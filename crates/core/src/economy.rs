@@ -933,6 +933,10 @@ pub(crate) fn upkeep_breakdown_with_military(
     if cities > 0 {
         b.add(city_upkeep_label(state), cities);
     }
+    for city in exempt_india_cities(state, p) {
+        b.parts
+            .push((format!("{}: Revenue Office pays its upkeep", city.name), 0));
+    }
     b
 }
 
@@ -945,17 +949,35 @@ pub fn city_upkeep_label(state: &GameState) -> String {
 }
 
 pub fn city_upkeep(state: &GameState, p: PlayerId) -> i32 {
+    let cities = state.cities_of(p).count() as i32;
+    let liable = cities - exempt_india_cities(state, p).count() as i32;
+    city_upkeep_total(state, cities, liable)
+}
+
+fn exempt_india_cities(state: &GameState, p: PlayerId) -> impl Iterator<Item = &City> {
+    state.cities_of(p).filter(move |city| {
+        state.player(p).faction == Faction::India
+            && !state
+                .setup
+                .rule_experiments
+                .rule_off(FactionRule::IndiaOfficeUpkeep)
+            && !state.setup.rule_experiments.no_city_upkeep
+            && data::has_building(&city.buildings, BuildingKind::Market)
+    })
+}
+
+fn city_upkeep_total(state: &GameState, cities: i32, liable: i32) -> i32 {
     state
         .setup
         .rule_experiments
-        .city_upkeep(state.cities_of(p).count() as i32)
+        .city_upkeep_with_liable(cities, liable)
 }
 
 /// Extra Gold per turn if this empire gains one city, using the same rounding as its total bill.
 pub fn added_city_upkeep(state: &GameState, p: PlayerId) -> i32 {
     let cities = state.cities_of(p).count() as i32;
-    let rules = state.setup.rule_experiments;
-    rules.city_upkeep(cities + 1) - rules.city_upkeep(cities)
+    let liable = cities - exempt_india_cities(state, p).count() as i32;
+    city_upkeep_total(state, cities + 1, liable + 1) - city_upkeep_total(state, cities, liable)
 }
 
 /// Food a city needs to grow, less decadence (rounding down once).
@@ -1063,7 +1085,15 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
                 .rule_off(FactionRule::IndiaRemittance)
         {
             let remitted = if data::has_building(&c.buildings, BuildingKind::Market) {
-                y.gold / 2
+                if state
+                    .setup
+                    .rule_experiments
+                    .rule_off(FactionRule::IndiaOfficeFull)
+                {
+                    y.gold / 2
+                } else {
+                    y.gold
+                }
             } else {
                 0
             };
@@ -1106,6 +1136,10 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     }
     if administration > 0 {
         gold.add(city_upkeep_label(state), -administration);
+    }
+    for city in exempt_india_cities(state, p) {
+        gold.parts
+            .push((format!("{}: Revenue Office pays its upkeep", city.name), 0));
     }
     PlayerIncome {
         cities,

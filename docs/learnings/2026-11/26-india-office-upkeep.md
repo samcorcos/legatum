@@ -1,0 +1,5 @@
+## 2026-11-26: Revenue Offices offset India's city upkeep
+
+- Cause: City upkeep at rules 63 dropped India's win rate because its wide empire paid for cities whose Gold stayed in regional courts.
+- Evidence: Six arms of 1,000 eight-seat Hard games, seed 20261126, each with 895 India seats. India's per-seat wins: baseline 12/895 (1.3%); remittance drawback off 43/895 (4.8%); upkeep paid in Food 52/895 (5.8%); Office cities exempt from upkeep 45/895 (5.0%); Office cities remit full Gold 36/895 (4.0%); both Office rules 88/895 (9.8%). Reports: `docs/sim-results/2026-11-26-india-{baseline-0c5d2e8,remit-off-0c5d2e8,upkeep-food,office-upkeep,office-full,office-upkeep-full}.md`.
+- What changed: Rules 65 makes both Office effects the default. An Office waives its city's upkeep but leaves the city in the count that sets every liable city's rate. A non-capital Office remits all Gold. Each effect has its own `--rule-off` ablation; the Food arm remains unshipped. These measurements used the experimental engine; the default AI now forecasts full Office remittance, so its exact live win rate still needs a fresh run.

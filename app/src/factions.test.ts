@@ -17,7 +17,7 @@ describe('faction content and setup', () => {
     const revenueOffice = itemDescription(FACTION_PIECES.India.item, 'India');
     expect(revenueOffice).toContain('60 Production');
     expect(revenueOffice).toContain('+3 Gold');
-    expect(revenueOffice).toContain('half');
+    expect(revenueOffice).toContain('remits all Gold');
     const legionary = itemDescription(FACTION_PIECES.Byzantium.item, 'Byzantium');
     expect(legionary).toContain('162 Production');
     expect(legionary).toContain('84 Gold');

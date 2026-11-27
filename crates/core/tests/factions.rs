@@ -568,7 +568,7 @@ fn replacement_yields_and_india_food_penalty_precede_consumption() {
 }
 
 #[test]
-fn india_revenue_offices_remit_half_gross_gold_and_unlock_a_transferable_diwan() {
+fn india_revenue_offices_remit_full_gold_and_unlock_a_transferable_diwan() {
     let mut s = state(Faction::India);
     let capital = city(&mut s, at(4, 4));
     let province = city(&mut s, at(7, 4));
@@ -586,10 +586,7 @@ fn india_revenue_offices_remit_half_gross_gold_and_unlock_a_transferable_diwan()
         .unwrap()
         .buildings
         .insert(BuildingKind::Market);
-    assert_eq!(
-        economy::player_income(&s, P).gold.total - before,
-        (gross + 3) / 2
-    );
+    assert_eq!(economy::player_income(&s, P).gold.total - before, gross + 3);
     let mut turn = s.clone();
     turn.player_mut(P).gold = 1_000;
     let remitted_income = economy::player_income(&turn, P).gold.total;
