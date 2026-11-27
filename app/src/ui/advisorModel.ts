@@ -42,6 +42,8 @@ export interface AdvisorContext {
   placingTile?: number | null;
   /** The latest resolved turn finished a technology and left no next technology. */
   researchQueueDrained?: boolean;
+  /** This turn's own era-entry event, with the turn hash to keep lessons separate across games. */
+  eraUp?: { era: number; hash: string };
 }
 const RESEARCH_FALLBACK = 'Research gives your empire new choices.';
 const ownCities = (v: PlayerView) => v.cities.filter((c) => c.owner === v.me);
@@ -219,6 +221,40 @@ export function howToWin(v: PlayerView): Suggestion {
     steps: [{ instruction: 'Score VP with Age cards, rival capitals, world wonders and your faction goal. The Victory race shows the score.', target: control('race') }] };
 }
 
+/** A new era's most useful choices, read from the Hard plan and the view's own unlocks. */
+function newEraSuggestion(ctx: AdvisorContext, plan: Order[] | null): Suggestion | null {
+  const { view: v, eraUp } = ctx;
+  if (!eraUp || eraUp.era <= 1 || eraUp.era !== v.research.era + 1) return null;
+  const eraTechs = new Set(v.research.catalog.filter((option) => option.era === v.research.era).map((option) => option.tech));
+  const known = new Set(v.research.known);
+  const newlyKnown = v.research.unlocks.filter((unlock) => eraTechs.has(unlock.tech) && known.has(unlock.tech)
+    && (unlock.item.kind === 'Unit' || unlock.item.kind === 'Building'));
+  const build = plan?.find((order) => {
+    const item = order.type === 'SetProduction' ? order.item : order.type === 'SetProductionQueue' ? order.queue[0] : null;
+    return item && newlyKnown.some((unlock) => itemKey(unlock.item) === itemKey(item));
+  });
+  const item = build?.type === 'SetProduction' ? build.item : build?.type === 'SetProductionQueue' ? build.queue[0] : null;
+  const city = build && 'city' in build ? v.cities.find((c) => c.id === build.city && c.owner === v.me) : null;
+  const plannedTechs = plan?.flatMap((order) => order.type === 'SetResearch' ? [order.tech]
+    : order.type === 'SetResearchQueue' ? order.techs : []) ?? [];
+  const tech = plannedTechs.find((planned) => eraTechs.has(planned) && !known.has(planned)) ?? null;
+  const unlocks = tech ? techCardUnlocks(v.research, tech, factionOf(v))
+    .filter((entry) => entry.kind === 'Unit' || entry.kind === 'Building').slice(0, item ? 1 : 2) : [];
+  const fallback = [...new Set(newlyKnown.map((unlock) => unlock.name))].slice(0, 3);
+  const fallbackNames = fallback.length === 3 ? `${fallback[0]}, ${fallback[1]} and ${fallback[2]}` : fallback.join(' and ');
+  const buildName = item ? itemName(item, factionOf(v)) : null;
+  const why = buildName && city && tech && unlocks.length
+    ? `Build ${buildName} in ${city.name}. Research ${TECH_NAME[tech]} for ${unlocks[0].label}.`
+    : buildName && city ? `You can now build ${buildName} in ${city.name}.`
+      : tech && unlocks.length ? `Research ${TECH_NAME[tech]} for ${unlocks.map((entry) => entry.label).join(' and ')}.`
+        : fallback.length ? `This era brings ${fallbackNames}.` : null;
+  if (!why) return null;
+  return { id: `era:${v.me}:${eraUp.era}:${eraUp.hash}`, title: `${v.research.era_name} era: what's new`, why,
+    steps: [city && buildName ? { instruction: `${ctx.touch ? 'Tap' : 'Click'} ${city.name} to build ${buildName}.`, target: tile(city.pos) }
+      : { instruction: `${ctx.touch ? 'Tap' : 'Click'} Research to choose a technology.`, target: control('research') }],
+    current: 0, acknowledge: true };
+}
+
 export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}, tips: TipLog = {}, locks: LockLog = {}): Suggestion | null {
   const v = ctx.view;
   if (v.finished || v.players.find((p) => p.id === v.me)?.alive === false) return null;
@@ -227,6 +263,8 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   // How to win, early: before the first score check, so a new player knows what VP are for.
   if (v.turn >= 3 && seen.includes('report') && !seen.includes('howToWin')) return howToWin(v);
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
+  const era = newEraSuggestion(ctx, plan);
+  if (era && !seen.includes(era.id)) return era;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
   const choice = plan?.find((o): o is Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }> => o.type === 'SetResearch' || o.type === 'SetResearchQueue');

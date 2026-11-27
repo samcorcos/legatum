@@ -181,6 +181,8 @@ export function Advisor() {
   const advice = view && !hidden ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
     humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
     researchQueueDrained: report?.events[seat]?.some((event) => event.type === 'ResearchQueueAdvanced' && event.player === view.me && event.next === null),
+    eraUp: report?.turn === view.turn ? report.events[seat]?.flatMap((event) =>
+      event.type === 'EraEntered' && event.player === view.me ? [{ era: event.era, hash: report.hash }] : []).at(-1) : undefined,
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : [], practice, tips, locks) : null;
   // While a tile is being placed, only the tip that asked for that tile keeps guiding (its last step rings the tile).

@@ -27,6 +27,72 @@ async function opening() {
 }
 
 describe('one decision at a time', () => {
+  it('teaches a new era from the Hard plan once, with its exact build and research unlocks', async () => {
+    const { view, city, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const [knownTech, tech] = view.research.catalog.filter((option) => option.era === 1).map((option) => option.tech);
+    const base = view.research.unlocks[0]!;
+    view.research.known = [...view.research.known, knownTech];
+    view.research.unlocks = [
+      { ...base, tech: knownTech, item: { kind: 'Building', building: 'Walls' }, name: 'Walls' },
+      { ...base, tech, item: { kind: 'Unit', unit: 'Spearman' }, name: 'Spearman' },
+    ];
+    const plan: Order[] = [
+      { type: 'SetProduction', city: city.id, item: { kind: 'Building', building: 'Walls' } },
+      { type: 'SetResearch', tech },
+    ];
+    const next = { ...ctx([], null, plan), eraUp: { era: 2, hash: 'new-game-turn' } };
+    const seen = ['welcome', 'report', 'howToWin'];
+    const card = advisorSuggestion(next, seen, []);
+    expect(card).toEqual({ id: `era:${view.me}:2:new-game-turn`, title: "Classical era: what's new",
+      why: `Build Walls in ${city.name}. Research ${TECH_NAME[tech]} for Spearman.`,
+      steps: [{ instruction: `Click ${city.name} to build Walls.`, target: { kind: 'tile', hex: city.pos } }],
+      current: 0, acknowledge: true });
+    expect(advisorSuggestion(next, [...seen, card!.id], [])?.id).not.toBe(card!.id);
+    expect(advisorSuggestion({ ...next, eraUp: undefined }, seen, [])?.id).not.toBe(card!.id);
+    expect(advisorSuggestion({ ...next, eraUp: { era: 1, hash: 'first' } }, seen, [])?.id).not.toMatch(/^era:/);
+    expect(advisorSuggestion({ ...next, eraUp: { era: 3, hash: 'other' } }, seen, [])?.id).not.toMatch(/^era:/);
+  });
+
+  it('uses known new units and buildings when the plan has no new-era choice', async () => {
+    const { view, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const tech = view.research.catalog.find((option) => option.era === 1)!.tech;
+    const base = view.research.unlocks[0]!;
+    view.research.known = [...view.research.known, tech];
+    view.research.unlocks = [{ ...base, tech, item: { kind: 'Unit', unit: 'Spearman' }, name: 'Spearman' },
+      { ...base, tech, item: { kind: 'Building', building: 'Walls' }, name: 'Walls' }];
+    const next = { ...ctx([], null, []), eraUp: { era: 2, hash: 'fallback' }, touch: true };
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])).toEqual({
+      id: `era:${view.me}:2:fallback`, title: "Classical era: what's new", why: 'This era brings Spearman and Walls.',
+      steps: [{ instruction: 'Tap Research to choose a technology.', target: { kind: 'control', name: 'research', value: undefined } }],
+      current: 0, acknowledge: true,
+    });
+    view.research.known = view.research.known.filter((known) => known !== tech);
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])?.id).not.toMatch(/^era:/);
+  });
+
+  it('points at Research when the Hard plan starts with a new-era technology', async () => {
+    const { view, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const tech = view.research.catalog.find((option) => option.era === 1)!.tech;
+    const base = view.research.unlocks[0]!;
+    view.research.unlocks = [{ ...base, tech, item: { kind: 'Unit', unit: 'Spearman' }, name: 'Spearman' },
+      { ...base, tech, item: { kind: 'Building', building: 'Walls' }, name: 'Walls' }];
+    const next = { ...ctx([], null, [{ type: 'SetResearch', tech }]), eraUp: { era: 2, hash: 'research' } };
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])).toEqual({
+      id: `era:${view.me}:2:research`, title: "Classical era: what's new", why: `Research ${TECH_NAME[tech]} for Walls and Spearman.`,
+      steps: [{ instruction: 'Click Research to choose a technology.', target: { kind: 'control', name: 'research', value: undefined } }],
+      current: 0, acknowledge: true,
+    });
+  });
+
   it('teaches the first locked garrison once, using the rival and city names', async () => {
     const { view, city, unit, ctx } = await opening();
     view.turn = 5;
