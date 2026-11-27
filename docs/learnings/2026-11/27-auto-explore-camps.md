@@ -1,0 +1,3 @@
+# Auto-explore walked scouts into barbarian camps (2026-11-27)
+
+`legatum_ai::explore_step` judged danger only from enemy units in sight and firing cities. A camp's guard drops out of sight as soon as the scout steps away, so on a later turn the camp tile looked safe and the route passed right beside it, where the guard or a roamer killed the scout. The fix: known camps (`PlayerView::barbarian_camps`, seen or remembered) and recent unseen sightings (`Ctx::remembered_threats`) count as danger too. They only steer the route: a scout inside such a zone walks out and keeps exploring, while a visible army still stops the automation with `Threatened`.

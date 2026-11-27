@@ -64,11 +64,7 @@ impl Planner<'_> {
             .view()
             .units
             .iter()
-            .filter(|u| {
-                u.owner == self.ctx.me
-                    && legatum_core::data::pays_upkeep(u.kind)
-                    && u.contract_until.is_none()
-            })
+            .filter(|u| u.owner == self.ctx.me && legatum_core::data::pays_upkeep(u.kind))
             .count() as i32;
         let current = self.upkeep_unit_count()
             + self.planned_military_purchases()

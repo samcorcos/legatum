@@ -509,7 +509,7 @@ it('auto-enables Settle temporarily, remembers explicit choices, and restores th
   const settler = v.units.find((u) => u.owner === v.me && u.kind === 'Settler')!;
   const spearman = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
   act(() => useGame.setState({ selection: { kind: 'unit', id: spearman.id } }));
-  chooseLens('Movement');
+  chooseLens('Default');
   // An overlay the player turned on rides through every automatic switch.
   act(() => setOverlay('yields', true));
   act(() => useGame.setState({ selection: { kind: 'unit', id: settler.id } }));
@@ -519,12 +519,13 @@ it('auto-enables Settle temporarily, remembers explicit choices, and restores th
   expect(vi.mocked(draw).mock.lastCall![1].overlays).toMatchObject({ yields: true });
   expect(vi.mocked(draw).mock.lastCall![1].yieldTiles!.length).toBeGreaterThan(0);
   act(() => useGame.setState({ selection: { kind: 'unit', id: spearman.id } }));
-  expect(chosenLens()).toBe('Movement');
+  expect(chosenLens()).toBe('Default');
   expect(document.querySelector('[role="checkbox"][data-overlay="yields"]')?.getAttribute('aria-checked')).toBe('true');
   act(() => useGame.setState({ selection: { kind: 'unit', id: settler.id } }));
-  chooseLens('Threat');
+  chooseLens('Default');
+  expect(chosenLens()).toBe('Default');
   act(() => useGame.setState({ selection: null }));
-  expect(chosenLens()).toBe('Threat');
+  expect(chosenLens()).toBe('Default');
   act(() => setOverlay('yields', false));
 });
 

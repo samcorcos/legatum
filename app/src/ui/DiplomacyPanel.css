@@ -213,9 +213,10 @@
 .deal-gift { margin-top: 10px; border-top: 1px solid var(--rule); padding-top: 6px; }
 .deal-gift-title { margin: 0; font-size: 13px; }
 .deal-gift .muted { margin: 4px 0 0; font-size: 12px; }
-/* A queued action: the button stays pressed (an ink fill), the sentence-plus-Undo line under it says what is queued. */
-.diplomacy-action > .btn[aria-pressed='true'] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+/* Ready line for offers, answers and gifts. */
 .diplomacy-queued { flex-basis: 100%; margin: 0; font-size: 13px; }
+.diplomacy-queued-check { color: var(--good); vertical-align: -2px; }
+.diplomacy-queued strong { font-weight: 700; }
 /* The hostile action comes last, below a rule. */
 .diplomacy-hostile { margin-top: 10px; border-top: 1px solid var(--rule); padding-top: 2px; }
 /* Open Borders: emblem plus word, like the relation beside it, but no box (dashed means "not yet standing"). */

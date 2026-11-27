@@ -1,4 +1,4 @@
-import { newestGameState } from './autosave';
+import { newestAutosave, newestGameState } from './autosave';
 import { test, expect } from './fixtures';
 import { endPlanning } from './turnActions';
 import { turnFlowFixture } from '../src/test/turnFlowFixture';
@@ -73,6 +73,7 @@ test('Space lasts one turn; Fortify persists and stays out of the cycle', async 
   await page.keyboard.press('Enter');
   await expect(page.locator('.city-panel')).toBeVisible();
   // Autosave is an output readback: no store injection or debug mutations.
+  await expect.poll(async () => (await newestAutosave(page))?.turn).toBe(3);
   const units = (await newestGameState<any>(page)).units;
   expect(units['0'].standing_order).toBeUndefined();
   expect(units['4'].standing_order).toBe('Sleep');
@@ -131,6 +132,8 @@ test('Fortify heals while the unit rests and stays in effect at full HP, out of 
   await expect(page.locator('.seatbar .cta')).toContainText('Choose production');
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('4');
+  // The autosave is written after the turn number changes: wait for turn 4's save, or this reads turn 3's (HP 95).
+  await expect.poll(async () => (await newestAutosave(page))?.turn).toBe(4);
   const units = (await newestGameState<any>(page)).units;
   expect(units['0'].hp).toBe(100);
   expect(units['0'].standing_order).toBe('Sleep');

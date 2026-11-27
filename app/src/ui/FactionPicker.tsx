@@ -228,7 +228,8 @@ export function FactionSheetView({
           </div>
         </div>
       </div>
-      <div className="fs-pairs">
+      {/* A people with one rule pair keeps it snug under its portrait: the rows size to their content, never float in the free height. */}
+      <div className={`fs-pairs${sheet.pairs.filter((p) => !p.onCard).length === 1 ? ' one-pair' : ''}`}>
         <div className="fs-col" data-testid="fs-strengths">
           {sheet.pairs.filter((p) => !p.onCard).map((p, i) => p.strength && p.strengthIcon && <MedallionRow key={i} icon={p.strengthIcon} tone="good" sign="Strength" className="fs-trait">{p.strength}</MedallionRow>)}
         </div>

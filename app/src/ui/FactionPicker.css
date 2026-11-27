@@ -288,6 +288,11 @@
   align-content: center;
   align-items: start;
 }
+.fs-pairs.one-pair {
+  flex: 0 0 auto;
+  align-content: start;
+  margin-top: 4px;
+}
 .fs-col {
   display: flex;
   flex-direction: column;

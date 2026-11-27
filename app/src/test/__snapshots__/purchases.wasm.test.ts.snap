@@ -1264,10 +1264,122 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     },
   },
   {
+    "cost": 72,
+    "item": {
+      "kind": "Unit",
+      "unit": "Spearman",
+    },
+  },
+  {
+    "cost": 118,
+    "item": {
+      "kind": "Unit",
+      "unit": "Archer",
+    },
+  },
+  {
+    "cost": 145,
+    "item": {
+      "kind": "Unit",
+      "unit": "Pikeman",
+    },
+  },
+  {
+    "cost": 192,
+    "item": {
+      "kind": "Unit",
+      "unit": "Crossbowman",
+    },
+  },
+  {
+    "cost": 198,
+    "item": {
+      "kind": "Unit",
+      "unit": "Musketman",
+    },
+  },
+  {
     "cost": 720,
     "item": {
       "kind": "Unit",
       "unit": "HeirToTheThrone",
+    },
+  },
+  {
+    "cost": 99,
+    "item": {
+      "kind": "Unit",
+      "unit": "Horseman",
+    },
+  },
+  {
+    "cost": 183,
+    "item": {
+      "kind": "Unit",
+      "unit": "Knight",
+    },
+  },
+  {
+    "cost": 340,
+    "item": {
+      "kind": "Unit",
+      "unit": "Cavalry",
+    },
+  },
+  {
+    "cost": 462,
+    "item": {
+      "kind": "Unit",
+      "unit": "Tank",
+    },
+  },
+  {
+    "cost": 630,
+    "item": {
+      "kind": "Unit",
+      "unit": "AutonomousArmour",
+    },
+  },
+  {
+    "cost": 270,
+    "item": {
+      "kind": "Unit",
+      "unit": "Rifleman",
+    },
+  },
+  {
+    "cost": 369,
+    "item": {
+      "kind": "Unit",
+      "unit": "Infantry",
+    },
+  },
+  {
+    "cost": 505,
+    "item": {
+      "kind": "Unit",
+      "unit": "HunterKiller",
+    },
+  },
+  {
+    "cost": 311,
+    "item": {
+      "kind": "Unit",
+      "unit": "FieldCannon",
+    },
+  },
+  {
+    "cost": 396,
+    "item": {
+      "kind": "Unit",
+      "unit": "Artillery",
+    },
+  },
+  {
+    "cost": 504,
+    "item": {
+      "kind": "Unit",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -1285,10 +1397,87 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     },
   },
   {
+    "cost": 108,
+    "item": {
+      "kind": "Unit",
+      "unit": "Phalangite",
+    },
+  },
+  {
+    "cost": 151,
+    "item": {
+      "kind": "Unit",
+      "unit": "CompositeArcher",
+    },
+  },
+  {
+    "cost": 135,
+    "item": {
+      "kind": "Unit",
+      "unit": "Cataphract",
+    },
+  },
+  {
+    "cost": 244,
+    "item": {
+      "kind": "Unit",
+      "unit": "Arquebusier",
+    },
+  },
+  {
+    "cost": 250,
+    "item": {
+      "kind": "Unit",
+      "unit": "Cuirassier",
+    },
+  },
+  {
+    "cost": 315,
+    "item": {
+      "kind": "Unit",
+      "unit": "TrenchInfantry",
+    },
+  },
+  {
+    "cost": 351,
+    "item": {
+      "kind": "Unit",
+      "unit": "Howitzer",
+    },
+  },
+  {
+    "cost": 396,
+    "item": {
+      "kind": "Unit",
+      "unit": "EarlyTank",
+    },
+  },
+  {
     "cost": 340,
     "item": {
       "kind": "Unit",
       "unit": "Biplane",
+    },
+  },
+  {
+    "cost": 432,
+    "item": {
+      "kind": "Unit",
+      "unit": "MechanisedInfantry",
+    },
+  },
+  {
+    "cost": 540,
+    "item": {
+      "kind": "Unit",
+      "unit": "MainBattleTank",
+    },
+  },
+  {
+    "cost": 445,
+    "item": {
+      "kind": "Unit",
+      "unit": "RocketArtillery",
     },
   },
   {

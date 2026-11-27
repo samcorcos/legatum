@@ -11,7 +11,7 @@ import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompa
 import { PieceVsLine } from './PieceVs';
 import { razeLossLines, razeLosses, razeWorkText } from '../razeLosses';
 import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED, wallsUpgradeName, wallsRepairing } from '../data';
-import { effectiveProduction, errorsWhere, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
+import { effectiveProduction, errorsWhere, isProductionOrder, refusalLine, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
 import { distance, hexEq, tileIndex } from '../hex';
 import { WONDER_INFO, WONDER_PERCENT, cityWonders, wonderArt, wonderBonusSentence, wonderYieldWord } from '../wonders';
 import { improvementGain, improvementName, improvementShortTitle, improvementTitle, improvementUpgradeYields, improvementWhere, isDormant } from '../improvements';
@@ -42,13 +42,12 @@ import { Amount, Amounts, Quantity } from './Amounts';
 import { ResourceReason, openResourceChip } from './ResourceReason';
 import type { AmountUnit } from './amountParts';
 import { ForeignCityActions } from './ForeignCityActions';
+import { CityBuy } from './CityBuy';
+import { capitalFallLine } from '../buyCity';
 import { CityBorders } from './CityBorders';
 import { ProgressBar } from './ProgressBar';
 import { claimSummary, growthProgress, territoryCounts, yieldsText } from '../cityProgress';
 import { revealBelowStickyHead, revealIdleProductionPicker } from './cityPanelScroll';
-import { LevyNote } from './Levy';
-import { CompanyShop } from './CompanyShop';
-import { canHire } from '../company';
 import { WhereToBuild, WhereToBuildLine } from './WhereToBuild';
 import { TILE_RELEASE_RULE } from './cityTerritoryText';
 
@@ -154,7 +153,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const col = playerInk(city.owner);
   const d = city.detail;
   const purchases = useMemo(() => purchasePreviews(client, city, view, orders, errors), [client, city, view, orders, errors]);
-  const errs = errorsWhere(orders, errors, (o: Order) => orderCity(o) === city.id);
+  // A refused build shows under Now producing, where the pick was made; other refusals stay at the foot.
+  const productionErrs = errorsWhere(orders, errors, (o: Order) => isProductionOrder(o, city.id));
+  const errs = errorsWhere(orders, errors, (o: Order) => orderCity(o) === city.id && !isProductionOrder(o, city.id));
   const panel = useRef<HTMLDivElement>(null);
   const placementReturnScroll = useRef<number | null>(null);
   useLayoutEffect(() => {
@@ -261,6 +262,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   // Egypt's Royal Tomb work: none of its cities builds or grows (core `economy`), and every panel says so.
   const tombStopped = city.owner === view.me && tombWorking(view);
+  const fallLine = capitalFallLine(view, city);
   // Healing, fire and bounty scroll with the list instead of riding in the sticky head: the head stays a name and three numbers, so the build cards keep the room.
   const status = (
     <>
@@ -270,6 +272,10 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <Icon name={GOAL_CITY_ICON[g.kind]} size={16} /><span>{goalCityLine(view, g)}</span>
       </div>)}
       {tombStopped && <div className="cp-capital cp-goal-city cp-tomb-work" data-testid="city-tomb-work"><Icon name="goal-royal-tomb" size={16} /><span>{TOMB_CITY_NOTE}</span></div>}
+      {/* The fall of Constantinople: a Byzantine capital (or the Heir's refuge) says what taking it does, to everyone. */}
+      {fallLine && <div className="cp-capital cp-goal-city" data-testid="city-capital-fall"><Icon name="unit-heirtothethrone" size={16} /><span>{fallLine}</span></div>}
+      {/* Your own city: an offer running on it, or what a Byzantium would pay for it now. */}
+      {city.owner === view.me && <CityBuy view={view} city={city} />}
       {(fire || heal || bounty !== null || city.greece_captive_at_risk) && <div className="cp-status">
         {heal && <Tip as="div" className="cp-healing-wrap" content={CITY_HEAL_RULE}>
           <ProgressBar className="cp-healing" testId="city-heal" name="City healing"
@@ -483,6 +489,10 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     feel.invalid();
     setNotice({ city: city.id, key: itemKey(u.item), tone: 'bad', text: `Can't build ${itemName(u.item, faction)} yet: ${lowerFirst(why.short)}.${why.growth ? ` ${why.growth}.` : ''}` });
   };
+  // A queued purchase is said under "Now producing": it lands only when the turn ends, so the panel names what the Gold buys.
+  const pendingBuy = (orders ?? []).find((o): o is Extract<Order, { type: 'BuyItem' }> => o.type === 'BuyItem' && o.city === city.id);
+  const pendingBuyPrice = pendingBuy ? purchases.options.get(itemKey(pendingBuy.item))?.cost ?? null : null;
+  const pendingBuyText = pendingBuy ? `Buying ${itemName(pendingBuy.item, faction)}${pendingBuyPrice === null ? '' : ` for ${pendingBuyPrice} Gold`}. It arrives when the turn ends.` : null;
   // Switching banks the old item's progress with it; the new item starts from its own bank.
   const oldItem = d.producing;
   // Said only when progress moves somewhere: an old build's banks, or a new one resuming or carrying some.
@@ -807,8 +817,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     </Tip>
     <div className={`prod-list ${producing ? '' : 'choosing'}`}>{improvementOptions.map((o) => renderOption(o))}</div>
   </section> : null;
-  // Byzantium's shop: only its own cities, never a rival's or a foreign city's panel.
-  const hire = city.owner === view.me && canHire(view) ? <CompanyShop city={city} view={view} hires={purchases.hires} /> : null;
 
   /** Idle with nothing queued: the control sits on the "Choose what ... builds" line, so it never scrolls out of view above the cards and costs no extra row. */
   const idleChoice = city.owner === view.me && !producing && queue.length === 0;
@@ -982,7 +990,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           </span>}
           value={storedProduction} max={waitingCap !== null ? Math.max(1, waitingCap) : pendingQueue ? producing ? option?.cost ?? d.production_cost ?? 1 : d.idle_production_cap : d.production_cost ?? d.idle_production_cap} />
 
+        {productionErrs.map((m, i) => <div key={i} className="order-error production-refused" role="alert" data-testid="production-refused"><Amounts text={`${refusalLine(m)} Choose another build.`} /></div>)}
         {switchNote && <div className="production-switch" data-testid="production-switch" role="status"><Amounts text={`${switchNote}.`} /></div>}
+        {pendingBuy && <div className="production-switch" data-testid="pending-purchase" role="status"><Amounts text={pendingBuyText!} />{' '}<button className="btn quiet" disabled={view.finished} onClick={() => editOrders((ord) => toggleBuy(ord, city.id, pendingBuy.item))}>Cancel</button></div>}
         {egyptBuilding && !tombStopped && <div className="production-switch" data-testid="egypt-construction" role="status">{`${city.name}'s ${nileSurplus} surplus Food goes into the ${producing ? itemName(producing, owner?.faction) : 'build'} this turn, so ${city.name} doesn't grow.`}{growOption && <>{' '}<button className="btn quiet" data-testid="egypt-grow-instead" disabled={view.finished} onClick={() => buildNow(growOption.item)}>Grow instead →</button></>}</div>}
         {parkedText && <div className="production-choose" data-testid="production-choose"><b>Choose a new build.</b> <Amounts text={parkedText} /></div>}
         {productionWarning && <Tip as="div" className="production-warning" content={FORECAST_ASSUMPTIONS}><Amounts text={productionWarning} /></Tip>}
@@ -1049,7 +1059,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
       {growOption && <><div className="cp-sub">Growth</div><div className="prod-list">{renderOption(growOption)}</div></>}
       <div className="cp-sub"><span>Units</span>{idleChoice && buyTile('inline')}</div>
-      <LevyNote />
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>
         {withUnavailable(unitLines(listOptions, owner?.faction ?? 'India'), (line) => line.main.item, listUnavailable.filter((u) => u.item.kind === 'Unit' && !isPermanentlyUnavailable(u, faction))).map((r) => r.row ? <div key={itemKey(r.row.main.item)}>
           {renderOption(r.row.main, r.row.keeps)}
@@ -1057,7 +1066,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           {r.row.older.length > 0 && <details className="unit-line"><summary>Also: {r.row.older.map((o) => itemName(o.item, owner?.faction)).join(', ')}</summary>{r.row.older.map((o) => renderOption(o))}</details>}
         </div> : renderUnavailable(r.unavailable))}{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit')) && <p className="prod-faction-rule" role="note">{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit'))}</p>}
       </div>
-      {hire}
       <div className="cp-sub">Buildings</div>
       {idleNote}
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>{renderBuildingPicker(listOptions.filter((o) => o.item.kind === 'Building'), listUnavailable.filter((u) => u.item.kind === 'Building'))}</div>

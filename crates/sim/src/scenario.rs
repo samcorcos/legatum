@@ -496,6 +496,14 @@ pub fn describe(state: &GameState, order: &Order) -> (String, String) {
         ),
         Order::BuyItem { city: c, item: i } => (city(c), format!("buy {}", item(i))),
         Order::BuyTile { city: c, tile } => (city(c), format!("buy the tile at {}", place(tile))),
+        Order::BuyCity { city: c, gold } => (
+            "Empire".into(),
+            if *gold > 0 {
+                format!("offer {gold} Gold for {}", city(c))
+            } else {
+                format!("offer to buy {}", city(c))
+            },
+        ),
         Order::Action { action } => ("Empire".into(), format!("{action:?}")),
         Order::GiveGold { to, amount } => (
             "Empire".into(),
@@ -530,10 +538,6 @@ pub fn describe(state: &GameState, order: &Order) -> (String, String) {
             techs
                 .first()
                 .map_or_else(|| "nothing".into(), |t| format!("{t:?}")),
-        ),
-        Order::HireCompany { unit, seller, .. } => (
-            "Production".into(),
-            format!("hire a {unit:?} company from player {}", seller.0),
         ),
         Order::DeclareWar { against, .. } => (
             "Diplomacy".into(),

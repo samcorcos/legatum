@@ -924,10 +924,6 @@ pub(crate) fn upkeep_breakdown_with_military(
             paid,
         ) - paid * UPKEEP_PER_UNIT,
     );
-    b.add(
-        "Mercenary Companies",
-        crate::company::count(state, p) as i32 * crate::company::UPKEEP,
-    );
     b.add("Treaties", treaty_upkeep(state, p).total);
     let cities = city_upkeep(state, p);
     if cities > 0 {
@@ -1274,27 +1270,6 @@ fn undiscounted_production_cost(
         full * 90 / 100
     } else {
         full
-    }
-}
-
-/// What `buyer` pays in Production-equivalent terms for `version`'s own version of unit `kind`:
-/// that faction's price, less the buyer's own Military Science discount (a hired Company,
-/// `company::price`).
-pub fn version_unit_cost(
-    state: &GameState,
-    buyer: crate::types::PlayerId,
-    version: Faction,
-    kind: UnitKind,
-) -> i32 {
-    let cost = state
-        .setup
-        .rule_experiments
-        .unit_stats_for(version, kind)
-        .cost;
-    if military_science_discount(state, buyer, ProductionItem::Unit { unit: kind }) {
-        cost * 90 / 100
-    } else {
-        cost
     }
 }
 
@@ -2068,51 +2043,16 @@ pub(crate) fn production_check_at_era<R: Reason>(
         ProductionItem::Improvement { improvement, tile } => {
             crate::improvements::check(state, city, improvement, tile)
         }
-        ProductionItem::Unit { unit } if data::pays_upkeep(unit) => levy_check(state, city.owner),
         ProductionItem::Unit { .. } | ProductionItem::Project { .. } => None,
     }
 }
 
-/// Land units that pay ordinary military upkeep. Companies have their separate bill.
+/// Land units that pay ordinary military upkeep.
 pub fn upkeep_unit_count(state: &GameState, owner: PlayerId) -> usize {
     state
         .units_of(owner)
-        .filter(|u| data::pays_upkeep(u.kind) && !crate::company::is_company(u))
+        .filter(|u| data::pays_upkeep(u.kind))
         .count()
-}
-
-/// Armed units an empire fields now, the count thin levies cap (`data::levy_cap`). Hired
-/// Companies are outside the levy: they have their own contract and upkeep (`company`).
-pub fn levy_count(state: &GameState, owner: PlayerId) -> usize {
-    let land_units = upkeep_unit_count(state, owner);
-    let aircraft = state
-        .aircraft
-        .iter()
-        .filter(|plane| {
-            state
-                .cities
-                .get(&plane.city)
-                .is_some_and(|city| city.owner == owner)
-        })
-        .count();
-    land_units + aircraft
-}
-
-/// The empire's levy: (armed units, cap), when its faction has a cap.
-pub fn levy(state: &GameState, owner: PlayerId) -> Option<(usize, usize)> {
-    data::levy_cap_rules(
-        state.setup.rule_experiments.faction_rules_off,
-        state.player(owner).faction,
-        state.cities_of(owner).count(),
-    )
-    .map(|cap| (levy_count(state, owner), cap))
-}
-
-/// Thin levies: no new armed unit while the empire is at its cap. Losing a city never disbands
-/// units; it only blocks new ones until the empire is back under the cap.
-fn levy_check<R: Reason>(state: &GameState, owner: PlayerId) -> Option<R> {
-    let (units, cap) = levy(state, owner).filter(|(units, cap)| units >= cap)?;
-    Some(R::word(|| format!("Levies full: {units} of {cap}")))
 }
 
 /// The Heir: one at a time. He is retrained only once no Heir of this Byzantium exists anywhere,

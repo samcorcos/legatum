@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, it } from 'vitest';
 import { FACTION_GOAL, SWARM_GOAL } from '../data';
 import { artifactsIn, auditBlocks, auditCopy, copyIssuesIn, htmlBlocks } from '../test/textArtifacts';
-import { companyText, coreInterfaceText, diplomacyText, factionText, guideText, interfaceText, itemText, renderedSheetText, reportText, techText, victoryText, type TextGroup } from '../test/playerText';
+import { heirText, coreInterfaceText, diplomacyText, factionText, guideText, interfaceText, itemText, renderedSheetText, reportText, techText, victoryText, type TextGroup } from '../test/playerText';
 import { FactionSheetView } from './FactionPicker';
 
 const report = (hits: string[]) => expect(hits, hits.join('\n')).toEqual([]);
@@ -83,7 +83,7 @@ it('the Guide, section by section, reads cleanly', () => {
   report(audit(guideText()));
 });
 
-it('city, Levy, era, tile, unit, and post-game interface strings read cleanly', () => {
+it('city, era, tile, unit, and post-game interface strings read cleanly', () => {
   report(audit(interfaceText()));
 });
 
@@ -102,8 +102,8 @@ it('diplomacy and treaty texts read cleanly', () => {
   report(audit(diplomacyText()));
 });
 
-it('mercenary company texts read cleanly (rule, contract line, roster, order, report lines)', async () => {
-  report(audit(await companyText()));
+it('Byzantium Heir report lines read cleanly', async () => {
+  report(audit(await heirText()));
 });
 
 it('a core game\'s turn report reads cleanly (every line player 0 reads over 60 AI turns)', async () => {

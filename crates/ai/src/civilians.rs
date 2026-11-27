@@ -2497,7 +2497,9 @@ impl Planner<'_> {
         // An empire that knows nowhere to settle needs its Scouts' eyes on the land, not on
         // a neighbour: sentry duty from the first turns kept a one-city empire from ever
         // seeing a site (gene `sentry_needs_sites`).
-        if !self.scouts_needed_for_sites() {
+        if !self.scouts_needed_for_sites()
+            && !(self.sparta_opening_seeking() && self.decisions.sparta_center_search > 0)
+        {
             self.watch_approaches(&scouts);
             self.post_sentry(&scouts);
         }
@@ -2911,6 +2913,19 @@ impl Planner<'_> {
                     .min()
                     .unwrap_or(0);
                 cost -= from_home.min(12) * self.decisions.recon_weight;
+            }
+            if self.sparta_opening_seeking()
+                && self.decisions.sparta_center_search > 0
+                && let Some(home) = ctx.capital().map(|c| c.pos)
+            {
+                let centre = Hex::from_offset(self.view().width / 2, self.view().height / 2);
+                let direct = home.distance(centre);
+                if h.distance(home) <= self.decisions.sparta_opening_search + 4
+                    && h.distance(home) + h.distance(centre) <= direct + 4
+                    && h.distance(centre) < direct
+                {
+                    cost -= 80;
+                }
             }
             if s.goto == Some(h) {
                 if Self::stuck(s) {

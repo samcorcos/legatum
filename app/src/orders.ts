@@ -18,7 +18,7 @@ import { hexEq, toOffset } from './hex';
 import { diplomaticCost, offerLabel, teamName, treatyLabel } from './diplomacy';
 import { ownerName } from './barbarians';
 import { empireOfPlayer, placeName } from './empires';
-import { withArticle, withThe } from './resources';
+import { withThe } from './resources';
 import { aircraftNeedingOrders, type Hold } from './airWing';
 import { isKnownOrderKind } from './orderDecoding';
 import { peaceScope, peaceScopeForAction } from './peaceScope';
@@ -56,7 +56,7 @@ export function pendingAirOrder(orders: Order[], plane: UnitId): Order | undefin
 }
 
 export function orderUnit(o: Order): UnitId | null {
-  return 'unit' in o && o.type !== 'HireCompany' ? o.unit : null;
+  return 'unit' in o ? o.unit : null;
 }
 
 export function orderCity(o: Order): CityId | null {
@@ -117,20 +117,13 @@ export function pendingProduction(orders: Order[], city: CityId): ProductionItem
   return o?.type === 'SetProduction' ? o.item : o?.type === 'SetProductionQueue' ? o.queue[0] ?? null : null;
 }
 
-/** A city has one purchase a turn: a Buy, a tile, or a hire (Byzantium's Mercenary Company). */
-export const isPurchase = (o: Order, city: CityId) => (o.type === 'BuyItem' || o.type === 'HireCompany' || o.type === 'BuyTile') && o.city === city;
+/** A city has one purchase a turn: a Buy or a tile. */
+export const isPurchase = (o: Order, city: CityId) => (o.type === 'BuyItem' || o.type === 'BuyTile') && o.city === city;
 
 export function toggleBuy(orders: Order[], city: CityId, item: ProductionItem): Order[] {
   const buy = orders.find((o) => isPurchase(o, city));
   const rest = orders.filter((o) => !isPurchase(o, city));
   return buy?.type === 'BuyItem' && sameItem(buy.item, item) ? rest : [...rest, { type: 'BuyItem', city, item }];
-}
-
-/** Hire (or, clicked again, cancel) one Company in `city`: it replaces any other purchase there, as a second Buy does. */
-export function toggleHire(orders: Order[], hire: Extract<Order, { type: 'HireCompany' }>): Order[] {
-  const same = orders.some((o) => o.type === 'HireCompany' && o.city === hire.city && o.unit === hire.unit && o.seller === hire.seller);
-  const rest = orders.filter((o) => !isPurchase(o, hire.city));
-  return same ? rest : [...rest, hire];
 }
 
 export type TileOrder = Extract<Order, { type: 'BuyTile' }>;
@@ -204,6 +197,29 @@ export function nextUnitNeedingOrders(
   if (!list.length) return null;
   if (current === null) return list[0];
   return list.find((u) => u.id > current) ?? list[0];
+}
+
+/** A city's own production order (Build or a queue edit). */
+export const isProductionOrder = (o: Order, city: CityId) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city;
+
+/**
+ * Why this turn's production order for `city` was refused, if it was. Orders are checked in list order, so a
+ * build can be refused by an earlier one this turn (the last spare Niter went to another city's Musketman).
+ */
+export function productionRefusal(orders: Order[], errors: OrderError[], city: CityId): string | null {
+  return errorsWhere(orders, errors, (o) => isProductionOrder(o, city))[0] ?? null;
+}
+
+/** A refusal as the city panel shows it: no "Queue item 1:" prefix, and a closing full stop before what follows. */
+export function refusalLine(message: string): string {
+  const line = message.replace(/^Queue item \d+: /, '').trim();
+  return /[.!?]$/.test(line) ? line : `${line}.`;
+}
+
+/** "Hamburg cannot start Musketman: No Niter to spare: all 4 …" → "Musketman can't start: No Niter to spare". */
+export function shortRefusal(message: string): string | null {
+  const m = /cannot (?:start|produce) ([^:]+): ([^:.]+)/.exec(message);
+  return m ? `${m[1]} can't start: ${m[2].trim()}` : null;
 }
 
 /** Errors that belong to orders matching `pred`, with the order they refer to. */
@@ -317,10 +333,6 @@ export function describeOrder(o: Order, view: PlayerView): string {
       return `${city(o.city)}: ${o.queue.length ? o.queue.map((item, i) => `${i + 1}. ${itemName(item, cityFaction(o.city))}`).join(' → ') : 'clear production queue'}`;
     case 'BuyItem':
       return `${city(o.city)}: buy ${itemName(o.item, cityFaction(o.city))}`;
-    case 'HireCompany': {
-      const price = view.company_offers?.find((x) => x.seller === o.seller && x.unit === o.unit)?.price;
-      return `${city(o.city)}: hire ${withArticle(itemName({ kind: 'Unit', unit: o.unit }, faction(o.seller)))} Company from ${empireOfPlayer(view, o.seller)}${price === undefined ? '' : ` for ${price} Gold`} (${RULES.company.turns} turns)`;
-    }
     case 'BuyTile': {
       const tilePrice = view.cities.find((c) => c.id === o.city)?.detail?.buyable_tiles.find((b) => hexEq(b.tile, o.tile))?.price;
       return `${city(o.city)}: buy the tile at ${coord(o.tile)}${tilePrice === undefined ? '' : ` for ${tilePrice} Gold`}`;
@@ -332,6 +344,10 @@ export function describeOrder(o: Order, view: PlayerView): string {
     case 'SetResearchGoal': return o.tech ? `Research goal: ${TECH_NAME[o.tech]}` : 'Clear the research goal';
     case 'SetScienceConversion': return `Convert Science to ${o.to}`;
     case 'GiveGold': return `Give ${o.amount} Gold to ${withThe(empireOfPlayer(view, o.to))}`;
+    case 'BuyCity': {
+      const gold = o.gold || view.city_buys?.find((b) => b.city === o.city && b.buyer === view.me)?.price;
+      return `Make an offer for ${city(o.city)}${gold === undefined ? '' : ` · ${gold} Gold`} · starts when the turn ends`;
+    }
     case 'Action':
       switch (o.action.action) {
         case 'Swarm': return `Kindle the New Fire: offer ${view.actions?.swarm?.population ?? 50} population · +2 VP, permanent`;

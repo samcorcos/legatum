@@ -1,12 +1,11 @@
 import type { LookId } from '../brand/look';
-import { centerX, centerY, FAR_HEX_PX, HEX_SIZE, hexPath } from './grid';
-import { LENS_ALPHA, LENS_FADED_ALPHA, lensMetrics, type LensTile } from './lenses';
+import { centerX, centerY, HEX_SIZE, hexPath } from './grid';
+import { lensMetrics, type LensTile } from './lenses';
 import type { Camera } from './render';
 import type { Rect } from './compass';
 import { SETTLE_BANDS, type SiteBand } from './settleAdvice';
 import { MAP_STYLES } from './style';
 import { CAPITAL_GILT, FONTS } from './sprites';
-import { yieldIconSize } from './yieldIcons';
 
 /** Each band's colour and how much of it covers the ground, from the shared tokens (the legend reads the same ones). */
 function settleColors(look: LookId): Record<SiteBand, { color: string; alpha: number }> {
@@ -18,39 +17,25 @@ function settleColors(look: LookId): Record<SiteBand, { color: string; alpha: nu
   })) as Record<SiteBand, { color: string; alpha: number }>;
 }
 
-/** A lens tile's wash (colour and opacity) as the 2D map paints it: the 3D map lays the same wash on its ground. */
-export function lensWash(tiles: readonly LensTile[], look: LookId): (tile: LensTile) => { color: string; alpha: number; rim: boolean } | null {
+/** The Settle band's wash, shared by the 2D and 3D maps. */
+export function lensWash(tiles: readonly LensTile[], look: LookId): (tile: LensTile) => { color: string; alpha: number } | null {
   const washes = tiles.some((t) => t.band) ? settleColors(look) : null;
   const L = MAP_STYLES[look].lens;
   return (tile) => {
-    if (tile.yields) return null;
-    const tier = tile.band ? washes![tile.band] : null;
-    const fade = tile.faded ? L.faded / L.wash : 1;
-    return { color: tier?.color ?? tile.tint, alpha: tier ? tier.alpha * fade : tile.faded ? LENS_FADED_ALPHA : LENS_ALPHA, rim: !!tile.rank };
+    if (!tile.band || !washes) return null;
+    const tier = washes[tile.band];
+    return { color: tier.color, alpha: tier.alpha * (tile.faded ? L.faded / L.wash : 1) };
   };
 }
 
-/** `yieldsOn`: the Yields overlay owns the foot of the hex, so lens chips move to the side of the tile. */
+/** The Yields overlay occupies the foot of each hex; Settle badges keep clear of its clusters. */
 export interface LensDrawOptions {
   /** The 3D map: where each tile's centre is on screen (null when off camera) and the hex radius in px, instead of the 2D camera. */
   at?: (index: number) => { x: number; y: number } | null;
   hexPx?: number;
   yieldsOn?: boolean; /** The yield icon clusters in view: a recommendation badge keeps off them where it can. */ yieldRects?: readonly Rect[] }
 
-/** Keep a lens chip clear of banners and map panels, including a neighbouring city's name. */
-export function clearLensChip(x: number, y: number, w: number, h: number, avoid: readonly Rect[]): { x: number; y: number } | null {
-  const hits = (px: number, py: number) => avoid.some((a) => px + w / 2 > a.x && px - w / 2 < a.x + a.w && py + h / 2 > a.y && py - h / 2 < a.y + a.h);
-  if (!hits(x, y)) return { x, y };
-  const candidates = avoid.flatMap((a) => [
-    { x, y: a.y + a.h + h / 2 + 2 },
-    { x: a.x - w / 2 - 2, y },
-    { x: a.x + a.w + w / 2 + 2, y },
-    { x, y: a.y - h / 2 - 2 },
-  ]).sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y));
-  return candidates.find((p) => !hits(p.x, p.y)) ?? null;
-}
-
-/** Terrain tint below tokens; labels above them, kept inside an occupied hex below its token. */
+/** Settle tint below tokens, with ranked site badges above them. */
 export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: Camera, width: number, height: number, mapWidth: number, dpr: number, look: LookId, pass: 'tint' | 'labels' = 'tint', unitBottoms: ReadonlyMap<number, number> = new Map(), avoid: readonly Rect[] = [], medallionAbove: (index: number) => number = () => 0, opts: LensDrawOptions = {}) {
   const r = opts.hexPx ?? HEX_SIZE * cam.zoom;
   const at = opts.at ?? ((index: number) => ({ x: (centerX(index, mapWidth) - cam.x) * cam.zoom + width / 2, y: (centerY(index, mapWidth) - cam.y) * cam.zoom + height / 2 }));
@@ -66,27 +51,25 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
   const washes = pass === 'tint' && tiles.some((tile) => tile.band) ? settleColors(look) : null;
   const badges: { rank: number; x: number; y: number; below: number; colonia?: boolean }[] = [];
   for (const tile of tiles) {
-    // Yield tiles have no tint or chip: yieldIcons.ts draws their icon clusters.
-    if (tile.yields) continue;
+    // Yield clusters are drawn separately.
+    if (!tile.band) continue;
     const p = at(tile.index);
     if (!p) continue;
     const x = p.x, center = p.y;
-    let y = center;
+    const y = center;
     if (x < -r || x > width + r || y < -r || y > height + r) continue;
     if (pass === 'tint') {
       ctx.beginPath(); hexPath(ctx, x, y, r * 0.93);
-      const tier = tile.band ? washes![tile.band] : null;
+      const tier = washes![tile.band];
       // A wash the terrain reads through.
       const fade = tile.faded ? L.faded / L.wash : 1;
-      ctx.globalAlpha = tier ? tier.alpha * fade : tile.faded ? LENS_FADED_ALPHA : LENS_ALPHA;
-      ctx.fillStyle = tier?.color ?? tile.tint; ctx.fill();
+      ctx.globalAlpha = tier.alpha * fade;
+      ctx.fillStyle = tier.color; ctx.fill();
       ctx.globalAlpha = 1;
       // Only a thin accent line is stronger: the band's own green, firmer for better sites.
-      if (tier) {
-        // Firm even on the faintest band, so a Poor site is told from land that is not a site.
-        ctx.globalAlpha = (0.7 + tier.alpha * 0.3) * fade; ctx.strokeStyle = tier.color; ctx.lineWidth = L.rim * 1.4; ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
+      // Firm even on the faintest band, so a Poor site is told from land that is not a site.
+      ctx.globalAlpha = (0.7 + tier.alpha * 0.3) * fade; ctx.strokeStyle = tier.color; ctx.lineWidth = L.rim * 1.4; ctx.stroke();
+      ctx.globalAlpha = 1;
       // The top three: an ink line with a paper edge outside it, so the ring shows on the deepest green too.
       if (tile.rank) { ctx.strokeStyle = paper; ctx.lineWidth = MAP_STYLES[look].pen.line + 2.4; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = MAP_STYLES[look].pen.line; ctx.stroke(); }
       // Rome's Colonia Victrix: a site where the selected veteran founds it wears a gilt ring inside the hex (the legend names it).
@@ -99,36 +82,9 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
       }
       continue;
     }
-    // Pure tint treatments carry no chip.
-    if (tile.label === undefined && !tile.rank) continue;
+    if (!tile.rank) continue;
     const unitBottom = unitBottoms.get(tile.index);
     const onUnit = unitBottom !== undefined;
-    if (tile.label) {
-      // With the Yields overlay on the chip is a little smaller, so it fits above the icons' top row.
-      const bw = Math.min(Math.max(metrics.font * tile.label.length * 0.67 + 5, 14), opts.yieldsOn ? r * 0.7 : r * 1.65);
-      const bh = metrics.font + (opts.yieldsOn ? 2 : 4);
-      let lx = x;
-      // Below the lowest token of a stack, but never past the hex's lower edge (so it can't read as the next hex's label).
-      if (onUnit) y = Math.min(center + unitBottom + 2 + bh / 2, center + r * 0.8 - bh / 2);
-      // With the Yields overlay on, the foot of the hex is the yield icons' place and a middle chip would sit on a stack's top row:
-      // the chip moves to the side of an empty tile, and beside the token on an occupied one.
-      if (opts.yieldsOn) {
-        const side = r * 0.87 - bw / 2 - 1.5;
-        if (onUnit) {
-          const half = unitBottom - 4;
-          lx = x + Math.min(half + 3 + bw / 2, r * 0.87 + 3 - bw / 2); y = center - half * 0.55;
-        } else {
-          // Level with the upper third of the hex, and always above the top row of the tallest yield stack (a 3 or 4 point stack is 1.68 icons high).
-          const stackTop = r * 0.64 - 1.68 * yieldIconSize(r);
-          lx = x - side; y = center + Math.min(-r * 0.28, stackTop - bh / 2 - 1);
-        }
-      }
-      const place = clearLensChip(lx, y, bw, bh, avoid);
-      if (place) {
-        ctx.fillStyle = paper; ctx.globalAlpha = 0.95; ctx.fillRect(place.x - bw / 2, place.y - bh / 2, bw, bh); ctx.globalAlpha = 1;
-        ctx.fillStyle = ink; ctx.fillText(tile.label, place.x, place.y, r * 1.55);
-      }
-    }
     if (tile.rank) {
       // A resource medallion sits at the top of the hex: the badge goes above it, not on it.
       const medallion = medallionAbove(tile.index);
@@ -176,44 +132,6 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
     ctx.font = `700 ${metrics.compact ? 9 : 12}px ${FONTS[look].sans}`;
     ctx.fillText(badge.rank === 1 ? (badge.colonia ? 'Best Colonia site' : 'Best spot') : `#${badge.rank}`, x, y);
     placed.push({ x, y, w });
-  }
-  ctx.restore();
-}
-
-/**
- * The Borders overlay: each owned tile gets a light wash in its owner's colour and a hairline, and the tiles on a
- * border carry the owner's number in a small roundel at the tile's upper right, clear of the middle (where lens chips
- * sit), the left (where they move when Yields is on) and the foot (yield icons). `washScale` lightens the wash under a lens that tints (0 under Settle, whose
- * bands must stay true); the hairline always stays, thicker when the wash steps back.
- */
-export function drawOwnerOverlay(ctx: CanvasRenderingContext2D, tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number, dpr: number, look: LookId, pass: 'tint' | 'labels', washScale: number, busy: ReadonlySet<number> = new Set()) {
-  const r = HEX_SIZE * cam.zoom;
-  const L = MAP_STYLES[look].lens, pen = MAP_STYLES[look].pen;
-  ctx.save();
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  for (const tile of tiles) {
-    const x = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
-    const y = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
-    if (x < -r || x > width + r || y < -r || y > height + r) continue;
-    const fade = tile.faded ? 0.7 : 1;
-    if (pass === 'tint') {
-      ctx.beginPath(); hexPath(ctx, x, y, r * 0.93);
-      if (washScale > 0) { ctx.globalAlpha = L.ownerWash * washScale * fade; ctx.fillStyle = tile.tint; ctx.fill(); }
-      ctx.globalAlpha = L.rimAlpha * fade; ctx.strokeStyle = tile.tint; ctx.lineWidth = washScale > 0 ? pen.hair : pen.thin; ctx.stroke();
-      ctx.globalAlpha = 1;
-      continue;
-    }
-    if (!tile.label || r < FAR_HEX_PX || busy.has(tile.index)) continue;
-    const radius = Math.min(8, Math.max(5.5, r * 0.22));
-    const rx = x + (r * 0.87 - radius - 1.5), ry = y - r * 0.5;
-    ctx.globalAlpha = 0.95 * fade;
-    ctx.beginPath(); ctx.roundRect(rx - radius, ry - radius, 2 * radius, 2 * radius, radius * 0.3); ctx.fillStyle = L.paper; ctx.fill();
-    ctx.lineWidth = 1.6; ctx.strokeStyle = tile.tint; ctx.stroke();
-    ctx.globalAlpha = fade;
-    ctx.font = `700 ${Math.round(radius * 1.4)}px ${FONTS[look].sans}`;
-    ctx.fillStyle = L.ink; ctx.fillText(tile.label, rx, ry + 0.5);
-    ctx.globalAlpha = 1;
   }
   ctx.restore();
 }

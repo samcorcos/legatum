@@ -1,9 +1,11 @@
 import { ageName } from '../data';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { feel, useCombatFx } from '../feel';
 import { CrestMedallion } from '../brand/ornaments';
 import { EmpireCrest } from '../ui/vpParts';
-import { Icon } from '../ui/bits';
+import { FactionMark, Icon } from '../ui/bits';
+import { useAdvisor } from '../ui/advisorModel';
+import { HOLD_TURNS } from '../victoryHold';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { eraArt } from './eraArt';
 import type { Moment } from './moments';
@@ -18,6 +20,8 @@ const LEGEND: { state: Box['state']; text: string }[] = [
   { state: 'later', text: 'Age to come' },
 ];
 
+/** The advisor's score-sheet lesson shows on this many score checks. */
+const SCORE_HELP = ['scoreHelp1', 'scoreHelp2'];
 const CREST = 32;
 const BOX = 24, GAP = 4;
 /** The capital star the map draws (`CapitalStarGlyph`'s filled path). Always filled: on the map a hollow star means "its VP is yours", so a capital still to take is a faint filled star (art review, 2026-11-22). */
@@ -107,6 +111,14 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
   const primary = useRef<HTMLButtonElement>(null);
   useEffect(() => { primary.current?.focus({ preventScroll: true }); }, [moment.id]);
   const finish = useTally(root, moment.id, reduced);
+  // With the advisor on, the first score checks say how to read the sheet: a sheet of boxes does not by itself
+  // tell a new player what a VP is or how the game ends. Shown twice, then the sheet speaks for itself.
+  const coached = useAdvisor((s) => (s.enabled ? SCORE_HELP.filter((id) => !s.seen.includes(id))[0] ?? null : null));
+  const [coach] = useState(coached);
+  const markSeen = useAdvisor((s) => s.markSeen);
+  // Counted when shown, however the check is closed (Continue, Return or Esc).
+  useEffect(() => { if (coach) markSeen(coach); }, [coach, markSeen]);
+  const myFaction = card.track.flatMap((t) => t.pieces).find((p) => p.isMine)?.faction;
   return <div ref={root} key={moment.id} className={`era-takeover score-check ${reduced ? 'reduced' : ''}`} role="dialog" aria-modal="true" aria-label={`Score check: the ${ageName(card.name)} begins`}
     data-testid="score-check" data-era={card.era}>
     <div className="et-art" aria-hidden="true">
@@ -119,7 +131,7 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
           <div className="sc-kicker">{card.replay ? `The ${ageName(card.name)} · the score now · Turn ${card.turn}` : `The ${ageName(card.name)} begins · Turn ${card.turn}`}</div>
           <h2 className="sc-title">Score check</h2>
         </div>
-        <p className="sc-rule">{card.opener}<br />First to hold <b>{card.target} VP</b> for <b>10 turns</b> wins.</p>
+        <p className="sc-rule">{card.opener}{/* The advisor's note says it in full; never twice on one screen. */}{!coach && <><br />First to hold <b>{card.target} VP</b> for <b>10 turns</b> wins.</>}</p>
       </header>
 
       <section className="sc-panel sc-track" aria-label="Who is ahead" data-testid="score-track">
@@ -148,7 +160,14 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
       </section>
 
       <footer className="et-foot sc-foot">
-        <span />
+        {coach ? <aside className="sc-coach" aria-label="Advisor" data-testid="score-coach">
+          <h3>{myFaction && <FactionMark faction={myFaction} size={20} />}<span>How to win</span></h3>
+          <ul>
+            <li>On your sheet, each small square is 1 victory point (VP); a wide one is 2. Filled ones are yours.</li>
+            {card.lines.some((l) => l.fresh) && <li>The gold-outlined square is this Age’s new card. Do what it says to score 1 VP.</li>}
+            <li>Hold <b>{card.target} VP</b> for <b>{HOLD_TURNS} turns</b> to win. If nobody does by turn {card.turnLimit}, the most VP then wins.</li>
+          </ul>
+        </aside> : <span />}
         <button ref={primary} className="btn primary" data-primary-action onClick={() => { feel.select(); dismiss(); }}>Continue <span className="kbd">Return</span></button>
       </footer>
     </div>

@@ -6,7 +6,7 @@
 import {
   FLOWER_WARS, AZTEC_NO_HORSES, BUILDING_STATS, INDIA_CAPITAL_RADIUS, INDIA_NETWORK_PERCENT_PER_CITY, INDIA_NETWORK_RADIUS, INDIA_YIELD_PERCENT_PER_HEX,
   GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, PROJECT_GOLD_PERCENT, PROJECT_SCIENCE_PERCENT, EGYPT_NILE_BUILD_PERCENT,
-  KESHIG_KIND, RULES, SPECIAL_UNIT, TECH_NAME, UNIT_NAME, UNIT_STATS, specialUnitEdge, specialUnitName, companyRule, THIN_LEVIES, THIN_LEVIES_DETAIL, factionGoalVp, itemName, swissInterestRule, swissTollRule, SWISS_CHEAP_BUYS, SWISS_CAPTURE_RULE, unitStatsFor,
+  KESHIG_KIND, RULES, BYZANTIUM_BUY_CITY, BYZANTIUM_COLLAPSE, BYZANTIUM_COLLAPSE_DETAIL, byzantiumBuyCityDetail, SPECIAL_UNIT, TECH_NAME, UNIT_NAME, UNIT_STATS, specialUnitEdge, specialUnitName, factionGoalVp, itemName, swissInterestRule, swissTollRule, SWISS_CHEAP_BUYS, SWISS_CAPTURE_RULE, unitStatsFor,
 } from './data';
 import { pieceAgainst } from './pieceCompare';
 import type { BuildingKind, Faction, ProductionItem, TechId } from './types';
@@ -151,13 +151,14 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     counteredBy: 'Capture the Imperial Diwan to take its points. Contest the compact city network.',
   },
   Byzantium: {
-    identity: 'Armies for hire',
-    lore: 'The eastern Roman Empire held Constantinople for a thousand years. When its thin professional army could not win, it opened the treasury and hired other empires’ armies.',
+    identity: 'Buys its empire',
+    lore: 'The eastern Roman Empire held Constantinople for a thousand years. It took the Armenian kingdoms of Vaspurakan in 1021 and Ani in 1045 when their kings ceded them for estates and titles.',
     ratings: { aggression: 2, economy: 3, complexity: 3 },
     pairs: [
-      { strength: "Hire a Company: buy another empire's special unit with Gold.", strengthDetail: companyRule(), price: THIN_LEVIES, priceDetail: THIN_LEVIES_DETAIL, strengthIcon: 'fortify', priceIcon: 'unit-spearman' },
+      { strength: BYZANTIUM_BUY_CITY, strengthDetail: byzantiumBuyCityDetail(), price: BYZANTIUM_COLLAPSE, priceDetail: BYZANTIUM_COLLAPSE_DETAIL, strengthIcon: 'yield-gold', priceIcon: 'capital' },
+      specialRow('Byzantium', 'unit-tagmatic'),
     ],
-    counteredBy: 'Outlast every Company: its countdown is public, its upkeep drains the treasury, and an unpaid Company turns barbarian.',
+    counteredBy: 'Defend the cities next to Byzantium to raise their price, or go to War. Take Constantinople and you take every Byzantine city.',
   },
   Germany: {
     identity: 'Industry shapes the land',

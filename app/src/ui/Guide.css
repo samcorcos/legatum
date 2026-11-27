@@ -50,7 +50,7 @@
 }
 .guide-nav > button[aria-current] { background: var(--panel-2); border-left-color: var(--accent); color: var(--ink); font-weight: 600; }
 .guide-chapter-number { color: var(--accent); font-size: 10px; font-weight: 400; }
-.guide-page { overflow-y: auto; overscroll-behavior: contain; padding: 28px 36px 36px; user-select: text; line-height: 1.65; }
+.guide-page { overflow-y: auto; overscroll-behavior: contain; padding: 28px 36px 36px; -webkit-user-select: text; user-select: text; line-height: 1.65; }
 .guide-page h2 { margin: 8px 0 16px; font: var(--display-weight) 34px/1.12 var(--display); }
 .guide-page p { margin: 0 0 16px; color: var(--ink-2); font-size: 14px; }
 .guide-page h3 { margin: 24px 0 8px; font: var(--display-weight) 23px/1.2 var(--display); color: var(--head-color); }

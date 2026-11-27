@@ -58,6 +58,7 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
             sakoku_turns: None,
             goal_rule: None,
             supply: Default::default(),
+            city_offer: None,
         })
         .collect();
     GameState {
@@ -135,8 +136,6 @@ pub fn unit_with_id(
         attack_revealed_to: Default::default(),
         attack_revealed_turn: None,
         heir_of: None,
-        contract_until: None,
-        origin: None,
         created_turn: state.turn,
     }
 }

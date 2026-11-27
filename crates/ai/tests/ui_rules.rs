@@ -3,7 +3,7 @@
 //! the rules, and fail CI if the checked-in snapshot drifts. Refresh with:
 //! UPDATE_UI_RULES=1 cargo test -p legatum-ai --test ui_rules
 use legatum_core::{
-    BuildingKind, Faction, ImprovementKind, Resource, TechId, Terrain, UnitKind, company, data,
+    BuildingKind, Faction, ImprovementKind, Resource, TechId, Terrain, UnitKind, data,
     diplomacy::{ALLIANCE_PROTECTED_TURNS, BETRAYAL_TURNS, PEACE_TRUCE_TURNS, TreatyKind},
     goals, resources,
     rules::promotion,
@@ -333,6 +333,17 @@ fn ui_rules_match_core() {
         "coloniaLevel": goals::COLONIA_LEVEL,
         "coloniaBorderReach": goals::COLONIA_BORDER_REACH,
         "tombTurns": goals::TOMB_TURNS,
+        "buyCity": {
+            "base": legatum_core::buy_city::BASE,
+            "perPopulation": legatum_core::buy_city::PER_POP,
+            "buildingPercent": legatum_core::buy_city::BUILDING_PERCENT,
+            "wallsPercent": legatum_core::buy_city::WALLS_PERCENT,
+            "guardPercent": legatum_core::buy_city::GUARD_PERCENT,
+            "goalMultiplier": legatum_core::buy_city::GOAL_MULTIPLIER,
+            "offerTurns": legatum_core::buy_city::OFFER_TURNS,
+            "failFeePercent": legatum_core::buy_city::FAIL_FEE_PERCENT,
+            "maxBidPercent": legatum_core::buy_city::MAX_BID_PERCENT,
+        },
         "firstGrowth": data::FIRST_GROWTH,
         "growthBase": data::GROWTH_BASE,
         "growthPerPop": data::GROWTH_PER_POP,
@@ -504,11 +515,6 @@ fn ui_rules_match_core() {
             "unitFightCap": data::XP_UNIT_FIGHT_CAP,
             "cityAttackXp": data::XP_CITY_ATTACK,
             "cityDefeatedXp": data::XP_CITY_DEFEATED,
-        },
-        "company": {
-            "turns": company::COMPANY_TURNS,
-            "upkeep": company::UPKEEP,
-            "hirePercent": company::HIRE_PERCENT,
         },
         "treaty": {
             "guaranteeTurns": PEACE_TRUCE_TURNS,

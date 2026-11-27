@@ -31,6 +31,6 @@ export function useMapLens(view: PlayerView | null, ownSel: UnitView | null, sea
   const sitesByHex = useMemo(() => new Map(sites.map((s) => [`${s.pos.q},${s.pos.r}`, s])), [sites]);
   const siteAt = (h: Hex) => sitesByHex.get(`${h.q},${h.r}`);
   const lensTiles = useMemo(() => view ? buildLensTiles(view, lens, sites) : [], [view, lens, sites]);
-  const overlayTiles = useMemo(() => view ? buildOverlayTiles(view, overlays) : { yields: [], borders: [] }, [view, overlays]);
+  const overlayTiles = useMemo(() => view ? buildOverlayTiles(view, overlays) : { yields: [] }, [view, overlays]);
   return { lens, setLens, overlays, settleUnit, scoreUnit, scoreView, reserved, sites, sitesByHex, siteAt, lensTiles, overlayTiles };
 }

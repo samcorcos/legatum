@@ -1,5 +1,5 @@
 // Map art review (art pass 3): the same busy map (src/test/mapArtFixture.ts) at normal and
-// zoomed-out zoom, 1000x600 and 1440x900, in the default and Settle lenses and with the Resources and Yields overlays.
+// zoomed-out zoom, 1000x600 and 1440x900, in the Default and Settle lenses and with Yields on.
 // ART_MAP_SHOTS=<dir> picks where the shots go. Shots only: the map tour asserts nothing about pixels.
 import { test as base, expect, type Page } from '@playwright/test';
 import { createServer } from 'vite';
@@ -60,12 +60,12 @@ async function frame(page: Page, at: { q: number; r: number } | null, zoom: numb
   await page.waitForTimeout(500);
 }
 
-/** A lens alone, or (Yields, Resources, Borders) the plain map with that one overlay on. */
+/** A lens alone, or Yields over the plain map. */
 async function lens(page: Page, name: string) {
-  const overlay = ['Yields', 'Resources', 'Borders'].includes(name);
+  const overlay = name === 'Yields';
   await showMapOptions(page);
   await lensRadio(page, overlay ? 'Default' : name).click();
-  for (const o of ['Yields', 'Resources', 'Borders']) await setOverlay(page, o, o === name);
+  for (const o of ['Yields']) await setOverlay(page, o, o === name);
   await page.waitForTimeout(500);
 }
 
@@ -90,9 +90,6 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
       if (setup.camp) { await frame(page, setup.camp, 1.1); await shot(page, size, '03-camp'); }
       await frame(page, home, 0.45); await shot(page, size, '04-out-0.45');
       await frame(page, home, 0.28); await shot(page, size, '05-out-0.28');
-      await lens(page, 'Resources');
-      await frame(page, home, 0.9); await shot(page, size, '06-resources');
-      await frame(page, home, 0.45); await shot(page, size, '07-resources-out');
       await lens(page, 'Yields');
       await frame(page, home, 1.1); await shot(page, size, '08-yields');
       if (setup.settler && setup.settlerAt) {

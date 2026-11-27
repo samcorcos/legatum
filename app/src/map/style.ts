@@ -81,8 +81,8 @@ export interface MapStyle {
   /** The Yam Relay Station's landmark (`yamRelayStation.ts`): rhumb lines across the holder's land and the compass-rose plaque. */
   hall: { plaque: number; plaqueRim: number; rhumbStart: number; rhumbEnd: number; rhumbStartFar: number; rhumbEndFar: number; remembered: number; reach: number };
   /** Lens washes: translucent over the terrain, with only a thin accent line stronger. */
-  lens: { wash: number; faded: number; rim: number; rimAlpha: number; ink: string; paper: string; ownerWash: number; badge: string; badgeText: string; settle: Record<SiteBand, string>; /** How much of each band's colour covers the ground: Poor is a faint tint, Exceptional nearly opaque. */ settleAlpha: Record<SiteBand, number>; tint: { ruin: string; easy: string; rough: string; blocked: string; threat: string; edge: string } };
-  /** Resource categories shared by far-zoom marks and the Resources overlay. */
+  lens: { wash: number; faded: number; rim: number; ink: string; paper: string; badge: string; badgeText: string; settle: Record<SiteBand, string>; /** How much of each band's colour covers the ground: Poor is a faint tint, Exceptional nearly opaque. */ settleAlpha: Record<SiteBand, number> };
+  /** Resource categories for far-zoom marks. */
   resources: { bonus: string; strategic: string };
   /** Overlay inks: route, selection, reach, labels. */
   ink: {
@@ -186,7 +186,7 @@ export const ATLAS: MapStyle = {
   barb: { plate: '#d8cdb3', ink: '#2b2419', blood: '#9a3322' },
   pen: { hair: 0.6, thin: 1, line: 1.5, heavy: 2.2 },
   hall: { plaque: 0.5, plaqueRim: 0.85, rhumbStart: 0.62, rhumbEnd: 0.18, rhumbStartFar: 0.5, rhumbEndFar: 0.14, remembered: 0.6, reach: 6.2 },
-  lens: { wash: 0.6, faded: 0.38, rim: 1, rimAlpha: 0.8, ink: '#2b2419', paper: '#f5eedb', ownerWash: 0.3, badge: '#704509', badgeText: '#fff8df', settle: { Poor: '#17a05e', Fair: '#0e8a4c', Good: '#097238', Great: '#06552c', Exceptional: '#033820' }, settleAlpha: { Poor: 0.26, Fair: 0.5, Good: 0.66, Great: 0.77, Exceptional: 0.84 }, tint: { ruin: '#ad7924', easy: '#268064', rough: '#b27936', blocked: '#555566', threat: '#bc3949', edge: '#287f9d' } },
+  lens: { wash: 0.6, faded: 0.38, rim: 1, ink: '#2b2419', paper: '#f5eedb', badge: '#704509', badgeText: '#fff8df', settle: { Poor: '#17a05e', Fair: '#0e8a4c', Good: '#097238', Great: '#06552c', Exceptional: '#033820' }, settleAlpha: { Poor: 0.26, Fair: 0.5, Good: 0.66, Great: 0.77, Exceptional: 0.84 } },
   resources: { bonus: '#3f8a5c', strategic: '#b3392b' },
   ink: {
     route: '#9a3322',

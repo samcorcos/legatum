@@ -430,7 +430,6 @@ fn scope(o: &Order) -> Scope {
         | Order::SetCityAutomation { city, .. }
         | Order::SetProductionQueue { city, .. }
         | Order::BuyItem { city, .. }
-        | Order::HireCompany { city, .. }
         | Order::BuyTile { city, .. } => Scope::City(city.0),
         Order::SetResearch { .. }
         | Order::SetResearchQueue { .. }

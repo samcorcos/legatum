@@ -33,20 +33,14 @@ import { Settings } from './lobby/Settings';
 import { randomSeed } from './lobby/randomSeed';
 import { rememberPlayerName, savedPlayerName } from '../platform/online';
 import { HOST_AWAY } from '../platform/relayLobby';
-import { hostedRoomId } from '../net/hosting';
-import { listedRoomName } from '../net/roomName';
+import { hostedJoinCode, hostedRoomId } from '../net/hosting';
+import { InviteCard } from '../ui/InviteCard';
 import '../lobby.css';
 
 const TITLES: Record<LobbyMode, string> = { solo: 'Single Player', host: 'Game room' };
 function forgetHostRoom(roomId: string | undefined) {
   const saved = rememberedSeat();
   if (roomId && saved?.seat === 0 && saved.roomId === roomId) rememberSeat(null);
-}
-
-
-/** Once the host's room is open: the game's name as the public list shows it, so the host can tell friends which one to join. */
-function listedLine(roomId: string | null): string | undefined {
-  return roomId ? `In the game list, this game is “${listedRoomName(roomId)}”.` : undefined;
 }
 
 /** An online host's first seat carries the player's saved name. */
@@ -180,13 +174,15 @@ export function LobbyScreen() {
     </>
   );
 
+  const invite = mode === 'host' && room && staging ? hostedRoomId() : null;
   return (
     <LobbyFrame
       title={TITLES[mode]}
       subtitle={mode === 'host' ? 'You are the host. Players who join take the Online player seats and choose their own faction.' : undefined}
-      note={mode === 'host' ? listedLine(room && staging ? hostedRoomId() : null) : undefined}
       onBack={back} backDisabled={!!busy} error={error} dock={dock}
     >
+      {/* Once the host's room is open, the first thing under the title is how friends find it, at every window size. */}
+      {invite && <InviteCard room={invite} code={hostedJoinCode()} />}
       <div className="lobby-body">
         <SeatsTable lobby={lobby} shown={shown} onChange={setLobby} room={staging ? { state: staging, guest: false } : undefined} />
         <aside className="lobby-side">
@@ -240,7 +236,7 @@ function useStagingHost(room: boolean, lobby: Lobby | null, writeSettings: boole
   };
 }
 
-export function LobbyFrame({ title, subtitle, note, onBack, backDisabled = false, error, dock, children }: { title: string; subtitle?: string; note?: string; onBack: () => void; backDisabled?: boolean; error: string | null; dock?: ReactNode; children: ReactNode }) {
+export function LobbyFrame({ title, subtitle, onBack, backDisabled = false, error, dock, children }: { title: string; subtitle?: string; onBack: () => void; backDisabled?: boolean; error: string | null; dock?: ReactNode; children: ReactNode }) {
   return (
     <div className="setup-screen lobby-screen">
       <HexBackdrop />
@@ -253,7 +249,6 @@ export function LobbyFrame({ title, subtitle, note, onBack, backDisabled = false
           <div />
         </div>
         {subtitle && <p className="setup-lede lobby-role">{subtitle}</p>}
-        {note && <p className="setup-lede lobby-listed">{note}</p>}
         {error === HOST_AWAY ? (
           <div className="toast bad inline host-away" role="status">
             <div>{error}</div>

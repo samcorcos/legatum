@@ -6,7 +6,6 @@ import { siegeTier } from '../combat';
 import { aWorks, fixClause, supplyPerMine, withArticle } from '../resources';
 import { strengthBonus } from '../promotion';
 import { siegeSelected, upgradeSelected } from '../commands';
-import { isCompany } from '../company';
 import { tileIndex } from '../hex';
 import { Amounts } from './Amounts';
 import { goldOnHand } from './productionPurchases';
@@ -154,8 +153,6 @@ export type UpgradeCheck = {
 export function upgradeCheck(unit: UnitView, view: PlayerView, gold: number, reserved = new Map<Resource, number>()): UpgradeCheck | null {
   const to = unit.upgrade_to ?? UNIT_STATS[unit.kind].upgradesTo;
   if (!to) return null;
-  // Core refuses it: a Company is replaced by hiring the next kind.
-  if (isCompany(unit)) return { to, cost: null, needs: [], need: null, blocker: 'A hired Company cannot be upgraded: hire the next one instead' };
   const tech = UNIT_STATS[to].requires;
   const hasTech = !tech || view.research.known.includes(tech);
   const inTerritory = view.tiles[tileIndex(unit.pos, view.width, view.height)]?.owner === view.me;
