@@ -1762,7 +1762,7 @@ exports[`eras: core behavior > refuses and accepts research orders with the same
 [
   {
     "index": 0,
-    "message": "Engineering is in the Classical era: finish the Ancient era first",
+    "message": "Engineering is in the Classical era: queue the rest of the Ancient era before it",
   },
 ]
 `;

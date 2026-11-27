@@ -242,6 +242,18 @@ pub fn researchable(p: &Player, tech: TechId) -> bool {
     !p.techs.contains(&tech) && era_of_tech(tech) == current_era(&p.techs)
 }
 
+/// The era a queued technology must wait behind, if the queue breaks the gate there: a later-era
+/// technology may be queued only after every unknown technology of the eras before it (a queue
+/// is researched in order, so the gate still holds when it comes up). `None` when `queue[index]`
+/// is legal at its place.
+pub fn queue_gap(known: &BTreeSet<TechId>, queue: &[TechId], index: usize) -> Option<u8> {
+    let tech = queue[index];
+    let mut ahead = known.clone();
+    ahead.extend(queue[..index].iter().copied());
+    let open = current_era(&ahead);
+    (era_of_tech(tech) > open).then_some(open)
+}
+
 /// Gives `player` a technology: records it, emits `TechResearched`, and emits `EraEntered` for
 /// each era the empire enters because of it. The one way a technology is learned.
 pub fn learn(

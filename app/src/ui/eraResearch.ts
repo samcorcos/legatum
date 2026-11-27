@@ -116,6 +116,59 @@ export function appendToQueue(queue: readonly TechId[], tech: TechId): TechId[] 
   return queue.includes(tech) ? [...queue] : [...queue, tech];
 }
 
+// ---- Queueing across eras -------------------------------------------------------------------
+// Core `eras::queue_gap`: a later-era tech may be queued only behind every unknown tech of the eras before
+// it, so the queue is researched in era order and the strict gate still holds when each one comes up.
+
+/** The first era with an unknown tech, for an empire knowing `known`. */
+function openEra(r: Pick<ResearchView, 'catalog'>, known: ReadonlySet<TechId>): number {
+  let era = Infinity;
+  for (const t of r.catalog) if (!known.has(t.tech) && t.era < era) era = t.era;
+  return era === Infinity ? Math.max(0, ...r.catalog.map((t) => t.era)) : era;
+}
+
+/** The era `queue[index]` must wait behind (it breaks the gate there), or null when it is legal at its place. */
+export function queueGap(r: Pick<ResearchView, 'catalog' | 'known'>, queue: readonly TechId[], index: number): number | null {
+  const ahead = new Set([...r.known, ...queue.slice(0, index)]);
+  const era = r.catalog.find((t) => t.tech === queue[index])?.era ?? 0;
+  const open = openEra(r, ahead);
+  return era > open ? open : null;
+}
+
+/** The queue cut at the first tech that breaks the gate: what is left after a removal or a move. */
+export function legalQueue(r: Pick<ResearchView, 'catalog' | 'known'>, queue: readonly TechId[]): TechId[] {
+  const cut = queue.findIndex((_, i) => queueGap(r, queue, i) !== null);
+  return cut < 0 ? [...queue] : queue.slice(0, cut);
+}
+
+/** The unknown, unqueued techs of the eras before `tech`'s, in era order and cheapest first in each era:
+ * what must be queued before it. Empty for a tech of the current era. */
+export function missingBefore(r: Pick<ResearchView, 'catalog' | 'known'>, queue: readonly TechId[], tech: TechId): TechId[] {
+  const era = r.catalog.find((t) => t.tech === tech)?.era ?? 0;
+  const have = new Set([...r.known, ...queue]);
+  return r.catalog.filter((t) => t.era < era && !have.has(t.tech))
+    .map((t, i) => ({ t, i }))
+    .sort((a, b) => a.t.era - b.t.era || a.t.cost.total - b.t.cost.total || a.i - b.i)
+    .map(({ t }) => t.tech);
+}
+
+/** Queue `tech` at the end, with every tech it must wait behind queued just before it. */
+export function queueThrough(r: Pick<ResearchView, 'catalog' | 'known'>, queue: readonly TechId[], tech: TechId): TechId[] {
+  if (queue.includes(tech) || r.known.includes(tech)) return [...queue];
+  return [...queue, ...missingBefore(r, queue, tech), tech];
+}
+
+/** Take `tech` out of the queue, and any later-era tech that was waiting behind it. */
+export function removeFromQueue(r: Pick<ResearchView, 'catalog' | 'known'>, queue: readonly TechId[], tech: TechId): TechId[] {
+  return legalQueue(r, queue.filter((t) => t !== tech));
+}
+
+export function queueRemovalHint(r: Pick<ResearchView, 'catalog' | 'known'>, queue: readonly TechId[], tech: TechId): string {
+  return queue.length - removeFromQueue(r, queue, tech).length > 1
+    ? 'Remove from the queue, including later-era technologies that need it.'
+    : 'Remove from the queue';
+}
+
 /** The auto-order: every researchable tech, cheapest first (discounted ones lead), ties in the era's order. */
 export function cheapestFirst(r: ResearchView): TechId[] {
   return currentEraTechs(r).filter((t) => t.researchable)
