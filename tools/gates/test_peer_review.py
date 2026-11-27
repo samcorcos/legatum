@@ -1,5 +1,7 @@
 """Security boundaries for the trusted-base peer review gate (no GitHub writes)."""
 import copy
+import os
+import json
 import sys
 import subprocess
 import tempfile
@@ -114,26 +116,51 @@ class VerdictTests(unittest.TestCase):
         row["body"] = "Approval withdrawn"
         self.assertTrue(gate.evaluate([row], HEAD, {"chatgpt"}, set()))
 
-    def test_identity(self):
+    def test_identity_and_human_required_provenance(self):
         self.assertEqual(gate.identity(pr(), REPOSITORY), {"chatgpt"})
-        for branch in ["chatgpt", "chatgpt/", "claude/task"]:
+        rows = []
+        for branch in ["chatgpt", "chatgpt/", "claude/task", "fix/task"]:
             row = pr()
             row["head"]["ref"] = branch
-            with self.assertRaises(ValueError):
-                gate.identity(row, REPOSITORY)
-        for label in ["author:unknown", "changes-requested"]:
+            rows.append(row)
+        for labels in [[], [{"name": "author:unknown"}]]:
             row = pr()
-            row["labels"].append({"name": label})
+            row["labels"] = labels
+            rows.append(row)
+        for repo in [{"full_name": "outsider/fork"}, None]:
+            row = pr()
+            row["head"]["repo"] = repo
+            rows.append(row)
+        row = pr()
+        row["user"]["login"] = "outside-user"
+        rows.append(row)
+        for row in rows:
+            with self.subTest(row=row):
+                self.assertIsNone(gate.identity(row, REPOSITORY))
+        for field, value in [("ref", "other"), ("repo", {"full_name": "outsider/repo"}), ("sha", "bad")]:
+            row = pr()
+            row["base"][field] = value
             with self.assertRaises(ValueError):
                 gate.identity(row, REPOSITORY)
         row = pr()
-        row["labels"].append({"name": "needs-human"})
-        self.assertEqual(gate.identity(row, REPOSITORY), {"chatgpt"})
-        for side, field, value in [("head", "repo", {"full_name": "outsider/fork"}), ("base", "ref", "other")]:
-            row = pr()
-            row[side][field] = value
-            with self.assertRaises(ValueError):
-                gate.identity(row, REPOSITORY)
+        row["labels"].append({"name": "author:claude"})
+        self.assertEqual(gate.identity(row, REPOSITORY), {"chatgpt", "claude"})
+
+    def test_human_approval_still_requires_specialists_and_no_failures(self):
+        human = comment("human")
+        self.assertEqual(gate.parse_comment(human), ("human", HEAD, {"peer": "PASS"}))
+        for authors in [None, {"chatgpt", "gemini", "claude"}]:
+            self.assertEqual(gate.evaluate([human], HEAD, authors, set()), [])
+            self.assertIn("Missing specialist", gate.evaluate([human], HEAD, authors, {DOCS})[0])
+            rows = [human, comment("chatgpt", f"{DOCS}: PASS", number=2)]
+            self.assertEqual(gate.evaluate(rows, HEAD, authors, {DOCS}), [])
+            rows.append(comment("gemini", "peer: FAIL", number=3))
+            self.assertIn("Outstanding failures", gate.evaluate(rows, HEAD, authors, {DOCS})[0])
+        self.assertTrue(gate.evaluate([comment()], HEAD, None, set()))
+        human["user"]["login"] = "outside-user"
+        self.assertIsNone(gate.parse_comment(human))
+        self.assertTrue(gate.evaluate([human], HEAD, None, set()))
+        self.assertTrue(gate.evaluate([comment("human", sha=BASE)], HEAD, None, set()))
 
 
 class EvaluationTests(unittest.TestCase):
@@ -172,13 +199,59 @@ class EvaluationTests(unittest.TestCase):
     def test_classifier_failure_and_missing_specialists_fail_closed(self):
         def broken(*_):
             raise RuntimeError("git diff failed")
-        self.assertFalse(self.run_gate(FakeAPI(), broken))
+        api = FakeAPI()
+        with self.assertRaisesRegex(RuntimeError, "git diff failed"):
+            gate.run(api, 381, broken)
+        self.assertEqual(api.calls[-1][2]["conclusion"], "failure")
         self.assertFalse(self.run_gate(FakeAPI(), lambda *_: {DOCS}))
 
     def test_comments_read_failure_completes_check_as_failure(self):
         api = FakeAPI()
         with patch.object(api, "comments", side_effect=RuntimeError("GitHub unavailable")):
+            with self.assertRaisesRegex(RuntimeError, "GitHub unavailable"):
+                gate.run(api, 381, lambda *_: set())
+        self.assertEqual(api.calls[-1][2]["conclusion"], "failure")
+
+    def test_closed_pr_skips_post_and_concurrent_closure_cancels(self):
+        api = FakeAPI()
+        api.initial["state"] = "closed"
+        self.assertIsNone(gate.run(api, 381))
+        self.assertEqual(len(api.calls), 1)
+        for rows in [[], [comment()]]:
+            closed = pr()
+            closed["state"] = "closed"
+            api = FakeAPI(rows, refreshed_pr=closed)
+            self.assertFalse(gate.run(api, 381, lambda *_: set()))
+            self.assertEqual(api.calls[-1][2]["conclusion"], "cancelled")
+
+    def test_main_waiting_is_success_but_operational_failure_raises(self):
+        with tempfile.TemporaryDirectory() as directory:
+            event = Path(directory) / "event.json"
+            event.write_text(json.dumps({"inputs": {"pr": "381"}}))
+            env = {"GITHUB_EVENT_PATH": str(event), "GITHUB_EVENT_NAME": "workflow_dispatch",
+                   "GITHUB_REPOSITORY": REPOSITORY, "GITHUB_TOKEN": "test"}
+            api = FakeAPI()
+            api.initial["draft"] = True
+            with patch.dict(os.environ, env), patch.object(gate, "GitHub", return_value=api):
+                self.assertEqual(gate.main(), 0)
+            self.assertEqual(api.calls[-1][2]["conclusion"], "failure")
+            api = FakeAPI()
+            run = gate.run
+            with patch.dict(os.environ, env), patch.object(gate, "GitHub", return_value=api), \
+                    patch.object(api, "comments", side_effect=RuntimeError("API unavailable")), \
+                    patch.object(gate, "run", side_effect=lambda api, number: run(api, number, lambda *_: set())):
+                with self.assertRaisesRegex(RuntimeError, "API unavailable"):
+                    gate.main()
+            self.assertEqual(api.calls[-1][2]["conclusion"], "failure")
+
+    def test_human_only_route_and_noncanonical_approval(self):
+        for body in [comment()["body"], "Example:\n" + comment("human")["body"], comment("human", sha=BASE)["body"]]:
+            api = FakeAPI([{**comment(), "body": body}])
+            api.initial["head"]["repo"]["full_name"] = "outside/fork"
             self.assertFalse(self.run_gate(api))
+        api = FakeAPI([comment("human", f"peer: PASS\n{DOCS}: PASS")])
+        api.initial["head"]["repo"]["full_name"] = "outside/fork"
+        self.assertTrue(self.run_gate(api, lambda *_: {DOCS}))
 
     def test_strict_git_errors_do_not_become_empty_diffs(self):
         with patch.object(gate.subprocess, "run") as process:
@@ -212,13 +285,21 @@ class EvaluationTests(unittest.TestCase):
             git(source, "commit", "-m", "Untrusted proposed changes")
             head = git(source, "rev-parse", "HEAD")
             git(source, "update-ref", "refs/pull/381/head", head)
+            git(source, "checkout", "master")
+            (source / "README.md").write_text("Trusted master advanced\n")
+            git(source, "add", ".")
+            git(source, "commit", "-m", "Advance trusted master")
+            trusted = git(source, "rev-parse", "HEAD")
+            self.assertNotEqual(trusted, base)
             subprocess.check_call(["git", "clone", "--quiet", "--branch", "master", str(source), str(checkout)])
             row = pr()
             row["base"]["sha"], row["head"]["sha"] = base, head
+            row["head"]["repo"]["full_name"] = "outside/fork"
+            self.assertIsNone(gate.identity(row, REPOSITORY))
             roles = gate.required_roles(row, 381, str(checkout))
             self.assertIn(DOCS, roles)
             self.assertIn("legatum-plain-language-reviewer", roles)
-            self.assertEqual(git(checkout, "rev-parse", "HEAD"), base)
+            self.assertEqual(git(checkout, "rev-parse", "HEAD"), trusted)
             self.assertFalse((checkout / "tools/gates/check.py").exists())
 
     def test_classifier_uses_strict_git_and_restores_helper(self):

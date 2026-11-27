@@ -28,7 +28,7 @@ FAMILIES = frozenset({"claude", "chatgpt", "gemini"})
 TRUSTED_USERS = frozenset({"samcorcos"})
 ROLES = frozenset(check.REVIEWERS.values()) | {"peer"}
 SHA = re.compile(r"[0-9a-f]{40}\Z")
-HEADER = re.compile(r"Legatum review: (claude|chatgpt|gemini) at ([0-9a-f]{40})\Z")
+HEADER = re.compile(r"Legatum review: (claude|chatgpt|gemini|human) at ([0-9a-f]{40})\Z")
 VERDICT = re.compile(r"([a-z-]+): (PASS|FAIL)\Z")
 
 
@@ -108,24 +108,19 @@ def parse_comment(comment):
 
 
 def identity(pr, repository):
-    """Validate supported provenance and return all recorded author families."""
-    if pr["head"]["repo"]["full_name"] != repository or pr["base"]["repo"]["full_name"] != repository:
-        raise ValueError("Fork pull requests require the manual review route")
-    if pr["user"]["login"] not in TRUSTED_USERS:
-        raise ValueError("Outside authors require the manual review route")
-    if pr["base"]["ref"] != "master":
-        raise ValueError("Only master-targeted pull requests are supported")
+    """Return agent authors, or None when explicit maintainer approval is required."""
+    if pr["base"]["repo"]["full_name"] != repository or pr["base"]["ref"] != "master":
+        raise ValueError("Only pull requests targeting this repository's master are supported")
     if not SHA.fullmatch(pr["head"]["sha"]) or not SHA.fullmatch(pr["base"]["sha"]):
         raise ValueError("Invalid commit SHA")
+    if ((pr["head"].get("repo") or {}).get("full_name") != repository
+            or pr["user"]["login"] not in TRUSTED_USERS):
+        return None
     labels = {x["name"] for x in pr["labels"]}
     authors = {label.removeprefix("author:") for label in labels if label.startswith("author:")}
     prefix, separator, suffix = pr["head"]["ref"].partition("/")
     if not authors or not authors <= FAMILIES or prefix not in authors or not separator or not suffix:
-        raise ValueError("Recognized author labels must include the branch's model family")
-    if pr["state"] != "open" or pr["draft"]:
-        raise ValueError("Pull request must be open and ready for review")
-    if "changes-requested" in labels:
-        raise ValueError("changes-requested must be resolved before approval")
+        return None
     return authors
 
 
@@ -146,7 +141,8 @@ def evaluate(comments, sha, authors, required):
     failures = [f"{family}/{role}" for (family, role), (_, verdict) in latest.items() if verdict == "FAIL"]
     missing = [role for role in sorted(required) if not any(
         r == role and verdict == "PASS" for (_, r), (_, verdict) in latest.items())]
-    peer = any(role == "peer" and family not in authors and verdict == "PASS"
+    peer = any(role == "peer" and (family == "human" or (authors is not None and family not in authors))
+               and verdict == "PASS"
                for (family, role), (_, verdict) in latest.items())
     reasons = []
     if failures:
@@ -154,7 +150,8 @@ def evaluate(comments, sha, authors, required):
     if missing:
         reasons.append("Missing specialist verdicts: " + ", ".join(missing))
     if not peer:
-        reasons.append("Missing different-family peer approval")
+        reasons.append("Missing explicit human peer approval" if authors is None
+                       else "Missing different-family peer or explicit human approval")
     return reasons
 
 
@@ -170,11 +167,13 @@ def strict_git(repo, *args, binary=False):
 
 
 def required_roles(pr, number, repo="."):
-    base, head = pr["base"]["sha"], pr["head"]["sha"]
-    if strict_git(repo, "rev-parse", "HEAD").strip() != base:
-        raise ValueError("Evaluator checkout must be the current trusted master commit")
+    # The workflow checks out trusted master. GitHub's PR base SHA may lag behind it.
+    base = strict_git(repo, "rev-parse", "HEAD").strip()
+    head = pr["head"]["sha"]
+    if not SHA.fullmatch(base) or not SHA.fullmatch(head):
+        raise ValueError("Invalid commit SHA")
     ref = f"refs/peer-review/{number}"
-    strict_git(repo, "fetch", "--no-tags", "--no-recurse-submodules", "origin", base,
+    strict_git(repo, "fetch", "--no-tags", "--no-recurse-submodules", "origin",
                f"+refs/pull/{number}/head:{ref}")
     if strict_git(repo, "rev-parse", ref).strip() != head:
         raise ValueError("Pull request head changed during fetch")
@@ -199,38 +198,56 @@ def fingerprint(pr, comments):
     metadata["author"] = pr["user"]["login"]
     metadata["labels"] = sorted(label["name"] for label in pr["labels"])
     for side in ("head", "base"):
-        metadata[side] = [pr[side]["sha"], pr[side]["ref"], pr[side]["repo"]["full_name"]]
+        metadata[side] = [pr[side]["sha"], pr[side]["ref"], (pr[side].get("repo") or {}).get("full_name")]
     current = sorted((c["id"], c.get("body"), c.get("updated_at"), c.get("user", {}).get("login")) for c in comments)
     return json.dumps([metadata, current], sort_keys=True)
 
 
 def run(api, number, classify=required_roles):
     pr = api.request("GET", f"/pulls/{number}")
+    if pr["state"] != "open":
+        print("Closed pull request; no check published.")
+        return None
     sha = pr["head"]["sha"]
     if not SHA.fullmatch(sha):
         raise ValueError("Invalid PR head")
     check_run = api.request("POST", "/check-runs", {"name": "peer-review", "head_sha": sha,
                            "status": "in_progress", "output": {"title": "Reviewing current approvals", "summary": "Checking exact-head peer and specialist verdicts."}})
     reasons = []
+    operational_error = None
+    closed = False
     try:
         authors = identity(pr, api.repository)
-        required = classify(pr, number)
-        comments = api.comments(number)
-        reasons = evaluate(comments, sha, authors, required)
-        if not reasons:
-            refreshed = api.request("GET", f"/pulls/{number}")
+        labels = {label["name"] for label in pr["labels"]}
+        if pr["draft"]:
+            reasons = ["Pull request must be ready for review"]
+        elif "changes-requested" in labels:
+            reasons = ["changes-requested must be resolved before approval"]
+        else:
+            required = classify(pr, number)
+            comments = api.comments(number)
+            reasons = evaluate(comments, sha, authors, required)
+        # Recheck even when waiting for reviews, so a concurrent close never stamps a failure.
+        refreshed = api.request("GET", f"/pulls/{number}")
+        closed = refreshed["state"] != "open"
+        if not reasons and not closed:
             refreshed_comments = api.comments(number)
             if fingerprint(pr, comments) != fingerprint(refreshed, refreshed_comments):
                 reasons = ["PR head, metadata or comments changed during evaluation; rerun required"]
     except Exception as error:
+        operational_error = error
         reasons = [f"Review evaluation failed: {type(error).__name__}: {error}"]
-    success = not reasons
-    summary = "\n".join(reasons) if reasons else "Required specialist verdicts and a different-family peer PASS match the exact current head."
+    success = not reasons and not closed
+    summary = ("Pull request closed during evaluation; check cancelled." if closed else
+               "\n".join(reasons) if reasons else
+               "Required specialist verdicts and an eligible peer PASS match the exact current head.")
     api.request("PATCH", f"/check-runs/{check_run['id']}", {"status": "completed",
-                "conclusion": "success" if success else "failure", "output": {
-                    "title": "Review requirements satisfied" if success else "Review requirements not satisfied",
+                "conclusion": "cancelled" if closed else "success" if success else "failure", "output": {
+                    "title": "Pull request closed" if closed else "Review requirements satisfied" if success else "Review requirements not satisfied",
                     "summary": summary[:60000]}})
     print(summary)
+    if operational_error is not None:
+        raise operational_error
     return success
 
 
@@ -240,7 +257,8 @@ def main():
     if number is None:
         return 0
     api = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"])
-    return 0 if run(api, number) else 1
+    run(api, number)
+    return 0
 
 
 if __name__ == "__main__":
