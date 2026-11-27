@@ -85,7 +85,6 @@ export const settlementSite = (view: PlayerView, unit: UnitView, pos: Hex, reser
 export const settlementSites = (view: PlayerView, unit: UnitView, reserved: Hex[] = [], only?: Hex): SettlementSite[] =>
   only ? [settlementSite(view, unit, only, reserved)].filter((site): site is SettlementSite => site !== null)
     : engineWork(() => JSON.parse(Game.settlement_sites_full(JSON.stringify(view), unit.id, JSON.stringify(reserved))));
-export const knownThreats = (view: PlayerView): number[] => engineWork(() => JSON.parse(Game.known_threats(JSON.stringify(view))));
 const reachCache = new WeakMap<PlayerView, Map<string, Set<number>>>();
 /**
  * Which of these known enemies can reach `pos` by moving next turn. One engine call for all of them, remembered per view:

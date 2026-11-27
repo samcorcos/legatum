@@ -68,7 +68,7 @@ describe('marks keep clear of a neighbouring town', () => {
   it("draws no yield cluster on a city's own tile", () => {
     const tiles = Array.from({ length: 4 }, () => ({ explored: true, visible: true, terrain: 'Grassland', owner: 0 }));
     const view = { width: 2, height: 2, me: 0, players: [{ id: 0, faction: 'Rome' }], tiles, cities: [{ pos: { q: 0, r: 0 } }] } as unknown as PlayerView;
-    const out = buildOverlayTiles(view, { yields: true, resources: false, borders: false });
+    const out = buildOverlayTiles(view, { yields: true });
     expect(out.yields.map((t) => t.index)).not.toContain(0);
     expect(out.yields.length).toBe(3);
   });

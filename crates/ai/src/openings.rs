@@ -1024,7 +1024,6 @@ impl Brain for OpeningBrain {
         p.plan_scouts();
         p.plan_military();
         p.dedupe_first_steps();
-        p.enforce_levy();
         if opening.is_some() {
             // Movement validates a simultaneous declaration, but ranged fire requires
             // an enemy in the original view. Wait until the next volley in a new war.

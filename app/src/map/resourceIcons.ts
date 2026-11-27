@@ -7,7 +7,7 @@ import { MAP_STYLES } from './style';
 import { resourceArtSprite, resourceArtUrl } from '../icons';
 import { isDormant } from '../improvements';
 import { improvementDetail } from './improvementArt';
-import { isStrategic, lackedResources } from '../resources';
+import { isStrategic } from '../resources';
 import { tileIndex } from '../hex';
 import type { PlayerView } from '../types';
 import { CITY_UNIT_DROP, STACK_LIFT, centerX, centerY, HEX_SIZE, tokenHalf } from './grid';
@@ -77,7 +77,7 @@ const INK: Record<LookId, { edge: string; face: string; paper: string; red: stri
   atlas: { edge: '#241d15', face: '#3a3025', paper: '#f1e6c9', red: '#b3392b', shadow: 'rgba(40,28,12,.4)' },
 
 };
-/** Category colours shared with the Resources overlay and its legend. */
+/** Category colours used by resource marks. */
 const CATEGORY_COLOR = { Bonus: MAP_STYLES.atlas.resources.bonus, Strategic: MAP_STYLES.atlas.resources.strategic } as const;
 
 /**
@@ -162,37 +162,8 @@ function markImprovement(ctx: CanvasRenderingContext2D, x: number, y: number, ra
   ctx.setLineDash([]);
 }
 
-/** Whose land a resource is in, as the Resources overlay rings it: a thick solid ring (yours), a thin one (unclaimed), a double ring (foreign). Shape carries it; the ring's colour is the resource's kind, and the dashed dark ring stays "not improved yet". */
-export function emphasisRing(owner: number | null, me: number): { width: number; double: boolean; owned: 'yours' | 'unclaimed' | 'foreign' } {
-  return owner === null ? { width: 1.8, double: false, owned: 'unclaimed' } : owner === me ? { width: 2.8, double: false, owned: 'yours' } : { width: 1.6, double: true, owned: 'foreign' };
-}
-
-/** The Resources overlay's "you lack this" badge: a red disc with a white exclamation mark at a medallion's upper right, drawn only on deposits someone else holds or nobody does, of a strategic resource your supply is short of. */
-function drawWanted(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, look: LookId) {
-  const r = Math.max(3.4, radius * 0.5);
-  const cx = x + radius * 0.8, cy = y - radius * 0.8;
-  ctx.beginPath(); ctx.arc(cx, cy, r + 1, 0, Math.PI * 2); ctx.fillStyle = INK[look].paper; ctx.fill();
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = INK[look].red; ctx.fill();
-  ctx.fillStyle = INK[look].paper;
-  const w = Math.max(1, r * 0.3);
-  ctx.fillRect(cx - w / 2, cy - r * 0.6, w, r * 0.75);
-  ctx.beginPath(); ctx.arc(cx, cy + r * 0.5, w * 0.7, 0, Math.PI * 2); ctx.fill();
-}
-
-function drawEmphasis(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, strategic: boolean, owner: number | null, me: number, look: LookId) {
-  const ring = emphasisRing(owner, me);
-  const color = strategic ? CATEGORY_COLOR.Strategic : CATEGORY_COLOR.Bonus;
-  // A paper edge outside the ring keeps it readable on dark woods and strong lens tints.
-  const reach = radius + 1.5 + (ring.double ? ring.width * 2 + 1.4 : ring.width);
-  ctx.beginPath(); ctx.arc(x, y, reach + 0.7, 0, Math.PI * 2);
-  ctx.strokeStyle = INK[look].paper; ctx.globalAlpha *= 0.85; ctx.lineWidth = 1.4; ctx.stroke(); ctx.globalAlpha /= 0.85;
-  ctx.strokeStyle = color; ctx.lineWidth = ring.width;
-  ctx.beginPath(); ctx.arc(x, y, radius + 1.5 + ring.width / 2, 0, Math.PI * 2); ctx.stroke();
-  if (ring.double) { ctx.beginPath(); ctx.arc(x, y, radius + 1.5 + ring.width * 1.5 + 1.4, 0, Math.PI * 2); ctx.stroke(); }
-}
-
-/** Draw every known resource. Runs before units, banners and routes so they stay on top. `emphasis`: the Resources overlay rings each one. */
-export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerView, cam: Camera, width: number, height: number, dpr: number, look: LookId, covers: readonly Cover[] = [], emphasis = false, towns: readonly (Cover & { tile: number })[] = []) {
+/** Draw every known resource before units, banners and routes. */
+export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerView, cam: Camera, width: number, height: number, dpr: number, look: LookId, covers: readonly Cover[] = [], towns: readonly (Cover & { tile: number })[] = []) {
   const r = HEX_SIZE * cam.zoom;
   const detail = resourceDetail(r);
   const art = improvementDetail(r) === 'art';
@@ -202,8 +173,6 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
   for (const u of view.units) { const k = tileIndex(u.pos, W, view.height); counts.set(k, (counts.get(k) ?? 0) + 1); }
   const open = medallionSlots(r, false), town = medallionSlots(r, true);
   const dot = Math.max(2.5, r * 0.15);
-  const lacked = emphasis ? lackedResources(view.supply) : null;
-  const wanted = (res: string, owner: number | null) => !!lacked?.has(res as never) && owner !== view.me;
   const myFaction = view.players.find((p) => p.id === view.me)?.faction;
   ctx.save();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -220,11 +189,9 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
     const ringed = !!t.improvement && !art;
     if (detail === 'dots') {
       if (dormant) ctx.globalAlpha *= FAR_DORMANT_FADE;
-      const d = emphasis ? dot * 1.3 : dot;
-      if (emphasis) drawEmphasis(ctx, x, cy - r * 0.62, d, strategic, t.owner, view.me, look);
+      const d = dot;
       drawFarMark(ctx, x, cy - r * 0.62, d, res, look);
-      markImprovement(ctx, x, cy - r * 0.62, d + (emphasis ? 5 : 1.5), dormant, ringed, t.visible, look);
-      if (wanted(res, t.owner)) drawWanted(ctx, x, cy - r * 0.62, d * 1.6, look);
+      markImprovement(ctx, x, cy - r * 0.62, d + 1.5, dormant, ringed, t.visible, look);
       continue;
     }
     const slots = cities.has(i) ? town : open;
@@ -236,21 +203,14 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
       // No painted medallion (still loading, or none made for this resource): its far-tier mark stands in, so the deposit is never invisible.
       if (resourceArtUrl(res, 64)) continue; // The map is redrawn when the image loads.
       if (dormant) ctx.globalAlpha *= FAR_DORMANT_FADE;
-      if (emphasis) drawEmphasis(ctx, x + p.dx, cy + p.dy, p.radius * 1.15, strategic, t.owner, view.me, look);
       drawFarMark(ctx, x + p.dx, cy + p.dy, p.radius * 0.85, res, look);
-      markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + (emphasis ? 8.2 : 2), dormant, ringed, t.visible, look);
-      if (wanted(res, t.owner)) drawWanted(ctx, x + p.dx, cy + p.dy, p.radius * 1.3, look);
+      markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + 2, dormant, ringed, t.visible, look);
       continue;
     }
     const size = s.width / dpr;
     // Dormant: your own unimproved resource yields nothing yet, so its medallion is faded and ringed with a dashed pen.
     if (dormant) ctx.globalAlpha *= art ? 0.62 : FAR_DORMANT_FADE;
-    if (emphasis) {
-      ctx.beginPath(); ctx.arc(x + p.dx, cy + p.dy, p.radius + 2, 0, Math.PI * 2);
-      ctx.fillStyle = INK[look].paper; ctx.globalAlpha *= 0.8; ctx.fill(); ctx.globalAlpha /= 0.8;
-    }
     ctx.drawImage(s, x + p.dx - size / 2, cy + p.dy - size / 2, size, size);
-    if (emphasis) drawEmphasis(ctx, x + p.dx, cy + p.dy, p.radius, strategic, t.owner, view.me, look);
     // Keep the map's strategic-resource cue visible over the painted brass frame.
     if (strategic) {
       ctx.beginPath();
@@ -259,8 +219,7 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
       ctx.lineWidth = Math.max(0.8, 0.8 * dpr);
       ctx.stroke();
     }
-    markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + (emphasis ? 8.2 : 2), dormant, ringed, t.visible, look);
-    if (wanted(res, t.owner)) drawWanted(ctx, x + p.dx, cy + p.dy, p.radius * 1.3, look);
+    markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + 2, dormant, ringed, t.visible, look);
   }
   ctx.restore();
 }

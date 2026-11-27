@@ -353,22 +353,17 @@ describe('GameScreen keyboard scope', () => {
     expect(gameplayFocusAllowed(document.activeElement)).toBe(true);
   });
 
-  it('Y, O and N toggle the Yields, Resources and Borders overlays from the map; R stays the ranged attack', () => {
+  it('Y toggles Yields; O and N have no overlay action, and R stays ranged attack', () => {
     vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {} });
     reloadOverlays();
     try {
-      press(map, 'y'); press(map, 'O');
-      expect(getOverlays()).toEqual({ yields: true, resources: true, borders: false });
-      press(map, 'n'); press(map, 'Y');
-      expect(getOverlays()).toEqual({ yields: false, resources: true, borders: true });
+      press(map, 'y'); press(map, 'O'); press(map, 'n');
+      expect(getOverlays()).toEqual({ yields: true });
+      press(map, 'Y');
+      expect(getOverlays()).toEqual({ yields: false });
       expect(toggleRangedMode).not.toHaveBeenCalled();
       press(map, 'r');
       expect(toggleRangedMode).toHaveBeenCalledOnce();
-      // A held key, a modifier or a focused control leave the overlays alone.
-      press(map, 'o', { repeat: true }); press(map, 'o', { ctrlKey: true });
-      const button = document.body.appendChild(document.createElement('button'));
-      press(button, 'o'); press(button, 'n');
-      expect(getOverlays()).toEqual({ yields: false, resources: true, borders: true });
     } finally { vi.unstubAllGlobals(); reloadOverlays(); }
   });
 

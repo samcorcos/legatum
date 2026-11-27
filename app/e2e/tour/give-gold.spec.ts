@@ -1,5 +1,5 @@
 // Co-op Gold gifts (rules 50): the diplomacy panel's "Your team" section in each state (default amount with its
-// forecast, an amount out of range, no amount, queued with Undo), the pending-orders line and the turn report lines.
+// forecast, an amount out of range, no amount, queued with Cancel), the pending-orders line and the turn report lines.
 // Run alone: `npx playwright test e2e/tour/give-gold`.
 import { test, expect } from '../fixtures';
 import { coreFixture } from '../../src/test/coreFixture';
@@ -29,7 +29,8 @@ for (const size of SIZES) test.describe(`give gold ${size.name}`, () => {
     await shot(page, size, 'g4-team-empty');
     await input.fill('120');
     await team.getByTestId('give-gold').click();
-    await expect(team.getByTestId('gift-queued')).toBeVisible();
+    await expect(team.getByTestId('gift-queued')).toContainText('Gift: you give 120 Gold');
+    await expect(team.getByTestId('gift-queued').getByRole('button', { name: 'Cancel' })).toBeVisible();
     await shot(page, size, 'g5-team-queued-undo');
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ diplomacyOpen: false }));
     await page.locator('summary', { hasText: 'Turn details' }).click();

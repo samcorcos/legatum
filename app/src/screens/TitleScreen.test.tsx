@@ -50,7 +50,7 @@ it('a game with other players continues as an online host: Continue opens Multip
   expect(button.disabled).toBe(false);
   expect(button.classList.contains('primary')).toBe(true);
   expect(button.textContent).toContain('Ada & Bo');
-  expect(button.textContent).toContain('host it online');
+  expect(button.textContent).toContain('host this save online');
   await press(button);
   expect(useGame.getState().screen).toBe('title');
   expect(useGame.getState().error).toBeNull();

@@ -183,6 +183,30 @@ it('shows the next city upkeep on the Settler build card only when it costs Gold
   expect(container.querySelector('[data-testid="settler-city-upkeep"]')).toBeNull();
 });
 
+it('shows an Indian Revenue Office upkeep saving inside its build card only when positive', async () => {
+  const { client } = await renderCity('India', undefined, 2);
+  client.debugState().players[0].techs.push('Currency');
+  const view = client.view(0);
+  const city = view.cities.find((candidate) => candidate.owner === view.me)!;
+  city.revenue_office_upkeep_savings = 2;
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  const card = container.querySelector('.production-choice[data-item="b:Market"]')!;
+  expect(card.querySelector('[data-testid="office-city-upkeep"]')?.textContent)
+    .toBe('City upkeep: saves 2 Gold a turn');
+  expect(card.querySelector('.prod-upkeep.gain')).not.toBeNull();
+  expect(card.querySelector('.production-more')?.textContent).not.toContain('saves');
+  expect(card.querySelector('[data-testid="office-remittance"]')).toBeNull();
+  city.revenue_office_remittance_gain = 4;
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('.production-choice[data-item="b:Market"] [data-testid="office-remittance"]')?.textContent)
+    .toBe('Sends 4 more Gold a turn to your treasury');
+  city.revenue_office_upkeep_savings = 0;
+  city.revenue_office_remittance_gain = undefined;
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('[data-testid="office-city-upkeep"]')).toBeNull();
+  expect(container.querySelector('[data-testid="office-remittance"]')).toBeNull();
+});
+
 it('drops the claim from the territory bar when there is no free tile', async () => {
   const { city, view } = await renderCity();
   city.detail!.next_claim = null;
@@ -327,6 +351,19 @@ it('shows every Buy price as a spend chip on the button, and the chosen buy agai
   // This fixture's treasury is short: the chosen card shows the spend against the treasury.
   const after = view.economy.gold - price;
   expect(chosen.textContent).toBe(`Costs ${price} Gold (${view.economy.gold} → ${after < 0 ? `−${-after}, debt` : after})`);
+});
+
+it('a queued Buy is named under Now producing with its price and when it arrives, and Cancel takes it back', async () => {
+  const { city } = await renderCity('Switzerland', 5000);
+  expect(container.querySelector('[data-testid="pending-purchase"]')).toBeNull();
+  const buy = container.querySelector<HTMLButtonElement>('.production-choice[data-item="u:Spearman"] .btn-buy')!;
+  const price = Number(buy.getAttribute('aria-label')!.match(/for (\d+) Gold/)![1]);
+  act(() => buy.click());
+  const line = container.querySelector('[data-testid="pending-purchase"]')!;
+  expect(line.textContent).toContain(`Buying Spearman for ${price} Gold. It arrives when the turn ends.`);
+  act(() => line.querySelector('button')!.click());
+  expect(useGame.getState().orders[0].some((o) => o.type === 'BuyItem' && o.city === city.id)).toBe(false);
+  expect(container.querySelector('[data-testid="pending-purchase"]')).toBeNull();
 });
 
 it('a Buy names the city in a notice with Undo, and Undo takes the purchase back (misclick guard)', async () => {

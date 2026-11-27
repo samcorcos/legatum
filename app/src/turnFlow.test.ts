@@ -3,7 +3,7 @@ import { cancelWarPrompt, sleepSelected } from './commands';
 import { pendingDecisions, nextDecision } from './turnFlow';
 import { FixtureClient } from './test/fixtureEngine';
 import { turnFlowFixture } from './test/turnFlowFixture';
-import { describeOrder, unitsNeedingOrders } from './orders';
+import { describeOrder, refusalLine, unitsNeedingOrders } from './orders';
 import type { Event, Order, PlayerView } from './types';
 import { useGame } from './store';
 import { queueDiplomacy } from './diplomacy';
@@ -254,6 +254,19 @@ it('treats a blocked-only queue as a pending city decision until a valid build i
   expect(pendingDecisions(view, [])).toContainEqual({ ...decision, label: `${city.name}: queue waiting (Spearman has no free spawn tile)` });
   city.detail!.production_queue = [];
   expect(pendingDecisions(view, [])).toContainEqual({ ...decision, label: `Choose what ${city.name} builds` });
+});
+
+it('names why a picked build was refused, so the Choose production prompt does not ignore the pick', () => {
+  const city = view.cities.find((c) => c.owner === view.me && c.detail && !c.detail.producing)!;
+  // Orders are checked in list order: another city's Musketman took the last spare Niter.
+  const orders: Order[] = [{ type: 'SetProductionQueue', city: city.id, queue: [{ kind: 'Unit', unit: 'Musketman' }] }];
+  const message = `${city.name} cannot start Musketman: No Niter to spare: all 4 of your Niter are in use. Bring another Niter deposit inside your borders.`;
+  expect(pendingDecisions(view, orders, [{ index: 0, message }])).toContainEqual(
+    { kind: 'city', id: city.id, label: `${city.name}: Musketman can't start: No Niter to spare`, refused: "Musketman can't start: No Niter to spare" });
+  expect(pendingDecisions(view, orders).some((d) => d.kind === 'city' && d.id === city.id)).toBe(false);
+  // The panel line drops the queue prefix and always ends its sentence before "Choose another build."
+  expect(refusalLine('Queue item 1: Thun cannot produce Musketman: Requires Gunpowder')).toBe('Thun cannot produce Musketman: Requires Gunpowder.');
+  expect(refusalLine(message)).toBe(message);
 });
 
 it('invalid production, research and unit orders cannot hide decisions; a cleared queue needs attention', () => {

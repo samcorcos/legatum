@@ -1,10 +1,9 @@
-// From the Classical era, strategic supply has an era resource: the Resources overlay, the era's supply chip with its breakdown, and the
+// From the Classical era, strategic supply has an era resource: the era's supply chip with its breakdown, and the
 // Classical and Medieval units that use 1 Iron (blocked, with the core's reason, when no Iron is supplied), in the real WASM engine.
 import { test as base, expect, type Page } from '@playwright/test';
 import { createServer } from 'vite';
 import { mkdirSync } from 'node:fs';
 import { endPlanning } from './turnActions';
-import { overlayBox } from './overlayHelpers';
 
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
@@ -110,7 +109,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     expect(errors).toEqual([]);
   });
 
-  test('resources overlay, Iron supply chip, and the units that use Iron', async ({ page }) => {
+  test('Iron supply chip and the units that use Iron', async ({ page }) => {
     test.setTimeout(90_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -153,28 +152,6 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     }
     await shot(page, `pikeman-uses-iron-${look}-${size.name}`);
 
-    // The Resources overlay lists the deposit and the tech that reveals the resources still hidden (Niter, Coal, Oil, Silicon).
-    await page.evaluate(async () => {
-      const { useGame } = await import('/src/store.ts' as string) as typeof import('../src/store');
-      useGame.getState().select(null);
-    });
-    const toggle = page.getByRole('button', { name: /^Lens: / });
-    if (phone && await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
-    const box = overlayBox(page, 'Resources');
-    await box.click();
-    // On phones the sheet stays open for a checkbox, but close and reopen it to read the key from rest.
-    await expect(box).toBeChecked();
-    // A short window keeps the key behind a button.
-    const opener = page.getByRole('button', { name: 'Overlay key' });
-    if (await opener.isVisible()) await opener.click();
-    if (phone) await expect(page.locator('.map-lenses')).toContainText('Coal: revealed by Industrialization');
-    else {
-      // Desktop: what reveals a hidden strategic resource is the ring key's tip.
-      await page.locator('.map-lenses .lens-key-row').hover();
-      await expect(page.locator('[role="tooltip"]:not([hidden])')).toContainText('Coal: revealed by Industrialization');
-      await page.mouse.move(1, 1);
-    }
-    await shot(page, `resources-overlay-${look}-${size.name}`);
     expect(errors).toEqual([]);
   });
 

@@ -20,6 +20,7 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bjoin the new game\b/i, reason: 'a hosted save carries on from its saved turn; it is not a new game (plain-language review, 2026-11-27)', instead: '"host this save online, then others join it"', source: true },
   { pattern: /\bpayer is short\b|\bis short of Gold\b/i, reason: 'vague: short of what, and when (plain-language review of deals, 2026-11-25)', instead: '"If the payer cannot pay then, the offer ends."', source: true },
   { pattern: /\bwar duties\b/i, reason: 'jargon (plain-language review of deals, 2026-11-25)', instead: 'say what the treaty does, or leave it out', source: true },
   { pattern: /\bEarliest activation\b/i, reason: 'mechanics-speak (UI review of deals, 2026-11-25)', instead: '"If they accept, it starts on turn 14."', source: true },
@@ -114,7 +115,6 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bStagnant\b/, reason: 'the city overview says "Not growing"; one word for one state', instead: 'Not growing', source: true },
   { pattern: /\bnever attacks? (?:you|the Celts)\b/i, reason: 'the Celts\' barbarian rule has one wording, board-game short (UI review, 2026-11-22)', instead: '"Barbarians don\'t attack the Celts." or "...they don\'t attack you."', source: true },
   { pattern: /\bslots? left\b|\bfree slots\b/i, reason: '"slots" is never defined for military units (UI tour 2026-11-22)', instead: '"Upkeep: free (2 more free units)"', source: true },
-  { pattern: /\bYour levies are full\b|\bUnits \d+\/\d+\b|\bMilitary units: \d+ of \d+\b/i, reason: 'the cap reads "Military units 3 / 2" (glossary: military unit); "levy" stays in Byzantium\'s rule line', instead: 'Military units 3 / 2 · 1 over the cap', source: true },
   { pattern: /\b\d+ melee(?:,|\b(?! (?:attack|unit|line|veteran)))|\bmelee strength\b/i, reason: 'a unit\'s strength is "strength", whatever its class (UI tour 2026-11-22: "32 melee", "Strength 20", "89 strength")', instead: '32 strength' },
   { pattern: /\branged at range \d|\b\d+ ranged, range \d|\br\d\b(?=<|\s|$)/, reason: '"r2" is a code abbreviation', instead: '65 ranged · range 2' },
   { pattern: /\bAwaiting orders\b/i, reason: 'a unit that has no order says "Needs orders"', instead: 'Needs orders', source: true },
@@ -168,7 +168,6 @@ export const GLOSSARY: { canonical: string; meaning: string; synonyms: RegExp[] 
   { canonical: 'supply', meaning: 'the Iron, Coal or other strategic resource your deposits give; each building or unit that needs it uses 1 while it exists', synonyms: [/\bstockpil(e|es|ed|ing)\b/i, /\bstored (Iron|Niter|Coal|Oil|Silicon)\b/i, /\b(Iron|Niter|Coal|Oil|Silicon) (per|a|each) turn\b/i] },
   { canonical: 'interest', meaning: 'Switzerland\'s Gold from its treasury', synonyms: [/\btreasury (bonus|yield)\b/i] },
   { canonical: 'Share the Learning', meaning: 'Athens\' goal and its broadcast of free technologies; the code\'s old name for it was the Signal (8.9.14 UI review, 2026-10-28: "shared the Signal" survived the rename)', synonyms: [/\b(?:share|shares|shared|sharing) the Signal\b/i, /\bthe Signal is (?:not )?shared\b/i, /\bSignal broadcast\b/i] },
-  { canonical: 'Company', meaning: 'a hired Mercenary Company', synonyms: [/\bhired (units?|troops|armies)\b/i, /\bmercenary (units?|troops)\b/i] },
 ];
 
 /** A sentence longer than this many words is two sentences. */

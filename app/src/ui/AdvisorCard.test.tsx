@@ -31,6 +31,24 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 const control = (name: 'found' | 'fortify' | 'explore' | 'ranged' | 'build', value?: string) => targetElement({ kind: 'control', name, value });
 
+it('finds the queue strip and each current or future add-to-queue control', () => {
+  const mounted = render(<dialog className="tech-modal" open>
+    <div className="research-queue">Research queue</div>
+    <article className="era-card" data-tech="Masonry"><button data-testid="queue-add">+ Queue</button></article>
+  </dialog>);
+  const queueTarget = (value: string) => targetElement({ kind: 'control', name: 'queueTech', value });
+  expect(targetElement({ kind: 'control', name: 'researchQueue' })?.className).toBe('research-queue');
+  expect(queueTarget('Masonry')?.getAttribute('data-testid')).toBe('queue-add');
+  expect(queueTarget('Writing')).toBeNull();
+  mounted.rerender(<dialog className="tech-modal tree-mode" open><div className="tree-node" data-tech="Masonry">Masonry</div></dialog>);
+  expect(queueTarget('Masonry')?.className).toBe('tree-node');
+  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} }));
+  mounted.rerender(<dialog className="tech-modal tree-mode" open><button data-testid="research-view-era">This era</button><div className="tree-node" data-tech="Masonry">Masonry</div></dialog>);
+  expect(queueTarget('Masonry')?.textContent).toBe('This era');
+  mounted.rerender(<dialog className="tech-modal tree-mode" open><div className="tree-node" data-tech="Masonry"><button>+ Queue Masonry</button></div></dialog>);
+  expect(queueTarget('Masonry')?.textContent).toBe('+ Queue Masonry');
+});
+
 it('finds real unit action buttons on mounted panels', () => {
   const original = view.units.find((u) => u.owner === view.me && u.military)!;
   const unit: UnitView = { ...original, kind: 'Spearman', military: true, ranged: 3, range: 2 };
@@ -112,7 +130,7 @@ it('counts routine steps the player does, once per turn', () => {
 });
 
 it('logs a tip when it shows, and Not now puts it away for the turn', () => {
-  useAdvisor.setState({ seen: ['welcome', 'report', 'race'], tips: {} });
+  useAdvisor.setState({ seen: ['welcome', 'report', 'howToWin'], tips: {} });
   act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }] }));
   render(<Advisor />);
   expect(screen.getByTestId('advisor').dataset.advisorId).toBe('tip:gold');
@@ -135,8 +153,31 @@ it('rings the city panel\'s Buy a tile button', () => {
   expect(targetElement({ kind: 'control', name: 'buyTile' })?.textContent).toBe('Buy a tile · from 50 Gold');
 });
 
+it('rings the Make an offer button of a city purchase', () => {
+  render(<div className="city-panel"><button data-testid="buy-city-offer">Make an offer (400 Gold)</button></div>);
+  expect(targetElement({ kind: 'control', name: 'buyCity' })?.textContent).toBe('Make an offer (400 Gold)');
+});
+
+it('targets desktop Diplomacy and leaves the phone lesson without a ring', () => {
+  const desktop = render(<div className="game"><section className="panel vp"><footer className="rivals-foot"><button>Diplomacy</button></footer></section></div>);
+  expect(targetElement({ kind: 'control', name: 'diplomacy' })?.textContent).toBe('Diplomacy');
+  desktop.unmount();
+  const rival = view.players.find((p) => p.team !== view.team)!;
+  const city = view.cities.find((c) => c.owner === view.me)!;
+  const unit = view.units.find((u) => u.owner === view.me && u.military)!;
+  unit.pos = city.pos;
+  unit.occupation_lock = rival.id;
+  city.occupation_lock = rival.id;
+  view.turn = 5;
+  useAdvisor.setState({ seen: ['welcome', 'report', 'howToWin'], skipped: [] });
+  render(<><button className="phone-vp-strip">Victory race</button><Advisor /></>);
+  expect(screen.getByTestId('advisor').dataset.advisorId).toBe('garrisonLock');
+  expect(targetElement({ kind: 'control', name: 'diplomacy' })).toBeNull();
+  expect(screen.queryByTestId('advisor-ring')).toBeNull();
+});
+
 it('while a tile is being placed, shows only the tip that asked for it', () => {
-  useAdvisor.setState({ seen: ['welcome', 'report', 'race'], tips: {} });
+  useAdvisor.setState({ seen: ['welcome', 'report', 'howToWin'], tips: {} });
   const city = view.cities.find((c) => c.owner === view.me)!;
   act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }], place: { city: city.id, building: null, intent: 'tile', pick: null } }));
   render(<Advisor />);

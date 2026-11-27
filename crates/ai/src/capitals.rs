@@ -154,14 +154,17 @@ impl Planner<'_> {
     }
 
     /// Our team's original capital stands in our hands, there is a rival to lose it to, and a
-    /// known rival military unit is within a few turns' walk of it.
+    /// known rival military unit is within a few turns' walk of it; or (gene `byz_capital_guard`)
+    /// Byzantium's current capital carries other cities and a rival unit can reach it.
     pub(crate) fn capital_pressed(&self, city: &CityView) -> bool {
-        self.decisions.capitals > 0
+        (self.decisions.capitals > 0
             && city.original_capital
             && self.own_original_capital(city)
             && city.owner == self.ctx.me
             && self.alive_teams() > 1
-            && self.rival_unit_in_reach(city.pos)
+            && self.rival_unit_in_reach(city.pos))
+            // The fall of Constantinople: Byzantium's current capital carries its other cities.
+            || self.byz_capital_pressed(city)
     }
 
     /// Fold the capitals victory into a capture projection: taking a standing rival capital

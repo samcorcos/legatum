@@ -32,8 +32,10 @@ import { useScrollHint } from './useScrollHint';
 import { useRowsBelow } from './useRowsBelow';
 import { counted } from '../plural';
 import { foreignCityChoice } from './ForeignCityActions';
+import { buyIsPrimary } from './CityBuy';
 import { Amounts } from './Amounts';
 import { SiegeAlerts } from './SiegeAlerts';
+import { OfferAlerts } from './OfferAlerts';
 import { useCityAlarms } from './useCityAlarms';
 
 class OrderListBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -228,6 +230,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
     cta = {
       label: 'Choose production',
       sub: automationNeedsChoice ? `${nextCity.name} · ${AUTOMATION_NO_CHOICE}`
+        : next?.kind === 'city' && next.refused ? `${nextCity.name} · ${next.refused}`
         : nextCity.detail?.wonder_lost ? `${nextCity.name} · ${BUILDING_NAME[nextCity.detail.wonder_lost.building]} lost to ${empireOfPlayer(view, nextCity.detail.wonder_lost.winner)}`
         : `${nextCity.name}${idleProductionWarning(nextCity.detail) ? ` · ${nextCity.detail!.idle_production_waste} Production wasted next turn` : ''}`,
       onClick: goToPending,
@@ -253,6 +256,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       <div ref={body} className={`turn-body${bodyScrolls ? ' scrolls' : ''}`}>
       {/* A city under attack is the turn's first concern: its card leads the body, outside the collapsed details. */}
       <SiegeAlerts />
+      <OfferAlerts />
       {!race && <><GoalActionRow /><FactionGoalProgressLine view={view} /></>}
       <details className="sidebar-turn-more" open={!race || hostCanOpenSeat || undefined}><summary hidden={!race}>Turn details · {counted(orders[seat].length + automated.length, 'order')}</summary>
       <AirWatch view={view} />
@@ -315,7 +319,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const selectedCity = selection?.kind === 'city' ? view.cities.find((c) => c.id === selection.id) : undefined;
   const selectedOwnUnit = (selection?.kind === 'unit' && view.units.some((u) => u.id === selection.id && u.owner === view.me))
     || (selection?.kind === 'air' && !!view.aircraft?.some((a) => a.id === selection.id && a.owner === view.me));
-  const stepped = returnOwned || (!!selectedCity && !!foreignCityChoice(view, selectedCity, attacker, orders[seat])?.canAttack && !next?.issue)
+  const stepped = returnOwned || (!!selectedCity && (!!foreignCityChoice(view, selectedCity, attacker, orders[seat])?.canAttack || buyIsPrimary(view, selectedCity, orders[seat] ?? [])) && !next?.issue)
     // A selected unit's card holds the primary while the turn's call to action is routine (turnLead.ts).
     || (selectedOwnUnit && cta.kind === 'todo' && unitCardLeads(decisions, selection));
   return (

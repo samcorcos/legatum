@@ -36,6 +36,12 @@ afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers(); 
 
 const rows = () => [...host.querySelectorAll<HTMLElement>('.rivals .rv-row')];
 
+/** The hover text of a chip or cell: its tooltip bubble's words. */
+function tipText(el: Element): string {
+  const trigger = el.closest('.tip-trigger') ?? el.querySelector('.tip-trigger');
+  return document.getElementById(trigger?.getAttribute('aria-describedby') ?? '')?.textContent ?? '';
+}
+
 it('lists every living empire ranked by VP, yours marked, with its public Gold, army, cities and Science per turn', () => {
   expect(rows()).toHaveLength(view.standings.length);
   const vps = rows().map((r) => Number(r.querySelector('.rv-vp b')!.textContent));
@@ -100,7 +106,7 @@ it(`an army at least ${STRONG_ARMY_RATIO} times yours reads red, with the reason
   act(() => useGame.setState({ views: [strong] }));
   const red = [...host.querySelectorAll<HTMLElement>('.rv-num.strong')];
   expect(red.map((c) => c.textContent)).toEqual(['150']);
-  expect(red[0].getAttribute('title')).toBe(`Army points 150: ${STRONG_ARMY_RATIO} times yours or more`);
+  expect(tipText(red[0])).toBe(`Army points 150: ${STRONG_ARMY_RATIO} times yours or more`);
 });
 
 it('a team holding its target shows an unmistakable countdown above the rows: yours gilt, a rival’s red, both with a meter', () => {
@@ -131,7 +137,7 @@ it('a closed country’s count is public: a chip in its row, with the whole rule
   expect(chip).not.toBeNull();
   expect(chip.textContent).toBe('12/30');
   expect(chip.getAttribute('aria-label')).toContain('closed: Closed 12 of 30 turns · holds 2 VP in 18');
-  expect(chip.getAttribute('title')).toContain("can't declare war or ally");
+  expect(tipText(chip)).toContain("can't declare war or ally");
   expect(chip.closest('.rv-row')).not.toBeNull();
   const holding = { ...closed, players: closed.players.map((p) => (p.id === rival.id ? { ...p, sakoku_turns: 31, faction_goal_done: true } : p)) };
   act(() => useGame.setState({ views: [holding] }));
@@ -147,7 +153,7 @@ it('a fallen capital is said in words on its row; a standing one adds nothing', 
   act(() => useGame.setState({ views: [fallen] }));
   expect(chips().map((c) => c.dataset.team)).toEqual([String(rival.team)]);
   expect(chips()[0].textContent).toBe('Capital fallen');
-  expect(chips()[0].getAttribute('title')).toContain('can still win by VP');
+  expect(tipText(chips()[0])).toContain('can still win by VP');
 });
 
 it('an empire above the average shows its lead and the one rate it cuts every yield by, with the curve in the tooltip', () => {
@@ -157,7 +163,7 @@ it('an empire above the average shows its lead and the one rate it cuts every yi
   const mine = host.querySelector('.rv-row.mine [data-testid="lead-chip"]')!;
   expect(mine.textContent).toBe('+60%');
   expect(mine.getAttribute('aria-label')).toBe('Power 60% above the average empire');
-  const title = mine.getAttribute('title')!;
+  const title = tipText(mine);
   expect(title).toContain(`Your Power is 60% above the average empire's.`);
   expect(title).toContain(`the more its people grow complacent, so your cities grow ${rate(60)}% slower and lose ${rate(60)}% of their Production, Gold and Science`);
   expect(title).toContain(decadenceCurveText({ decadenceSlope: 45 }));
@@ -170,7 +176,7 @@ it('an empire above the average shows its lead and the one rate it cuts every yi
   expect(cut.textContent).toBe(`${rate(60)}%`);
   expect(cut.querySelector('.icon')).not.toBeNull();
   expect(cut.getAttribute('aria-label')).toBe(`Decadence: growth ${rate(60)}% slower, Production, Gold and Science cut by ${rate(60)}%`);
-  expect(cut.getAttribute('title')).toMatch(/grow \d+% slower \(smaller families\) and lose \d+% of their Production \(sloth\), Gold \(luxury\) and Science \(complacency\)/);
+  expect(tipText(cut)).toMatch(/grow \d+% slower \(smaller families\) and lose \d+% of their Production \(sloth\), Gold \(luxury\) and Science \(complacency\)/);
   expect([...host.querySelectorAll('.rv-row:not(.mine) [data-testid="decadence-chip"]')].map((c) => c.textContent)).toEqual([`${rate(30)}%`]);
   // At or below the average there is no chip.
   act(() => useGame.setState({ views: [withV2(structuredClone(useGame.getState().views![0]), { era: 2 })] }));

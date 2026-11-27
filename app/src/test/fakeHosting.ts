@@ -15,6 +15,7 @@ export const fakeHost: { fromSave: string | null; saves: number; liveSave: strin
 export function fakeHostingModule() {
   return {
     hostedGameSave: () => fakeHost.liveSave,
+    hostedJoinCode: () => null,
     hostedRoomId: () => {
       try {
         const raw = globalThis.sessionStorage?.getItem(KEY);

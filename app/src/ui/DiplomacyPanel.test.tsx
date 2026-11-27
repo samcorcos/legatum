@@ -39,7 +39,23 @@ const labelled = (label: string) => [...container.querySelectorAll<HTMLButtonEle
 it('shows the recorded AI level in diplomacy and the victory race', () => {
   act(() => root.render(<><VpTrack /><DiplomacyPanel /></>));
   expect([...container.querySelectorAll('.empire-pick-level')].map((e) => e.textContent)).toContain('AI · Normal');
-  expect([...container.querySelectorAll('.rivals button.rv-row')].map((e) => e.getAttribute('title'))).toContain('AI · Normal. Open Diplomacy');
+  // The rival's name carries its AI level in a hover tooltip.
+  const tips = [...container.querySelectorAll('.rivals button.rv-row .rv-name')].map((e) => document.getElementById(e.closest('.tip-trigger')?.getAttribute('aria-describedby') ?? '')?.textContent);
+  expect(tips).toContain('AI · Normal. Click to open Diplomacy.');
+});
+
+it('a compact sent-offer action becomes a ready line with a separate Cancel', () => {
+  act(() => root.render(<DiplomacyPanel />));
+  const card = container.querySelector('.sent-offer')!;
+  const withdraw = [...card.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.startsWith('Withdraw offer'))!;
+  expect(withdraw).toBeTruthy();
+  act(() => withdraw.click());
+  const ready = card.querySelector('[data-testid=diplomacy-queued]')!;
+  expect(ready.textContent?.trim()).toBe('Withdraw offer: happens when you end the turn. Cancel');
+  expect(withdraw.isConnected).toBe(false);
+  expect(document.activeElement).toBe(ready.querySelector('button'));
+  act(() => (ready.querySelector('button') as HTMLButtonElement).click());
+  expect(useGame.getState().orders[0]).toEqual([]);
 });
 
 /** Our view with 120 Gold and +7 net Gold per turn, and the Alliance upkeep. */
@@ -82,11 +98,13 @@ it('counts only incoming offers, prioritizes responding, and makes Accept primar
   // Reopened, the card shows the answer as its state; the other choice is no longer a primary.
   act(() => useGame.setState({ diplomacyOpen: true }));
   const card = container.querySelector('.offer-card')!;
-  expect(card.querySelector('.offer-answer')!.textContent).toMatch(/^\s*Accepted: Alliance starts turn \d+$/);
-  expect(card.querySelector('.offer-answer .mask-icon')).not.toBeNull();
+  expect(card.querySelector('[data-testid=diplomacy-queued]')!.textContent?.trim()).toMatch(/^Accept Alliance: you accept when you end the turn\. It starts turn \d+\. Cancel$/);
+  expect(card.querySelector('.diplomacy-queued-check')).not.toBeNull();
   expect(card.querySelector('.btn.primary')).toBeNull();
-  expect([...card.querySelectorAll('.offer-answered button')].map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(['Undo', 'Decline instead']);
-  act(() => button('Undo').click());
+  expect([...card.querySelectorAll('.offer-answered button')].map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(['Cancel', 'Decline instead']);
+  // Reopening the panel focuses Close, not a queued line's Cancel (Enter must not cancel by surprise).
+  expect(document.activeElement?.getAttribute('aria-label')).toBe('Close diplomacy');
+  act(() => button('Cancel').click());
   expect(useGame.getState().orders[0]).toEqual([]);
   expect(button('Accept Alliance').classList.contains('primary')).toBe(true);
 });

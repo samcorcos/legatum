@@ -14,9 +14,11 @@ import { capitalStar } from '../capitalMark';
 import { hexToPixel, tileIndex } from '../hex';
 import { healthColor, playerInk, rgba } from '../theme';
 import { GOAL_CITY_ICON, goalCities, goalSealFor, isColoniaFounder, tombChip, tombStatus, type GoalCityKind, type TombStatus } from '../goalCities';
+import { offerOn, offerTone } from '../buyCity';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
+import { SELECT_HALO, SELECT_INK, selectionBreath, selectionBurst } from './selectionMark';
 import { MAP_STYLES, mapBorderColor, mapPlayerColor, type MapStyle } from './style';
 import { TerrainCache, TOWN_OVAL } from './terrain';
 import { getBorderVariant } from './borderVariant';
@@ -30,16 +32,15 @@ import type { SiegeLevel } from '../siege';
 import { miniatureImage } from '../unitArt';
 import { siegePropFor, siegePropImage, siegePropRect, type SiegeProp } from '../siegeProps';
 import { attackableEnemies, drawEraPlaque, drawStrengthChip, matchupStrength, plaqueHeight, unitEra } from './unitEra';
-import { contractLeft } from '../company';
 import { heirTag } from '../heir';
 import { rankLevel } from '../rankInsignia';
-import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius, CAPITAL_GILT } from './sprites';
+import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawHeirHalo, drawLabel, drawOfferCoin, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius, CAPITAL_GILT } from './sprites';
 import { mapFeatureImage, RUIN_MASS } from './mapFeatures';
 import { BARBARIAN, isBarbarian } from '../barbarians';
 import type { Rect } from './compass';
 import type { LensTile, MapLens } from './lenses';
-import { drawLens, drawOwnerOverlay } from './drawLens';
-import { artFadeFor, DEFAULT_OVERLAYS, ownerWashScale, type OverlaySet } from './overlays';
+import { drawLens } from './drawLens';
+import { artFadeFor, DEFAULT_OVERLAYS, type OverlaySet } from './overlays';
 import { drawYieldIcons, foldedBonuses, yieldClusterRects, YIELD_FILL } from './yieldIcons';
 import { drawImprovements } from './improvementArt';
 import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT, type Cover } from './resourceIcons';
@@ -103,14 +104,15 @@ export interface RenderInput {
   time: number;
   /** The clock the selection pulse reads, when it must run ahead of `time` (a pulse-only frame freezes `time` so the rest of the map does not move). */
   pulseTime?: number;
+  /** Milliseconds since the selection changed, while its burst plays (null with motion off or once it is over). */
+  selectBurstMs?: number | null;
   hover: Hex | null;
   lens?: MapLens;
   lensTiles?: LensTile[];
-  /** The stackable overlays (Yields, Resources, Borders) on top of whichever lens is showing. */
+  /** Yields can stack over either lens. */
   overlays?: OverlaySet;
-  /** Their tiles: yield clusters, and owned land for the Borders overlay. */
+  /** Yield clusters. */
   yieldTiles?: LensTile[];
-  borderTiles?: LensTile[];
   /** Screen rects of panels over the map: lens badges move clear of them. */
   lensAvoid?: readonly Rect[];
   /** Battle result cues (damage, losses) over hexes, already faded for this frame. */
@@ -357,8 +359,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   if (moments && momentView) drawMomentGround(ctx, moments.plan, moments.t, momentView);
   if (idleView) idleLive += drawChimneySmoke(ctx, view, idleT, idleView, moments ? (tile) => moments.hold.towns.has(tile) : undefined);
   if (inp.lensTiles?.length) drawLens(ctx, inp.lensTiles, cam, w, h, view.width, dpr, look);
-  // Overlays draw over the lens tint, so a lens never hides them: owned land first, then the yield icons on top of both.
-  if (inp.borderTiles?.length) drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, view.width, dpr, look, 'tint', ownerWashScale(inp.lens));
+  // Yield icons draw over the Settle tint, so the lens does not hide them.
   // Tile yields sit under every unit and banner: quiet enough to leave on.
   // A neighbour's medallion, yield cluster or wonder badge never sits on a town (or its walls): they keep clear of its footprint.
   const townCovers = cityArtCovers(view, toScreen, z, hexPx);
@@ -378,7 +379,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const iconView = moments?.hold.resources.size
     ? { ...view, tiles: view.tiles.map((tile, i) => moments.hold.resources.has(i) ? { ...tile, resource: null } : tile) }
     : view;
-  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, overlays.resources, townCovers);
+  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, townCovers);
   // A natural wonder's bonus, on its tile: above the lens tint and yield icons, under units and banners (folded or as its pill).
   const wonderPillsOverUnits = drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers], tokenCovers, folded);
 
@@ -399,7 +400,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const ownSel = selUnit && selUnit.owner === view.me ? selUnit : null;
 
   // Movement reach: a wash plus an edge.
-  if ((!inp.lens || inp.lens === 'default' || inp.lens === 'movement') && ownSel && !inp.rangedTiles && ownSel.max_moves > 0 && !inp.unitPos.size) {
+  if ((!inp.lens || inp.lens === 'default') && ownSel && !inp.rangedTiles && ownSel.max_moves > 0 && !inp.unitPos.size) {
     const reach = reachOf(view, ownSel);
     if (reach.size) {
       ctx.beginPath();
@@ -770,9 +771,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   }
 
   // Selection mark under the token (unit or hangar aircraft), else city.
-  const pulse = 0.75 + 0.25 * Math.sin((inp.pulseTime ?? inp.time) / 300);
+  const pulse = selectionBreath(inp.pulseTime ?? inp.time, !inp.pulseTime);
+  const burst = inp.selectBurstMs != null ? selectionBurst(inp.selectBurstMs) : null;
   let ring: SelectionRing | null = null;
-  const ringAt = (x: number, y: number): void => { ring = { x, y, r: selectionRadius(hexPx) + 3.5 + 1.6 }; };
+  const ringAt = (x: number, y: number): void => { ring = { x, y, r: selectionReach(hexPx, inp.selectBurstMs != null) }; };
   // Zoomed in, a token behind a city banner is raised (bannerLift): its selection mark goes with it.
   const liftCovers = banners.filter((b) => !b.far).map((b) => b.cover);
   const cityHexes = new Set(view.cities.map((c) => `${c.pos.q},${c.pos.r}`));
@@ -781,15 +783,15 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     const wp = inp.unitPos.get(selUnit.id) ?? hxCenter(selUnit.pos);
     const p = worldToScreen(cam, w, h, wp.x, wp.y);
     if (!isFar(hexPx)) p.y -= liftOf(selUnit, p.x, p.y);
-    drawSelection(ctx, look, S, p.x, p.y, hexPx, pulse);
+    drawSelection(ctx, p.x, p.y, hexPx, pulse, burst);
     ringAt(p.x, p.y);
   } else if (inp.selectedAir != null && !inp.fx?.plan.shots.some((s) => s.shooter === inp.selectedAir && aircraftPassProgress(s, inp.fx!.t) != null)) {
     const plane = view.aircraft?.find((a) => a.id === inp.selectedAir);
     const home = plane && view.cities.find((c) => c.id === plane.city);
-    if (home) { const p = S2(home.pos); drawSelection(ctx, look, S, p.x, p.y, hexPx, pulse); ringAt(p.x, p.y); }
+    if (home) { const p = S2(home.pos); drawSelection(ctx, p.x, p.y, hexPx, pulse, burst); ringAt(p.x, p.y); }
   } else if (selCity) {
     const p = S2(selCity.pos);
-    drawSelection(ctx, look, S, p.x, p.y, hexPx, pulse);
+    drawSelection(ctx, p.x, p.y, hexPx, pulse, burst);
     ringAt(p.x, p.y);
   }
 
@@ -924,8 +926,6 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       if (u.occupation_lock != null) lockMarks.push({ x, y, w: tw });
       const farHeir = heirTag(view, u);
       if (farHeir) drawTag(ctx, look, x, y + tw + (u.hp < 100 ? 9 : 4), farHeir, u.owner === view.me ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
-      const farLeft = contractLeft(u, view);
-      if (farLeft !== null) drawContractPip(ctx, look, x, y, tw, farLeft);
       // Far zoom keeps only the strength cue's direction: a small rising or falling mark beside the roundel.
       if (strengthCue?.targets.has(u.id)) {
         const theirs = matchupStrength(u, factionOf.get(u.owner), strengthCue.sel, false), yours = matchupStrength(strengthCue.sel, strengthCue.selFaction, u, true);
@@ -934,7 +934,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       continue;
     }
     if (u.occupation_lock != null) lockMarks.push({ x, y, w: tw });
-    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
+    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
     if (stack.length > 2 && stack[0].id === u.id) drawBadge(ctx, look, x - tw, y - tw, tw * 0.45, String(stack.length), true);
   }
   // A natural wonder's bonus pill that a resting counter would hide goes above the units (still under the banners).
@@ -966,6 +966,11 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   for (const { c, far } of banners) {
     if (far && focusOf(c)) drawTag(ctx, look, far.x, far.y - far.seal.ay - 15, 'Auto', 'neutral');
   }
+  // Byzantium buying a city: a public countdown chip, above its seal zoomed out and above its banner zoomed in (below).
+  for (const { c, far } of banners) {
+    const offer = far ? offerOn(view, c.id) : undefined;
+    if (far && offer) drawOfferCoin(ctx, look, far.x + sealRadius(hexPx) * 0.9, far.y + sealRadius(hexPx) * 0.5, offer.turns_left, offerTone(view, offer));
+  }
 
   // Zoomed in, every banner above the units; a city under attack also wears its alarm: a ring
   // (steady under reduced motion) and a siege badge, on top of the banner or seal at both zoom levels.
@@ -983,6 +988,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       if (drawAlpha <= 0.01) continue;
       if (motion && motion.sx !== 1) { ctx.save(); ctx.translate(x, 0); ctx.scale(motion.sx, 1); ctx.translate(-x, 0); }
       const r = drawBanner(ctx, look, spec, x, y + (motion?.dy ?? 0), fs, dpr, drawAlpha);
+      const offer = offerOn(view, c.id);
+      if (offer) drawOfferCoin(ctx, look, level ? r.x : r.x + r.w, r.y + r.h / 2, offer.turns_left, offerTone(view, offer), drawAlpha);
       const hpNow = cityHp(c);
       if (level) {
         const barY = r.y + r.h + SIEGE_BAR_GAP;
@@ -1037,11 +1044,6 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     ctx.restore();
   }
 
-  if (inp.borderTiles?.length) {
-    // Owner numbers keep off tiles that hold a token or a city (they carry their own) or a resource medallion (its ring is there). The square badge is not a unit's round owner roundel.
-    const busy = new Set([...unitBottoms.keys(), ...view.cities.map((c) => tileIndex(c.pos, W, H)), ...view.tiles.flatMap((t, i) => t.resource && t.explored ? [i] : [])]);
-    drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, W, dpr, look, 'labels', ownerWashScale(inp.lens), busy);
-  }
   if (inp.lensTiles?.length) {
     const medallions = resourceDetail(hexPx) === 'medallions';
     const cityAt = new Set(view.cities.map((c) => tileIndex(c.pos, W, H)));
@@ -1462,20 +1464,56 @@ export function ambientClipRects(ring: SelectionRing | null, ambient: readonly R
   return out;
 }
 
-function drawSelection(ctx: CanvasRenderingContext2D, _look: LookId, S: MapStyle, x: number, y: number, hexPx: number, pulse: number) {
+/** How far the selection mark reaches from its centre (screen CSS pixels), halo included; while the burst plays, its widest ring. */
+function selectionReach(hexPx: number, bursting: boolean): number {
+  const edge = hexPx * 0.97 + selectionHalo(hexPx) / 2;
+  return Math.max(selectionRadius(hexPx) + 4, bursting ? edge * 2.4 + 2 : edge) + 1;
+}
+const selectionHalo = (hexPx: number) => Math.max(3, Math.min(6, hexPx * 0.2));
+
+/** The selection: a bright white tile edge on a dark halo, a breathing wash, a ring round the token, and the burst when it changes (see selectionMark.ts). */
+function drawSelection(ctx: CanvasRenderingContext2D, x: number, y: number, hexPx: number, pulse: number, burst: { scale: number; alpha: number } | null) {
   const r = selectionRadius(hexPx);
+  const halo = selectionHalo(hexPx), line = halo * 0.5;
   ctx.save();
   ctx.translate(x, y);
-  ctx.strokeStyle = S.ink.select;
-  ctx.globalAlpha = 0.55 + 0.45 * pulse;
-  ctx.lineWidth = 1.6;
+  ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  hexPath(ctx, 0, 0, hexPx * 0.97);
+  ctx.fillStyle = SELECT_INK;
+  ctx.globalAlpha = 0.12 + 0.16 * pulse;
+  ctx.fill();
+  ctx.globalAlpha = 0.9;
+  ctx.strokeStyle = SELECT_HALO;
+  ctx.lineWidth = halo;
   ctx.stroke();
-  ctx.lineWidth = 0.8;
+  ctx.globalAlpha = 0.8 + 0.2 * pulse;
+  ctx.strokeStyle = SELECT_INK;
+  ctx.lineWidth = line;
+  ctx.stroke();
+  // A ring round the token itself, so the unit (not just its tile) is marked.
   ctx.beginPath();
-  ctx.arc(0, 0, r + 3.5, 0, Math.PI * 2);
+  ctx.arc(0, 0, r + 1.5, 0, Math.PI * 2);
+  ctx.globalAlpha = 0.85;
+  ctx.strokeStyle = SELECT_HALO;
+  ctx.lineWidth = line + 1.6;
   ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = SELECT_INK;
+  ctx.lineWidth = line;
+  ctx.stroke();
+  if (burst) {
+    ctx.beginPath();
+    hexPath(ctx, 0, 0, hexPx * 0.97 * burst.scale);
+    ctx.globalAlpha = burst.alpha * 0.8;
+    ctx.strokeStyle = SELECT_HALO;
+    ctx.lineWidth = halo;
+    ctx.stroke();
+    ctx.globalAlpha = burst.alpha;
+    ctx.strokeStyle = SELECT_INK;
+    ctx.lineWidth = line;
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -1506,7 +1544,7 @@ export function drawFortifyMark(ctx: CanvasRenderingContext2D, x: number, y: num
   if (ic) ctx.drawImage(ic, x, y, 12, 12);
 }
 
-function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false) {
+function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, heirLabel?: string | null, colonia = false) {
   if (isBarbarian(u.owner)) drawBarbarianToken(ctx, look, u.kind as UnitKind, u.military, x, y, w, dpr);
   else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) });
   // A unit an Engineer covers wears its siege gear in front of its feet, on the hex's right side and always inside the hex: the
@@ -1541,10 +1579,8 @@ function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: n
   else if (mine && u.standing_order) drawBadge(ctx, look, bx, y - w * 0.85, w * 0.38, '', false, u.standing_order === 'Heal' ? 'mark-heal' : u.standing_order === 'AutoFire' ? 'mark-autofire' : 'mark-sleep');
   else if (mine && u.goto) drawBadge(ctx, look, bx, y - w * 0.85, w * 0.38, '', false, 'mark-move');
   const tagY = y + w * 1.04 + (u.hp < 100 ? 10 : 4) + (mini ? w * 0.3 : 0) + Math.max(0, drop - (mini ? w * 0.8 : 0));
-  // A hired Company wears its seller's seal and its turns of contract left, for every viewer (the countdown is public).
-  if (contract !== null && contract !== undefined) drawContractTag(ctx, look, x, tagY, u.origin, contract);
   // Byzantium's Heir says whose he is and who holds him, so a rival knows whom to look for.
-  else if (heirLabel) drawTag(ctx, look, x, tagY, heirLabel, mine ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
+  if (heirLabel) drawTag(ctx, look, x, tagY, heirLabel, mine ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
 }
 
 /** A warning roundel on the friend's tile that may stop the previewed route: "!" in attack ink. */

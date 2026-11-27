@@ -1,21 +1,25 @@
 /** The advisor explains one decision from a Hard plan made from this seat's own view. */
 import { create } from 'zustand';
 import { advisorOrders } from '../automation';
-import { buildingStatsFor, itemKey, itemName, TECH_NAME, wallsRepairing, wallsUpgradeName } from '../data';
+import { buildingStatsFor, effectiveTurnLimit, itemKey, itemName, TECH_NAME, wallsRepairing, wallsUpgradeName } from '../data';
 import { WALLS_HP_PER_LEVEL } from '../combat';
 import { isThreat } from '../diplomacy';
+import { ownerName } from '../barbarians';
 import { distance, hexEq } from '../hex';
 import { effectiveResearchQueue, pendingResearchQueue } from '../orders';
+import { revealedByTech } from '../resources';
 import { pendingDecisions } from '../turnFlow';
 import { HOLD_TURNS } from '../victoryHold';
 import { techCardUnlocks } from './techCardUnlocks';
 import { YIELD_LABEL, type YieldKey } from './yieldKeys';
 import { strategyTip, tipKind, type TipLog } from './advisorTips';
-import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, UnitView } from '../types';
+import type { LockLog } from './advisorTips';
+import { occupiedCityName } from './forecastWarnings';
+import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, TechId, UnitView } from '../types';
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch' | 'buyTile'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'diplomacy' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'queueTech' | 'researchQueue' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
 export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean; tip?: boolean }
 export interface AdvisorContext {
@@ -36,12 +40,33 @@ export interface AdvisorContext {
   turnLabel?: string;
   /** The city whose Buy a tile placement is open, if any: the advisor guides the last click there. */
   placingTile?: number | null;
+  /** The latest resolved turn finished a technology and left no next technology. */
+  researchQueueDrained?: boolean;
 }
 const RESEARCH_FALLBACK = 'Research gives your empire new choices.';
 const ownCities = (v: PlayerView) => v.cities.filter((c) => c.owner === v.me);
 const ownUnits = (v: PlayerView) => v.units.filter((u) => u.owner === v.me);
 const factionOf = (v: PlayerView) => v.players.find((p) => p.id === v.me)?.faction ?? 'Switzerland';
 const otherSide = (v: PlayerView, owner: number) => owner !== v.me && v.players.find((p) => p.id === owner)?.team !== v.team;
+// Match the technologies the Hard planner prioritizes under threat (`crates/ai/src/research.rs::is_military_tech`).
+const DEFENCE_TECHS = new Set<TechId>(['Masonry', 'Mathematics', 'Feudalism', 'Machinery', 'Chivalry', 'Gunpowder', 'Metallurgy', 'MilitaryEngineering', 'Rifling', 'MilitaryScience', 'Cannonry', 'ReplaceableParts', 'Combustion', 'Steel', 'Flight', 'Robotics', 'StealthTechnology']);
+function researchWhy(order: Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }>, view: PlayerView): string {
+  const tech = order.type === 'SetResearch' ? order.tech : order.techs[0];
+  if (!tech) return RESEARCH_FALLBACK;
+  const unlocks = techCardUnlocks(view.research, tech, factionOf(view));
+  const military = DEFENCE_TECHS.has(tech) && unlocks.find((u) => u.kind === 'Unit' || u.label === 'Walls');
+  const nearArmy = view.units.some((u) => u.military && otherSide(view, u.owner) && ownCities(view).some((c) => distance(c.pos, u.pos) <= 6)
+    && (isThreat(view, u.owner) || (view.players.find((p) => p.id === u.owner)?.army ?? 0) > (view.players.find((p) => p.id === view.me)?.army ?? 0)));
+  const ahead = view.players.some((p) => p.alive && otherSide(view, p.id) && p.era > view.research.era + 1
+    && view.cities.some((c) => c.owner === p.id && ownCities(view).some((own) => distance(c.pos, own.pos) <= 12)));
+  if (military && (nearArmy || ahead)) return `${nearArmy ? 'A foreign military unit is near one of your cities' : 'A rival is ahead in research'}: ${TECH_NAME[tech]} unlocks ${military.label}.`;
+  const resource = revealedByTech(tech)[0];
+  if (resource) return `${TECH_NAME[tech]} shows ${resource} on the map.`;
+  const unlock = unlocks.find((u) => u.kind !== 'Effect');
+  if (!unlock) return RESEARCH_FALLBACK;
+  const main = unlock.yields.find(([key]) => key === 'food' || key === 'production' || key === 'gold' || key === 'science');
+  return `${TECH_NAME[tech]} unlocks the ${unlock.label}${main ? `: +${main[1]} ${YIELD_LABEL[main[0]]} in a city` : ''}.`;
+}
 const nearestCity = (v: PlayerView, at: Hex) => ownCities(v).sort((a, b) => distance(a.pos, at) - distance(b.pos, at))[0];
 /**
  * Routine steps (moving a unit, Fortify, Skip, Auto-explore, End turn, Close Research) are taught only until the
@@ -97,11 +122,7 @@ export function advisorWhy(order: Order, view: PlayerView, city?: CityView, unit
     return `${city.name} can put its Production to work.`;
   }
   if (order.type === 'SetResearch' || order.type === 'SetResearchQueue') {
-    const tech = order.type === 'SetResearch' ? order.tech : order.techs[0];
-    const unlock = tech && techCardUnlocks(view.research, tech, factionOf(view)).find((u) => u.kind !== 'Effect');
-    if (!unlock || !tech) return RESEARCH_FALLBACK;
-    const main = unlock.yields.find(([key]) => key === 'food' || key === 'production' || key === 'gold' || key === 'science');
-    return `${TECH_NAME[tech]} unlocks the ${unlock.label}${main ? `: +${main[1]} ${YIELD_LABEL[main[0]]} in a city` : ''}.`;
+    return researchWhy(order, view);
   }
   if (order.type === 'SetAutomation') return 'Exploring finds city sites, ruins and rivals.';
   if (order.type === 'FoundCity') return 'A new city gives your empire more room to grow.';
@@ -144,15 +165,23 @@ function citySuggestion(ctx: AdvisorContext, city: CityView, order?: Extract<Ord
     ] };
 }
 function researchSuggestion(ctx: AdvisorContext, order?: Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }>): Suggestion {
-  const planned = order?.type === 'SetResearch' ? order.tech : order?.techs[0];
-  const tech = ctx.view.research.available.some((option) => option.tech === planned) ? planned : undefined;
-  const name = tech && TECH_NAME[tech];
-  return { id: 'research', title: name ? `Research ${name}` : 'Choose research',
-    why: order && tech ? advisorWhy(order, ctx.view) : RESEARCH_FALLBACK, current: ctx.techOpen ? 1 : 0,
-    steps: [
-      { instruction: `${ctx.touch ? 'Tap' : 'Click'} Research at the top.`, key: ctx.touch ? undefined : 'T', target: control('research') },
-      { instruction: name ? `${ctx.touch ? 'Tap' : 'Click'} ${name}.` : 'Choose a technology.', target: tech ? control('tech', tech) : null },
-    ] };
+  const planned = order?.type === 'SetResearch' ? [order.tech] : order?.techs ?? [];
+  const available = new Set(ctx.view.research.available.map((option) => option.tech));
+  const techs = planned.filter((tech) => available.has(tech)).slice(0, 3);
+  const queue = effectiveResearchQueue(validOrders(ctx), ctx.view.research);
+  const matched = techs.findIndex((tech, i) => queue[i] !== tech);
+  const done = matched < 0 ? techs.length : matched;
+  const names = techs.map((tech) => TECH_NAME[tech]);
+  const title = names.length > 1 ? `Queue research: ${names.join(', then ')}` : names.length ? `Research ${names[0]}` : 'Choose research';
+  const steps: AdvisorStep[] = [
+    { instruction: `${ctx.touch ? 'Tap' : 'Click'} Research at the top.`, key: ctx.touch ? undefined : 'T', target: control('research') },
+    { instruction: names[0] ? `${ctx.touch ? 'Tap' : 'Click'} ${names[0]}.` : 'Choose a technology.', target: techs[0] ? control('tech', techs[0]) : null },
+    ...techs.slice(1).map((tech): AdvisorStep => ({ instruction: ctx.touch
+      ? `Tap This era, then + Queue on ${TECH_NAME[tech]}.`
+      : `Shift-click ${TECH_NAME[tech]} in the tree, or click + Queue.`, target: control('queueTech', tech) })),
+  ];
+  return { id: 'research', title, why: order && techs.length ? researchWhy({ type: 'SetResearch', tech: techs[0] }, ctx.view) : RESEARCH_FALLBACK,
+    current: ctx.techOpen ? 1 + done : 0, steps };
 }
 function unitSuggestion(ctx: AdvisorContext, unit: UnitView, order?: Order): Suggestion | null {
   const name = unitName(ctx.view, unit), first: AdvisorStep = { instruction: `${ctx.touch ? 'Tap' : 'Click'} your ${name}.`, target: tile(unit.pos) };
@@ -181,15 +210,42 @@ function unitSuggestion(ctx: AdvisorContext, unit: UnitView, order?: Order): Sug
   return action ? { ...base, title: action.title, steps: [first, { instruction: action.instruction, key: ctx.touch ? undefined : action.key, target: action.target }] } : null;
 }
 
-export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}, tips: TipLog = {}): Suggestion | null {
+/** The early lesson on winning: the target, the hold, the last turn and the four ways to score. */
+export function howToWin(v: PlayerView): Suggestion {
+  const mine = v.standings.find((s) => s.team === v.team);
+  const target = mine?.target ?? 10, team = (mine?.members.length ?? 1) > 1 ? ' with your team' : '';
+  return { id: 'howToWin', title: 'How to win', current: 0, acknowledge: true,
+    why: `Get ${target} victory points (VP)${team} and keep them for ${HOLD_TURNS} turns. If nobody does by turn ${effectiveTurnLimit(v.turn_limit)}, the most VP then wins.`,
+    steps: [{ instruction: 'Score VP with Age cards, rival capitals, world wonders and your faction goal. The Victory race shows the score.', target: control('race') }] };
+}
+
+export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}, tips: TipLog = {}, locks: LockLog = {}): Suggestion | null {
   const v = ctx.view;
   if (v.finished || v.players.find((p) => p.id === v.me)?.alive === false) return null;
   if (v.turn === 1 && !seen.includes('welcome')) return { id: 'welcome', title: 'Your advisor will guide you', why: "I'll suggest what to do each turn and show you where to click.", steps: [], current: 0, acknowledge: true };
   if (v.turn > 1 && seen.includes('welcome') && !seen.includes('report')) return { id: 'report', title: 'Read the Turn report', why: 'The Turn report lists battles, discoveries and failed orders.', steps: [{ instruction: 'Press L to open it.', key: ctx.touch ? undefined : 'L', target: null }], current: 0, acknowledge: true };
-  if (v.turn >= 8 && !seen.includes('race')) return { id: 'race', title: 'Win the victory race', why: `Reach your team’s VP target and hold it for ${HOLD_TURNS} turns to win.`, steps: [{ instruction: 'Look at the Victory race.', target: control('race') }], current: 0, acknowledge: true };
+  // How to win, early: before the first score check, so a new player knows what VP are for.
+  if (v.turn >= 3 && seen.includes('report') && !seen.includes('howToWin')) return howToWin(v);
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
+  const choice = plan?.find((o): o is Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }> => o.type === 'SetResearch' || o.type === 'SetResearchQueue');
+  const queue = effectiveResearchQueue(orders, v.research);
+  const nextTech = v.research.available.find((option) => !queue.includes(option.tech))?.tech;
+  if (!seen.includes('researchQueue') && !skipped.includes('researchQueue') &&
+      nextTech &&
+      ((ctx.techOpen && queue.length === 1) || (ctx.researchQueueDrained && queue.length === 0))) {
+    return { id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: ctx.techOpen ? 1 : 0,
+      why: queue.length ? 'Queue more technologies to keep researching after the current one.' : 'Choose a technology to resume research.',
+      steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} Research at the top.`, target: control('research') },
+        { instruction: ctx.touch ? `Tap This era, then + Queue on ${TECH_NAME[nextTech]}.`
+          : `Shift-click ${TECH_NAME[nextTech]} in the tree, or click + Queue on ${TECH_NAME[nextTech]}.`, target: control('queueTech', nextTech) }] };
+  }
+  const pendingQueue = pendingResearchQueue(orders);
+  if (pendingQueue?.length && choice?.type === 'SetResearchQueue' && !skipped.includes('research')) {
+    const recommended = choice.techs.filter((tech) => v.research.available.some((option) => option.tech === tech)).slice(0, 3);
+    if (pendingQueue.length < recommended.length && pendingQueue.every((tech, i) => recommended[i] === tech)) return researchSuggestion(ctx, choice);
+  }
   // Research is chosen but its panel is still open: closing it is the next step, since the rest of the turn is behind it.
   // Only after a choice made this turn, so opening Research later to browse isn't nagged; "Not now" dismisses it.
   const chosen = pendingResearchQueue(orders);
@@ -207,9 +263,17 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     return { id, title: peace ? 'Answer the peace talks' : 'Answer this first', why: d.label, current: 0,
       steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${ctx.turnLabel ?? d.label}.`, target: control('turn') }] };
   }
+  const garrison = ownUnits(v).find((u) => u.occupation_lock != null);
+  if (garrison && !seen.includes('garrisonLock') && !ctx.techOpen && !ctx.selection) {
+    const city = occupiedCityName(v, garrison), people = ownerName(v, garrison.occupation_lock!);
+    return { id: 'garrisonLock', title: `Your ${unitName(v, garrison)} holds ${city}`,
+      why: `Your military units in ${city} stay as its garrison until Peace with ${people} or their elimination. ${city} builds nothing until then.`,
+      steps: [{ instruction: `Make Peace with ${people} in Diplomacy to free your garrison.`, target: control('diplomacy') }],
+      current: 0, acknowledge: true };
+  }
   // Situational advice comes before the routine decisions, but never interrupts a unit or panel already in hand.
   if (seen.includes('welcome') && !ctx.techOpen) {
-    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx), ctx.placingTile ?? null);
+    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx), ctx.placingTile ?? null, locks);
     if (tip && !skipped.includes(tip.id) && (!ctx.selection || tip.current > 0)) return tip;
   }
   // Follow the screen: the open Research panel or the selected city or unit is the decision in hand.
@@ -224,7 +288,6 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     }
     if (d.kind === 'research') {
       if (skipped.includes('research') || effectiveResearchQueue(orders, v.research).length) continue;
-      const choice = plan?.find((o): o is Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }> => o.type === 'SetResearch' || o.type === 'SetResearchQueue');
       return researchSuggestion(ctx, choice);
     }
     if (d.kind === 'unit') {
@@ -243,16 +306,16 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${solo ? 'End turn' : 'Ready'}.`, key: ctx.touch ? undefined : 'Return', target: control('turn', 'end') }], current: 0 };
 }
 
-interface AdvisorPreferences { enabled: boolean; seen: string[]; practice: Practice; tips: TipLog }
+interface AdvisorPreferences { enabled: boolean; seen: string[]; practice: Practice; tips: TipLog; locks: LockLog }
 export function readAdvisorPreferences(): AdvisorPreferences {
   try {
     const raw: unknown = JSON.parse(globalThis.localStorage?.getItem(ADVISOR_KEY) ?? 'null');
     if (raw && typeof raw === 'object') {
       const p = raw as { enabled?: unknown; seen?: unknown; tutorial?: unknown; practice?: unknown };
-      return { enabled: p.enabled !== false, practice: readPractice(p.practice), tips: readTips((p as { tips?: unknown }).tips), seen: Array.isArray(p.seen) ? p.seen.filter((x): x is string => typeof x === 'string') : Array.isArray(p.tutorial) ? p.tutorial.filter((x): x is string => typeof x === 'string') : [] };
+      return { enabled: p.enabled !== false, practice: readPractice(p.practice), tips: readTips((p as { tips?: unknown }).tips), locks: readTips((p as { locks?: unknown }).locks), seen: Array.isArray(p.seen) ? p.seen.filter((x): x is string => typeof x === 'string') : Array.isArray(p.tutorial) ? p.tutorial.filter((x): x is string => typeof x === 'string') : [] };
     }
   } catch { /* Storage may be unavailable. */ }
-  return { enabled: true, seen: [], practice: {}, tips: {} };
+  return { enabled: true, seen: [], practice: {}, tips: {}, locks: {} };
 }
 const PRACTICE_KINDS: readonly PracticeKind[] = ['move', 'fortify', 'skip', 'explore', 'endTurn', 'closeResearch'];
 function readPractice(raw: unknown): Practice {
@@ -268,8 +331,8 @@ function readTips(raw: unknown): TipLog {
   if (!raw || typeof raw !== 'object') return {};
   return Object.fromEntries(Object.entries(raw as Record<string, unknown>).filter((e): e is [string, number] => typeof e[1] === 'number' && Number.isFinite(e[1])));
 }
-function savePreferences({ enabled, seen, practice, tips }: AdvisorPreferences) {
-  try { globalThis.localStorage?.setItem(ADVISOR_KEY, JSON.stringify({ enabled, seen, practice, tips })); } catch { /* Session state still works. */ }
+function savePreferences({ enabled, seen, practice, tips, locks }: AdvisorPreferences) {
+  try { globalThis.localStorage?.setItem(ADVISOR_KEY, JSON.stringify({ enabled, seen, practice, tips, locks })); } catch { /* Session state still works. */ }
 }
 interface AdvisorState extends AdvisorPreferences {
   skippedTurn: number;
@@ -282,6 +345,7 @@ interface AdvisorState extends AdvisorPreferences {
   resetPractice(): void;
   /** Record a tip as shown on this turn. An earlier turn than any logged means a new game: the log starts over. */
   noteTip(key: string, turn: number): void;
+  observeLocks(view: PlayerView): void;
   skip(id: string, turn: number): void;
   setEnabled(enabled: boolean): void;
 }
@@ -306,6 +370,17 @@ export const useAdvisor = create<AdvisorState>((set) => ({
     const next = { ...s, tips: { ...log, [key]: turn, [count]: (log[count] ?? 0) + 1 } };
     savePreferences(next);
     return next;
+  }),
+  observeLocks: (view) => set((s) => {
+    const locks: Record<string, number> = {};
+    for (const unit of view.units) {
+      if (unit.owner !== view.me || unit.occupation_lock == null) continue;
+      const key = `${unit.id}:${unit.occupation_lock}`;
+      const since = s.locks[key];
+      locks[key] = since !== undefined && since <= view.turn ? since : view.turn;
+    }
+    if (Object.keys(locks).length === Object.keys(s.locks).length && Object.entries(locks).every(([key, since]) => s.locks[key] === since)) return s;
+    const next = { ...s, locks }; savePreferences(next); return next;
   }),
   resetPractice: () => set((s) => { const next = { ...s, practice: {}, practised: [] }; savePreferences(next); return next; }),
   setEnabled: (enabled) => set((s) => { const next = { ...s, enabled }; savePreferences(next); return next; }),

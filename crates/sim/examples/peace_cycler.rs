@@ -68,7 +68,7 @@ fn levy_of_team(state: &GameState, team: TeamId) -> usize {
         .players
         .iter()
         .filter(|p| p.alive && p.team == team)
-        .map(|p| economy::levy_count(state, p.id))
+        .map(|p| economy::upkeep_unit_count(state, p.id))
         .sum()
 }
 
@@ -224,7 +224,7 @@ fn play(seed: u64, cycle: bool, war_turns: u32, first_war: u32) -> Value {
         c.observe(&session.state);
         if session.state.turn == 100 {
             for p in &session.state.players {
-                levy_t100.insert(p.id.0, economy::levy_count(&session.state, p.id));
+                levy_t100.insert(p.id.0, economy::upkeep_unit_count(&session.state, p.id));
             }
         }
     }

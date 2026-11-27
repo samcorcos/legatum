@@ -152,6 +152,17 @@ function TermsPlate({ view, team, close }: { view: PlayerView; team: TeamId; clo
   </Plate>;
 }
 
+/** Byzantium's Buy a city: War between buyer and seller calls a running offer off (core `buy_city::process_offers`). */
+function offersCalledOff(view: PlayerView, team: TeamId): string[] {
+  const teamOf = (id: number) => view.players.find((p) => p.id === id)?.team;
+  return (view.city_offers ?? []).flatMap((o) => {
+    const name = view.cities.find((c) => c.id === o.city)?.name ?? 'the city';
+    if (o.buyer === view.me && teamOf(o.seller) === team) return [`Your offer for ${name} is called off, and the Gold comes back.`];
+    if (o.seller === view.me && teamOf(o.buyer) === team) return [`${empireTitle(view, team)}'s offer for ${name} is called off.`];
+    return [];
+  });
+}
+
 export function WarPlate({ view, team, attackText, confirmLabel = 'Declare War', onConfirm, onClose }: {
   view: PlayerView; team: TeamId; attackText?: string; confirmLabel?: string; onConfirm(): void; onClose(): void;
 }) {
@@ -175,6 +186,8 @@ export function WarPlate({ view, team, attackText, confirmLabel = 'Declare War',
     ...(action.cost > 0 ? [`Breaking the Alliance costs ${action.cost} Gold.`] : []),
     ...(action.cost === 0 ? ['Costs no Gold.'] : []),
     ...(action.betrayal ? [`Betrayal: ${empireTitle(view, team)} will refuse an Alliance for ${allianceTerms(view.cities.filter((c) => c.owner === view.me).length).betrayalTurns} turns.`] : []),
+    ...(relationWith(view, team)?.state === 'Alliance' ? ['The Alliance ends: no more shared sight or open borders.'] : []),
+    ...offersCalledOff(view, team),
   ] : [];
   const armies = armyLine(view, team, [...(action?.new_wars ?? []).flatMap((w) => [w.team, w.enemy]), ...(action?.calls ?? []).flatMap((w) => [w.team, w.enemy])]);
   return <Plate view={view} team={team} mode="war" onClose={onClose}>

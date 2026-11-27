@@ -47,7 +47,7 @@ export function CityBorders({ city, view, onChoose, slot }: { city: CityView; vi
   }
   if (slot === 'row') return null;
   const faction = view.players.find((p) => p.id === city.owner)?.faction;
-  const otherName = buy.other?.type === 'BuyItem' ? itemName(buy.other.item, faction) : buy.other?.type === 'HireCompany' ? itemName({ kind: 'Unit', unit: buy.other.unit }, faction) : null;
+  const otherName = buy.other?.type === 'BuyItem' ? itemName(buy.other.item, faction) : null;
   const reason = buy.blocker ? shortReason(buy.blocker)
     : otherName ? `Cancel the ${otherName} purchase first`
     : !buy.tags.length ? 'No free tile in reach'

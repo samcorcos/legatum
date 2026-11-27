@@ -2300,13 +2300,18 @@ pub fn resolve_boundary(
             .relation(p.from, p.to)
             .filter(|r| r.version != p.relation_version);
         let reason = if !after.team_alive(p.from) || !after.team_alive(p.to) {
-            Some("A team was eliminated")
+            Some("A team was eliminated".to_string())
         } else if after.finished {
-            Some("The game ended")
+            Some("The game ended".to_string())
         } else if changed.is_some_and(|r| r.state == RelationState::War) {
-            Some(WAR_ENDS_OFFERS)
+            Some(WAR_ENDS_OFFERS.to_string())
         } else if changed.is_some() || d.relation(p.from, p.to).is_none() {
-            Some("Relationship changed")
+            Some("Relationship changed".to_string())
+        } else if p.kind == TreatyKind::Alliance {
+            // An Alliance offer that this turn made impossible (say the proposer just signed a
+            // guaranteed Peace with the receiver's enemy) is withdrawn now, with the reason the
+            // accept would give, so nobody is shown an offer they cannot take.
+            check_alliance(&d, after, p.from, p.to, effective_turn).err()
         } else {
             None
         };
@@ -2314,7 +2319,7 @@ pub fn resolve_boundary(
             events.push(Event::ProposalInvalidated {
                 proposal: proposal_for_event(&d, p),
                 effective_turn,
-                reason: reason.into(),
+                reason,
             });
         } else if effective_turn > p.respond_by {
             cooldown(&mut d, &p, effective_turn);

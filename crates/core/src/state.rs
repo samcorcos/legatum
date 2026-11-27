@@ -396,13 +396,6 @@ pub struct Unit {
     /// whoever holds him scores that empire's goal (`goals::heir_holder`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heir_of: Option<PlayerId>,
-    /// A Mercenary Company only (Byzantium, `company`): the last turn of its contract. The unit
-    /// goes home at the end of that turn's resolution. None for every ordinary unit.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub contract_until: Option<u32>,
-    /// A Mercenary Company only: the faction that sold it.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<Faction>,
 }
 
 fn unit_creation_turn() -> u32 {
@@ -896,6 +889,10 @@ pub struct Player {
     /// each has used supply and whether it is idle (`resources::update_supply`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub supply: Vec<crate::resources::SupplyRecord>,
+    /// Byzantium's running offer for a rival's city (`buy_city`, `Order::BuyCity`): the Gold in
+    /// escrow and the turn the city changes hands. Public. Omitted when none, so older saves load.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub city_offer: Option<crate::buy_city::CityOffer>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1045,6 +1042,7 @@ static BARBARIAN_PLAYER: std::sync::LazyLock<Player> = std::sync::LazyLock::new(
     goal_rule: None,
     // Barbarians have no economy: no supply.
     supply: Vec::new(),
+    city_offer: None,
 });
 
 impl GameState {
@@ -1055,11 +1053,10 @@ impl GameState {
             .unit_moves_for(player.faction, kind)
     }
 
-    /// The faction whose version of `u` it is: its seller for a hired Company (`company`), else
-    /// its owner's own faction. The unit's own stat line, name and rules follow it; faction-wide
-    /// rules follow the owner.
+    /// The faction whose version of `u` it is: its owner's faction. The unit's own stat line,
+    /// name and rules follow it.
     pub fn made_by(&self, u: &Unit) -> Faction {
-        u.origin.unwrap_or_else(|| self.player(u.owner).faction)
+        self.player(u.owner).faction
     }
 
     /// The stats of `u`, as its owner fields it (`made_by` for its own line).

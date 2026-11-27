@@ -396,8 +396,6 @@ pub fn forecast_air_strike(
         sight: None,
         resting_heal: None,
         heir_of: None,
-        contract_until: None,
-        origin: None,
     };
     let mut with_plane = view.clone();
     let mut units = view.units.to_vec();
