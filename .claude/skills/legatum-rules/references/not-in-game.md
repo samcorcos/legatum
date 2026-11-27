@@ -22,7 +22,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Road-laying units / tile-by-tile road building | **Absent** — roads come only from the Yam Relay Station (the Courier Hall, §8) and the Roadworks building (`roads::extend_roadworks`) |
 | Military Engineer, Forts | **Removed 2026-10-22** — Siege is a Gold upgrade on an ordinary unit (§4); units laying roads or building Forts are roadmap only |
 | City-states | **Absent** |
-| Tech trading | **Absent** — only passive diffusion (−10% per other living empire that knows it, max −50%), which a closed Japan (Sakoku, §8) does not get |
+| Tech trading | **Absent** — only passive diffusion (−10% per other living empire that knows it, max −50%); a closed country (Sakoku) gets none |
 | Tech boosts (Eurekas) | **Removed 2026-10-17** — a technology's price depends only on the table and diffusion |
 | Endless / repeatable technologies | **Absent** — after all technologies are known, Science converts to Gold, Food or Production at 50% (Eras and technologies) |
 | Relocating/moving a city | **Absent** |
