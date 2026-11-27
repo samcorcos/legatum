@@ -184,6 +184,8 @@ decision_params! {
     flower_wars_value: 100, 0, 300, "Aztec captive value as a percent of the nearest city growth cost; rivals value denying captives with ranged units and Walls";
     egypt_food_buildings: 0, 0, 1, "Hard Egypt: value buildings by turns of surplus Food and lost growth, and wait for growth after the Royal Granary (1: on)";
     chariot_archer_bonus: 0, 0, 300, "Production value added to Egypt's Chariot Archer (its Archer: 3 moves, +40% shooting the melee line) while the army is below quota, so Egypt fields its fast defender against a foot rush (Sam, 2026-11-25)";
+    egypt_grow_to: 0, 0, 20, "Hard Egypt on the Nile: while no enemy or Barbarian military unit is in sight within 8 hexes of a city, the city chooses Grow instead of a Settler or combat unit until it reaches this population (0: off)";
+    egypt_peace_army: 0, 0, 300, "Hard Egypt on the Nile: while no enemy or Barbarian military unit is in sight within 8 hexes of a city, the city chooses Grow instead of a new combat unit once Egypt's land army (Scouts aside) is at least this percent of its city count, at least 1 (0: off)";
     egypt_grow_payback: 30, 0, 200, "Egypt on the Nile: a city chooses Grow instead of a building, wonder or improvement when the Food the next population costs is repaid by its extra surplus within this many turns (0: never grows by choice)";
     scribe_bias: 0, 0, 300, "Research value added to Writing, Code of Laws and Philosophy; former hard-coded faction bias (climb program stage 1): Athens 140";
     currency_tech_bonus: 0, 0, 200, "Research value added to Currency in its tech value; former hard-coded faction bonus (climb program stage 1): Switzerland 20";
@@ -838,6 +840,7 @@ pub const BUILTIN_FACTION_DECISIONS: &[(Faction, &str, i32)] = &[
     (Faction::India, "india_playbook", 2),
     (Faction::Egypt, "egypt_food_buildings", 1),
     (Faction::Egypt, "chariot_archer_bonus", 120),
+    (Faction::Egypt, "egypt_peace_army", 100),
 ];
 
 impl DecisionParams {

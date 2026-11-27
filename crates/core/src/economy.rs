@@ -951,6 +951,13 @@ pub fn city_upkeep(state: &GameState, p: PlayerId) -> i32 {
         .city_upkeep(state.cities_of(p).count() as i32)
 }
 
+/// Extra Gold per turn if this empire gains one city, using the same rounding as its total bill.
+pub fn added_city_upkeep(state: &GameState, p: PlayerId) -> i32 {
+    let cities = state.cities_of(p).count() as i32;
+    let rules = state.setup.rule_experiments;
+    rules.city_upkeep(cities + 1) - rules.city_upkeep(cities)
+}
+
 /// Food a city needs to grow, less decadence (rounding down once).
 pub fn growth_threshold(state: &GameState, city: &City) -> Breakdown {
     let mut b = Breakdown::default();

@@ -84,7 +84,7 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "moves": 5,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -105,7 +105,7 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -126,7 +126,7 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -140,14 +140,14 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -168,21 +168,21 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 3,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 54,
   },
   {
     "kind": "Arquebusier",
@@ -203,28 +203,28 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -593,7 +593,7 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "moves": 5,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -614,7 +614,7 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -635,7 +635,7 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -649,14 +649,14 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -677,21 +677,21 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 2,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 54,
   },
   {
     "kind": "Arquebusier",
@@ -712,28 +712,28 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -1067,7 +1067,7 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "moves": 5,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -1088,7 +1088,7 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "moves": 2,
     "ranged": 0,
     "strength": 96,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -1109,7 +1109,7 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -1123,14 +1123,14 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -1151,21 +1151,21 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "moves": 2,
     "ranged": 0,
     "strength": 29,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 2,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 54,
   },
   {
     "kind": "Arquebusier",
@@ -1186,28 +1186,28 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "moves": 2,
     "ranged": 0,
     "strength": 80,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -1394,7 +1394,7 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "moves": 5,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -1415,7 +1415,7 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "moves": 2,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -1436,7 +1436,7 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -1450,14 +1450,14 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -1478,21 +1478,21 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "moves": 2,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 2,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 54,
   },
   {
     "kind": "Arquebusier",
@@ -1513,28 +1513,28 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "moves": 2,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -2855,20 +2855,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Athens 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Athens 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Athens 149`] = `null`;
 
@@ -3930,20 +3922,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Aztecs 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Aztecs 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Aztecs 149`] = `null`;
 
@@ -5005,20 +4989,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Byzantium 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Byzantium 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Byzantium 149`] = `null`;
 
@@ -6080,20 +6056,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Celts 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Celts 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Celts 149`] = `null`;
 
@@ -7155,20 +7123,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Germany 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Germany 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Germany 149`] = `null`;
 
@@ -8230,20 +8190,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for India 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for India 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for India 149`] = `null`;
 
@@ -9305,20 +9257,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Mongols 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Mongols 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Mongols 149`] = `null`;
 
@@ -10380,20 +10324,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Rome 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Rome 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Rome 149`] = `null`;
 
@@ -11455,20 +11391,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Sparta 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Sparta 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Sparta 149`] = `null`;
 
@@ -12530,20 +12458,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
       "Military Engineering (50%)",
       -70,
     ],
-    [
-      "Base upgrade Gold",
-      164,
-    ],
-    [
-      "Military Engineering (50%)",
-      -82,
-    ],
   ],
-  "total": 400,
+  "total": 318,
 }
 `;
 
-exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Switzerland 148`] = `null`;
+exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Switzerland 148`] = `318`;
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for Switzerland 149`] = `null`;
 
@@ -12590,35 +12510,35 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "moves": 2,
     "ranged": 0,
     "strength": 20,
-    "upgrade": null,
+    "upgrade": 210,
   },
   {
     "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
-    "upgrade": null,
+    "upgrade": 214,
   },
   {
     "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
-    "upgrade": null,
+    "upgrade": 138,
   },
   {
     "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
-    "upgrade": null,
+    "upgrade": 132,
   },
   {
     "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "HeirToTheThrone",
@@ -12632,14 +12552,14 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "moves": 4,
     "ranged": 0,
     "strength": 26,
-    "upgrade": null,
+    "upgrade": 268,
   },
   {
     "kind": "Knight",
     "moves": 4,
     "ranged": 0,
     "strength": 42,
-    "upgrade": null,
+    "upgrade": 174,
   },
   {
     "kind": "Cavalry",
@@ -12653,7 +12573,7 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "moves": 6,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -12674,7 +12594,7 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "moves": 2,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -12695,7 +12615,7 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -12709,14 +12629,14 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -12737,63 +12657,63 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "moves": 2,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 180,
   },
   {
     "kind": "CompositeArcher",
     "moves": 2,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 178,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 228,
   },
   {
     "kind": "Arquebusier",
     "moves": 2,
     "ranged": 45,
     "strength": 34,
-    "upgrade": null,
+    "upgrade": 74,
   },
   {
     "kind": "Cuirassier",
     "moves": 4,
     "ranged": 0,
     "strength": 57,
-    "upgrade": null,
+    "upgrade": 100,
   },
   {
     "kind": "TrenchInfantry",
     "moves": 2,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -13682,7 +13602,7 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "moves": 5,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -13703,7 +13623,7 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "moves": 2,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -13724,7 +13644,7 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -13738,14 +13658,14 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -13766,21 +13686,21 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "moves": 2,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 2,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 54,
   },
   {
     "kind": "Arquebusier",
@@ -13801,28 +13721,28 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "moves": 2,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -14610,7 +14530,7 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "moves": 6,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -14631,7 +14551,7 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "moves": 3,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -14652,7 +14572,7 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "moves": 3,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -14666,14 +14586,14 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "moves": 2,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 2,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -14694,21 +14614,21 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "moves": 3,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 3,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 5,
     "ranged": 17,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 40,
   },
   {
     "kind": "Arquebusier",
@@ -14729,28 +14649,28 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "moves": 3,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 3,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 4,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 2,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -15119,7 +15039,7 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "moves": 5,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -15140,7 +15060,7 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "moves": 2,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -15161,7 +15081,7 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -15175,14 +15095,14 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -15203,21 +15123,21 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "moves": 2,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 2,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 54,
   },
   {
     "kind": "Arquebusier",
@@ -15238,28 +15158,28 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "moves": 2,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -17859,7 +17779,7 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "moves": 5,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -17880,7 +17800,7 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -17901,7 +17821,7 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -17915,14 +17835,14 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -17943,21 +17863,21 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 2,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 54,
   },
   {
     "kind": "Arquebusier",
@@ -17978,28 +17898,28 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "moves": 2,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
@@ -18633,7 +18553,7 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "moves": 5,
     "ranged": 0,
     "strength": 94,
-    "upgrade": null,
+    "upgrade": 86,
   },
   {
     "kind": "AutonomousArmour",
@@ -18654,7 +18574,7 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "moves": 2,
     "ranged": 0,
     "strength": 89,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "HunterKiller",
@@ -18675,7 +18595,7 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "moves": 2,
     "ranged": 98,
     "strength": 77,
-    "upgrade": null,
+    "upgrade": 55,
   },
   {
     "kind": "CombatDrone",
@@ -18689,14 +18609,14 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "moves": 1,
     "ranged": 103,
     "strength": 103,
-    "upgrade": null,
+    "upgrade": 70,
   },
   {
     "kind": "Bomber",
     "moves": 1,
     "ranged": 114,
     "strength": 64,
-    "upgrade": null,
+    "upgrade": 80,
   },
   {
     "kind": "StealthFighter",
@@ -18717,21 +18637,21 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "moves": 2,
     "ranged": 0,
     "strength": 25,
-    "upgrade": null,
+    "upgrade": 42,
   },
   {
     "kind": "CompositeArcher",
     "moves": 2,
     "ranged": 22,
     "strength": 14,
-    "upgrade": null,
+    "upgrade": 46,
   },
   {
     "kind": "Cataphract",
     "moves": 4,
     "ranged": 0,
     "strength": 33,
-    "upgrade": null,
+    "upgrade": 54,
   },
   {
     "kind": "Arquebusier",
@@ -18752,28 +18672,28 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "moves": 2,
     "ranged": 0,
     "strength": 74,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "Howitzer",
     "moves": 2,
     "ranged": 80,
     "strength": 62,
-    "upgrade": null,
+    "upgrade": 105,
   },
   {
     "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
-    "upgrade": null,
+    "upgrade": 160,
   },
   {
     "kind": "Biplane",
     "moves": 1,
     "ranged": 60,
     "strength": 60,
-    "upgrade": null,
+    "upgrade": 130,
   },
   {
     "kind": "MechanisedInfantry",
