@@ -6,6 +6,9 @@ use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
 pub const EXPLORE_MIN_HP: i32 = 60;
+/// Auto-explore keeps at least this many tiles from a known barbarian camp: the guard and
+/// roamers wander up to `ROAM_RADIUS` from it and still have moves left to attack.
+pub const CAMP_SAFE_DISTANCE: i32 = legatum_core::rules::barbarians::ROAM_RADIUS + 2;
 
 /// Shared with the empire AI's civilian/scout planner. Lower is better.
 pub(crate) fn frontier_score(ctx: &Ctx<'_>, h: Hex, distance: i32, bonus: i32) -> i32 {
@@ -45,6 +48,23 @@ pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
             .max()
             .unwrap_or(0)
     };
+    // Known barbarian camps and recent sightings of armies now out of sight: places a
+    // scout keeps away from. Unlike a live army, being near one retreats without stopping.
+    let spared = view.barbarians_spare_me();
+    let lurking_at = |h: Hex| {
+        view.barbarian_camps
+            .iter()
+            .filter(|_| !spared)
+            .map(|c| (CAMP_SAFE_DISTANCE - h.distance(c.pos)).max(0))
+            .chain(ctx.remembered_threats.iter().map(|o| {
+                let s = legatum_core::data::unit_stats(o.kind);
+                (s.range.max(s.moves).max(1) + 1 - h.distance(o.pos)).max(0)
+            }))
+            .max()
+            .unwrap_or(0)
+    };
+    let live_danger_at = danger_at;
+    let danger_at = |h: Hex| live_danger_at(h).max(lurking_at(h));
     let unsafe_at = |h: Hex| danger_at(h) > 0;
     let blocked = |h: Hex| {
         view.index(h).is_some_and(|i| ctx.neutral_at[i])
@@ -101,7 +121,7 @@ pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
             })
             .collect()
     };
-    let threatened = unsafe_at(scout.pos);
+    let threatened = live_danger_at(scout.pos) > 0;
     let stop = if scout.hp < EXPLORE_MIN_HP {
         Some(ExploreStopReason::Damaged)
     } else if threatened {
@@ -276,6 +296,68 @@ mod tests {
                     .all(|h| h.distance(off(8, 5)) > v.units[1].max_moves)
             );
         }
+    }
+
+    /// A known barbarian camp (even one now out of sight with no guard visible) and a recent
+    /// sighting of an army are kept at a distance: the route and target stay clear, and a
+    /// scout already too close walks away without switching auto-explore off.
+    #[test]
+    fn explore_keeps_away_from_known_camps_and_remembered_armies() {
+        let camp = off(9, 5);
+        let mut v = ViewBuilder::new(20, 12)
+            .unexplored_from_col(13)
+            .unit(1, ME, UnitKind::Scout, off(5, 5))
+            .build();
+        v.barbarian_camps
+            .push(legatum_core::view::BarbarianCampView {
+                pos: camp,
+                visible: false,
+            });
+        let (path, stop) = plan(&v);
+        assert!(stop.is_none());
+        assert!(!path.is_empty());
+        assert!(path.iter().all(|h| h.distance(camp) >= CAMP_SAFE_DISTANCE));
+
+        // Already beside the camp: retreat, still exploring.
+        v.units[0].pos = off(8, 5);
+        let (path, stop) = plan(&v);
+        assert!(stop.is_none());
+        let end = *path.last().expect("walks away");
+        assert!(end.distance(camp) > off(8, 5).distance(camp));
+
+        // The Celts are spared by barbarians, so their scouts ignore camps.
+        let mut celts = v.clone();
+        celts.players.iter_mut().for_each(|p| {
+            if p.id == ME {
+                p.faction = legatum_core::Faction::Celts
+            }
+        });
+        celts.units[0].pos = off(5, 5);
+        let mut no_camp = celts.clone();
+        no_camp.barbarian_camps.clear();
+        assert!(celts.barbarians_spare_me());
+        assert_eq!(plan(&celts), plan(&no_camp));
+
+        // An enemy army seen last turn, now out of sight, is avoided too.
+        let foe = off(10, 5);
+        let mut w = ViewBuilder::new(20, 12)
+            .unexplored_from_col(15)
+            .unit(1, ME, UnitKind::Scout, off(5, 5))
+            .build();
+        let i = w.index(foe).unwrap();
+        w.tiles[i].visible = false;
+        w.observed_threats
+            .push(legatum_core::state::ThreatObservation {
+                unit: UnitId(9),
+                owner: ENEMY,
+                kind: UnitKind::Archer,
+                pos: foe,
+                seen_turn: w.turn,
+            });
+        let (path, stop) = plan(&w);
+        assert!(stop.is_none());
+        assert!(!path.is_empty());
+        assert!(path.iter().all(|h| h.distance(foe) > 3));
     }
 
     /// Barbarians never attack the Celts: a Celtic scout is not "threatened" by one and walks
