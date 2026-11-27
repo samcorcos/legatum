@@ -6,16 +6,17 @@ import { WALLS_HP_PER_LEVEL } from '../combat';
 import { isThreat } from '../diplomacy';
 import { distance, hexEq } from '../hex';
 import { effectiveResearchQueue, pendingResearchQueue } from '../orders';
+import { revealedByTech } from '../resources';
 import { pendingDecisions } from '../turnFlow';
 import { HOLD_TURNS } from '../victoryHold';
 import { techCardUnlocks } from './techCardUnlocks';
 import { YIELD_LABEL, type YieldKey } from './yieldKeys';
 import { strategyTip, tipKind, type TipLog } from './advisorTips';
-import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, UnitView } from '../types';
+import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, TechId, UnitView } from '../types';
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'queueTech' | 'researchQueue' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
 export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean; tip?: boolean }
 export interface AdvisorContext {
@@ -36,12 +37,33 @@ export interface AdvisorContext {
   turnLabel?: string;
   /** The city whose Buy a tile placement is open, if any: the advisor guides the last click there. */
   placingTile?: number | null;
+  /** The latest resolved turn finished a technology and left no next technology. */
+  researchQueueDrained?: boolean;
 }
 const RESEARCH_FALLBACK = 'Research gives your empire new choices.';
 const ownCities = (v: PlayerView) => v.cities.filter((c) => c.owner === v.me);
 const ownUnits = (v: PlayerView) => v.units.filter((u) => u.owner === v.me);
 const factionOf = (v: PlayerView) => v.players.find((p) => p.id === v.me)?.faction ?? 'Switzerland';
 const otherSide = (v: PlayerView, owner: number) => owner !== v.me && v.players.find((p) => p.id === owner)?.team !== v.team;
+// Match the technologies the Hard planner prioritizes under threat (`crates/ai/src/research.rs::is_military_tech`).
+const DEFENCE_TECHS = new Set<TechId>(['Masonry', 'Mathematics', 'Feudalism', 'Machinery', 'Chivalry', 'Gunpowder', 'Metallurgy', 'MilitaryEngineering', 'Rifling', 'MilitaryScience', 'Cannonry', 'ReplaceableParts', 'Combustion', 'Steel', 'Flight', 'Robotics', 'StealthTechnology']);
+function researchWhy(order: Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }>, view: PlayerView): string {
+  const tech = order.type === 'SetResearch' ? order.tech : order.techs[0];
+  if (!tech) return RESEARCH_FALLBACK;
+  const unlocks = techCardUnlocks(view.research, tech, factionOf(view));
+  const military = DEFENCE_TECHS.has(tech) && unlocks.find((u) => u.kind === 'Unit' || u.label === 'Walls');
+  const nearArmy = view.units.some((u) => u.military && otherSide(view, u.owner) && ownCities(view).some((c) => distance(c.pos, u.pos) <= 6)
+    && (isThreat(view, u.owner) || (view.players.find((p) => p.id === u.owner)?.army ?? 0) > (view.players.find((p) => p.id === view.me)?.army ?? 0)));
+  const ahead = view.players.some((p) => p.alive && otherSide(view, p.id) && p.era > view.research.era + 1
+    && view.cities.some((c) => c.owner === p.id && ownCities(view).some((own) => distance(c.pos, own.pos) <= 12)));
+  if (military && (nearArmy || ahead)) return `${nearArmy ? 'Enemies are near' : 'A rival is ahead'}: ${TECH_NAME[tech]} unlocks ${military.label}.`;
+  const resource = revealedByTech(tech)[0];
+  if (resource) return `${TECH_NAME[tech]} shows ${resource} on the map.`;
+  const unlock = unlocks.find((u) => u.kind !== 'Effect');
+  if (!unlock) return RESEARCH_FALLBACK;
+  const main = unlock.yields.find(([key]) => key === 'food' || key === 'production' || key === 'gold' || key === 'science');
+  return `${TECH_NAME[tech]} unlocks the ${unlock.label}${main ? `: +${main[1]} ${YIELD_LABEL[main[0]]} in a city` : ''}.`;
+}
 const nearestCity = (v: PlayerView, at: Hex) => ownCities(v).sort((a, b) => distance(a.pos, at) - distance(b.pos, at))[0];
 /**
  * Routine steps (moving a unit, Fortify, Skip, Auto-explore, End turn, Close Research) are taught only until the
@@ -97,11 +119,7 @@ export function advisorWhy(order: Order, view: PlayerView, city?: CityView, unit
     return `${city.name} can put its Production to work.`;
   }
   if (order.type === 'SetResearch' || order.type === 'SetResearchQueue') {
-    const tech = order.type === 'SetResearch' ? order.tech : order.techs[0];
-    const unlock = tech && techCardUnlocks(view.research, tech, factionOf(view)).find((u) => u.kind !== 'Effect');
-    if (!unlock || !tech) return RESEARCH_FALLBACK;
-    const main = unlock.yields.find(([key]) => key === 'food' || key === 'production' || key === 'gold' || key === 'science');
-    return `${TECH_NAME[tech]} unlocks the ${unlock.label}${main ? `: +${main[1]} ${YIELD_LABEL[main[0]]} in a city` : ''}.`;
+    return researchWhy(order, view);
   }
   if (order.type === 'SetAutomation') return 'Exploring finds city sites, ruins and rivals.';
   if (order.type === 'FoundCity') return 'A new city gives your empire more room to grow.';
@@ -144,15 +162,23 @@ function citySuggestion(ctx: AdvisorContext, city: CityView, order?: Extract<Ord
     ] };
 }
 function researchSuggestion(ctx: AdvisorContext, order?: Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }>): Suggestion {
-  const planned = order?.type === 'SetResearch' ? order.tech : order?.techs[0];
-  const tech = ctx.view.research.available.some((option) => option.tech === planned) ? planned : undefined;
-  const name = tech && TECH_NAME[tech];
-  return { id: 'research', title: name ? `Research ${name}` : 'Choose research',
-    why: order && tech ? advisorWhy(order, ctx.view) : RESEARCH_FALLBACK, current: ctx.techOpen ? 1 : 0,
-    steps: [
-      { instruction: `${ctx.touch ? 'Tap' : 'Click'} Research at the top.`, key: ctx.touch ? undefined : 'T', target: control('research') },
-      { instruction: name ? `${ctx.touch ? 'Tap' : 'Click'} ${name}.` : 'Choose a technology.', target: tech ? control('tech', tech) : null },
-    ] };
+  const planned = order?.type === 'SetResearch' ? [order.tech] : order?.techs ?? [];
+  const available = new Set(ctx.view.research.available.map((option) => option.tech));
+  const techs = planned.filter((tech) => available.has(tech)).slice(0, 3);
+  const queue = effectiveResearchQueue(validOrders(ctx), ctx.view.research);
+  const matched = techs.findIndex((tech, i) => queue[i] !== tech);
+  const done = matched < 0 ? techs.length : matched;
+  const names = techs.map((tech) => TECH_NAME[tech]);
+  const title = names.length > 1 ? `Queue research: ${names.join(', then ')}` : names.length ? `Research ${names[0]}` : 'Choose research';
+  const steps: AdvisorStep[] = [
+    { instruction: `${ctx.touch ? 'Tap' : 'Click'} Research at the top.`, key: ctx.touch ? undefined : 'T', target: control('research') },
+    { instruction: names[0] ? `${ctx.touch ? 'Tap' : 'Click'} ${names[0]}.` : 'Choose a technology.', target: techs[0] ? control('tech', techs[0]) : null },
+    ...techs.slice(1).map((tech): AdvisorStep => ({ instruction: ctx.touch
+      ? `Tap This era, then + Queue on ${TECH_NAME[tech]}.`
+      : `Shift-click ${TECH_NAME[tech]} in the tree, or click + Queue.`, target: control('queueTech', tech) })),
+  ];
+  return { id: 'research', title, why: order && techs.length ? researchWhy({ type: 'SetResearch', tech: techs[0] }, ctx.view) : RESEARCH_FALLBACK,
+    current: ctx.techOpen ? 1 + done : 0, steps };
 }
 function unitSuggestion(ctx: AdvisorContext, unit: UnitView, order?: Order): Suggestion | null {
   const name = unitName(ctx.view, unit), first: AdvisorStep = { instruction: `${ctx.touch ? 'Tap' : 'Click'} your ${name}.`, target: tile(unit.pos) };
@@ -200,6 +226,20 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
+  const choice = plan?.find((o): o is Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }> => o.type === 'SetResearch' || o.type === 'SetResearchQueue');
+  const queue = effectiveResearchQueue(orders, v.research);
+  if (!seen.includes('researchQueue') && !skipped.includes('researchQueue') &&
+      ((ctx.techOpen && queue.length === 1) || (ctx.researchQueueDrained && queue.length === 0))) {
+    return { id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: ctx.techOpen ? 1 : 0,
+      why: 'Add several technologies so research never stops between turns. The first in line is researched first.',
+      steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} Research at the top.`, target: control('research') },
+        { instruction: 'Add more technologies to this queue.', target: control('researchQueue') }] };
+  }
+  const pendingQueue = pendingResearchQueue(orders);
+  if (pendingQueue?.length && choice?.type === 'SetResearchQueue' && !skipped.includes('research')) {
+    const recommended = choice.techs.filter((tech) => v.research.available.some((option) => option.tech === tech)).slice(0, 3);
+    if (pendingQueue.length < recommended.length && pendingQueue.every((tech, i) => recommended[i] === tech)) return researchSuggestion(ctx, choice);
+  }
   // Research is chosen but its panel is still open: closing it is the next step, since the rest of the turn is behind it.
   // Only after a choice made this turn, so opening Research later to browse isn't nagged; "Not now" dismisses it.
   const chosen = pendingResearchQueue(orders);
@@ -233,7 +273,6 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     }
     if (d.kind === 'research') {
       if (skipped.includes('research') || effectiveResearchQueue(orders, v.research).length) continue;
-      const choice = plan?.find((o): o is Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }> => o.type === 'SetResearch' || o.type === 'SetResearchQueue');
       return researchSuggestion(ctx, choice);
     }
     if (d.kind === 'unit') {

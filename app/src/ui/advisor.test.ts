@@ -49,7 +49,9 @@ describe('one decision at a time', () => {
     const { view, ctx } = await opening();
     const tech = view.research.available[0].tech;
     const s = advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech }]), techOpen: true }, ['welcome'], []);
-    expect(s).toMatchObject({ id: 'closeResearch', steps: [{ key: 'Esc', target: { kind: 'control', name: 'closeResearch' } }] });
+    expect(s).toMatchObject({ id: 'researchQueue', title: 'Queue your research' });
+    expect(advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech }]), techOpen: true }, ['welcome', 'researchQueue'], []))
+      .toMatchObject({ id: 'closeResearch', steps: [{ key: 'Esc', target: { kind: 'control', name: 'closeResearch' } }] });
     expect(advisorSuggestion(ctx([{ type: 'SetResearch', tech }]), ['welcome'], [])?.id).not.toBe('closeResearch');
     expect(advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech }]), techOpen: true }, ['welcome'], ['closeResearch'])?.id).not.toBe('closeResearch');
     expect(advisorSuggestion({ ...ctx([]), techOpen: true }, ['welcome'], [])?.id).not.toBe('closeResearch');
@@ -185,6 +187,82 @@ describe('one decision at a time', () => {
     await client.newGame(await client.standardSetup('424242', 'Athens', 'India', 'Ada', 'Bo'));
     const plan = JSON.parse(advisor_orders(JSON.stringify(client.view(0)))) as Order[];
     expect(plan.some((o) => o.type === 'MoveUnit' || o.type === 'MoveUnitPath')).toBe(true);
+  });
+});
+
+describe('research queue advice', () => {
+  it('recommends the first three available technologies and advances after each is queued', async () => {
+    const { view, ctx } = await opening();
+    const techs = view.research.available.slice(0, 3).map((option) => option.tech);
+    expect(techs).toHaveLength(3);
+    const plan: Order[] = [{ type: 'SetResearchQueue', techs: [...techs, 'AutonomousSystems'] }];
+    const names = techs.map((tech) => TECH_NAME[tech]);
+    const expectedTitle = `Queue research: ${names.join(', then ')}`;
+    const open = (orders: Order[] = []) => ({ ...ctx(orders, null, plan), techOpen: true });
+    const seen = ['welcome', 'researchQueue'];
+    const first = advisorSuggestion(open(), seen, []);
+    expect(first).toMatchObject({ id: 'research', title: expectedTitle, why: advisorWhy({ type: 'SetResearch', tech: techs[0] }, view), current: 1 });
+    expect(first?.steps).toEqual([
+      { instruction: 'Click Research at the top.', key: 'T', target: { kind: 'control', name: 'research', value: undefined } },
+      { instruction: `Click ${names[0]}.`, target: { kind: 'control', name: 'tech', value: techs[0] } },
+      { instruction: `Shift-click ${names[1]} in the tree, or click + Queue.`, target: { kind: 'control', name: 'queueTech', value: techs[1] } },
+      { instruction: `Shift-click ${names[2]} in the tree, or click + Queue.`, target: { kind: 'control', name: 'queueTech', value: techs[2] } },
+    ]);
+    expect(advisorSuggestion({ ...open(), touch: true }, seen, [])?.steps[2].instruction)
+      .toBe(`Tap This era, then + Queue on ${names[1]}.`);
+    const one = [{ type: 'SetResearchQueue' as const, techs: techs.slice(0, 1) }];
+    expect(advisorSuggestion(open(one), seen, [])).toMatchObject({ id: 'research', title: expectedTitle, current: 2 });
+    const two = [{ type: 'SetResearchQueue' as const, techs: techs.slice(0, 2) }];
+    expect(advisorSuggestion(open(two), seen, [])).toMatchObject({ id: 'research', current: 3 });
+    expect(advisorSuggestion(open([{ type: 'SetResearchQueue', techs }]), seen, [])?.id).toBe('closeResearch');
+    expect(advisorSuggestion(open(one), seen, ['research'])?.id).not.toBe('research');
+    expect(advisorSuggestion(open([{ type: 'SetResearchQueue', techs: [techs[1]] }]), seen, [])?.id).not.toBe('research');
+  });
+
+  it('keeps the single-technology title, skips unavailable picks, and stays quiet while a saved queue runs', async () => {
+    const { view, ctx } = await opening();
+    const tech = view.research.available[0].tech;
+    const plan: Order[] = [{ type: 'SetResearchQueue', techs: ['AutonomousSystems', tech] }];
+    const s = advisorSuggestion({ ...ctx([], null, plan), techOpen: true }, ['welcome', 'researchQueue'], []);
+    expect(s).toMatchObject({ id: 'research', title: `Research ${TECH_NAME[tech]}`, current: 1 });
+    expect(s?.steps[1]).toEqual({ instruction: `Click ${TECH_NAME[tech]}.`, target: { kind: 'control', name: 'tech', value: tech } });
+    view.research.queue = [tech];
+    view.research.current = tech;
+    expect(advisorSuggestion(ctx([], null, plan), ['welcome', 'researchQueue'], [])?.id).not.toBe('research');
+    expect(advisorSuggestion({ ...ctx([], null, plan), researchQueueDrained: true }, ['welcome'], [])?.id).not.toBe('researchQueue');
+  });
+
+  it('teaches the queue once after the first pick or when completed research drains it', async () => {
+    const { view, ctx } = await opening();
+    const tech = view.research.available[0].tech;
+    const chosen: Order[] = [{ type: 'SetResearchQueue', techs: [tech] }];
+    const lesson = advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], []);
+    expect(lesson).toEqual({ id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: 1,
+      why: 'Add several technologies so research never stops between turns. The first in line is researched first.',
+      steps: [{ instruction: 'Click Research at the top.', target: { kind: 'control', name: 'research', value: undefined } },
+        { instruction: 'Add more technologies to this queue.', target: { kind: 'control', name: 'researchQueue', value: undefined } }] });
+    expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome', 'researchQueue'], [])?.id).not.toBe('researchQueue');
+    expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], ['researchQueue'])?.id).not.toBe('researchQueue');
+    expect(advisorSuggestion(ctx(), ['welcome'], [])?.id).not.toBe('researchQueue');
+    view.turn = 2;
+    expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report'], [])).toMatchObject({ id: 'researchQueue', current: 0 });
+    expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report', 'researchQueue'], [])?.id).not.toBe('researchQueue');
+  });
+
+  it('uses visible threat or a resource reveal only when the technology provides it', async () => {
+    const { view, city, unit } = await opening();
+    const rival = view.players.find((p) => p.team !== view.team)!;
+    view.players = view.players.map((p) => p.id === rival.id ? { ...p, army: 100 } : p);
+    view.units.push({ ...unit, id: 9001, owner: rival.id, pos: city.pos, military: true });
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('Enemies are near: Masonry unlocks Walls.');
+    expect(advisorWhy({ type: 'SetResearch', tech: 'IronWorking' }, view)).toBe('Iron Working shows Iron on the map.');
+    view.units = view.units.filter((u) => u.id !== 9001);
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^Enemies are near/);
+    view.players = view.players.map((p) => p.id === rival.id ? { ...p, era: view.research.era + 2 } : p);
+    view.cities.push({ ...city, id: 9002, owner: rival.id });
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A rival is ahead: Masonry unlocks Walls.');
+    view.players = view.players.map((p) => p.id === rival.id ? { ...p, era: view.research.era + 1 } : p);
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^A rival is ahead/);
   });
 });
 
