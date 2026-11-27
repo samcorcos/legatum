@@ -90,7 +90,7 @@ The Hunter-Killer, Stealth Fighter and Stealth Bomber each have the full set (`-
 
 ## Barbarians
 
-Barbarian camps field six kinds (`crates/core/src/rules/barbarians.rs`: Spearman, then Pikeman, then Musketman as half the living empires learn Feudalism and Gunpowder; Archer, then Crossbowman with Machinery; and the camp's Scout). Each has its own painted raider, so a barbarian never draws as a glyph counter beside the painted empires (2026-11-01):
+Barbarian unit art uses the same unit-kind slugs as `UNIT_ART` in `app/src/unitArt.ts`. Each painted raider has its own pose and equipment. The contact sheet at `docs/design/unit-art/barbarian-eras.png` places every raider beside the corresponding player unit in era order.
 
 | Slug | Subject |
 | --- | --- |
@@ -100,8 +100,17 @@ Barbarian camps field six kinds (`crates/core/src/rules/barbarians.rs`: Spearman
 | `barbarian-archer` | Iron Age raider archer under a wolf-fur hood, long self bow drawn high. |
 | `barbarian-crossbowman` | Medieval forest outlaw, hooded, foot in the stirrup spanning a heavy crossbow. |
 | `barbarian-scout` | Iron Age outrider crouched on one knee, shading his eyes, ox-horn war horn on his back. |
+| `barbarian-arquebusier` | Renaissance brigand stepping sideways with a matchlock arquebus, frayed cloak and soft cap. |
+| `barbarian-rifleman` | Nineteenth-century irregular with captured rifle, cartridge bandolier and mixed civilian clothes. |
+| `barbarian-field-cannon` | Bandit hauling a stolen small field gun on a rough wooden carriage. |
+| `barbarian-trench-infantry` | First World War-era partisan crouching with a bolt-action rifle, scavenged greatcoat and helmet. |
+| `barbarian-howitzer` | Irregular mortar team around a short, steep tube and baseplate, with no wheels. |
+| `barbarian-infantry` | Second World War-era guerrilla with submachine gun, scarf and soft field cap. |
+| `barbarian-artillery` | Irregular light gun crew with a makeshift carriage and mismatched wheels. |
+| `barbarian-mechanised-infantry` | Civilian pickup technical with a standing gunner and mounted machine gun. |
+| `barbarian-rocket-artillery` | Civilian pickup with a raised six-tube rocket rack and no gunner. |
 
-Every raider carries one blood-red cloth accent; the map washes the base charred ink in an ink ring with a blood-red notch at its left end (never a seat colour, and no owner roundel), and the far zoom uses the class roundel washed blood red under a heavy ink ring with a red notch at the upper left. A kind without its own raider keeps its ordinary figure on the barbarian base (`barbarianArtSlug` in `app/src/unitArt.ts`). Only the `-256` master and the `-source` are shipped: barbarians appear on the map only, never in the unit panel or build cards. They were painted by Codex image generation on a flat magenta field with `pikeman-source.png` and `archer-source.png` as style references, keyed to alpha, eroded 2 px and despilled at the edge; prompts are in `prompts/barbarian-*.prompt.txt`.
+Every raider carries one blood-red cloth accent; the map washes the base charred ink in an ink ring with a blood-red notch at its left end (never a seat colour, and no owner roundel), and the far zoom uses the class roundel washed blood red under a heavy ink ring with a red notch at the upper left. A kind without its own raider keeps its ordinary figure on the barbarian base (`barbarianArtSlug` in `app/src/unitArt.ts`). The nine later-era raiders have `-256`, `-64`, `-48`, `-card` and `-panel` derivatives from the standard `tools/art/unit-art.py --edge-key` pipeline. Their source rasters stay outside git; their production prompts are in `prompts/barbarian-*.prompt.txt` and `barbarian-*.art-pass-3.prompt.txt`.
 
 ## Air-strike plan views (2026-11-02, `claude/painted-aircraft`)
 
