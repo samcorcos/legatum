@@ -1419,15 +1419,22 @@ impl Planner<'_> {
     }
 
     /// The production option shows gross city Gold. India's provincial court sends none
-    /// until its Revenue Office is complete, then only half, rounded like the engine.
+    /// until its Revenue Office is complete, then all of it (or half with the Office rule off).
     pub(crate) fn remitted_city_gold(&self, city: &CityView, gross: i32) -> i32 {
-        if self.faction == Faction::India && !city.is_capital {
+        if self.faction == Faction::India
+            && !city.is_capital
+            && self.rule_on(legatum_core::experiments::FactionRule::IndiaRemittance)
+        {
             if city
                 .detail
                 .as_ref()
                 .is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Market))
             {
-                gross / 2
+                if self.rule_on(legatum_core::experiments::FactionRule::IndiaOfficeFull) {
+                    gross
+                } else {
+                    gross / 2
+                }
             } else {
                 0
             }
@@ -4989,11 +4996,17 @@ impl Planner<'_> {
                                 } else {
                                     70
                                 };
-                                (opt.yields.total.gold
+                                let gross = (opt.yields.total.gold
                                     + data::building_stats(BuildingKind::Market).yields.gold)
-                                    .max(0)
-                                    / 2
-                                    * weight
+                                    .max(0);
+                                let remitted = if self.rule_on(
+                                    legatum_core::experiments::FactionRule::IndiaOfficeFull,
+                                ) {
+                                    gross
+                                } else {
+                                    gross / 2
+                                };
+                                remitted * weight
                             } else {
                                 0
                             };
@@ -7980,6 +7993,10 @@ mod india_office_tests {
             .unwrap()
             .buildings
             .push(BuildingKind::Market);
+        assert_eq!(delta(&view), 6);
+        view.rule_experiments
+            .faction_rules_off
+            .insert(legatum_core::experiments::FactionRule::IndiaOfficeFull);
         assert_eq!(delta(&view), 3);
     }
 
@@ -8060,17 +8077,17 @@ mod india_office_tests {
         office.yields.total.gold = 6;
         assert_eq!(
             planner.item_base_value(1, city, &office, &tally) - ordinary,
-            400
+            800
         );
         planner.decisions.india_office_goal_value = 800;
         assert_eq!(
             planner.item_base_value(1, city, &office, &tally) - ordinary,
-            1200
+            1600
         );
         planner.decisions.india_last_office_value = 1200;
         assert_eq!(
             planner.item_base_value(1, city, &office, &tally) - ordinary,
-            1800
+            2200
         );
     }
 

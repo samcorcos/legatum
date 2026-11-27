@@ -45,7 +45,7 @@ describe('faction sheets', () => {
     // A drawback that only restates its ability is not one: the project row has no price.
     expect(FACTION_SHEETS.Germany.pairs[3].price).toBeUndefined();
     expect(FACTION_SHEETS.India.pairs[0].priceDetail).toContain('Production never falls below 3');
-    expect(FACTION_SHEETS.India.pairs[1].priceDetail).toContain('half the Gold they make');
+    expect(FACTION_SHEETS.India.pairs[1].priceDetail).toContain('all the Gold they make');
     expect(FACTION_SHEETS.India.pairs[2].strength).toContain('Imperial Diwan');
     expect(FACTION_SHEETS.Mongols.pairs[0].price).toContain('You never build or upgrade Walls and buy no Siege before the Medieval era.');
     expect(FACTION_SHEETS.Mongols.pairs[0].price).toContain('buy no Siege before the Medieval era');

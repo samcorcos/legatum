@@ -578,7 +578,6 @@ fn india_remittance_off_lets_every_city_keep_its_gold() {
         let c = found(&mut s, P0, at(2, 6));
         let city = s.cities.get_mut(&c).unwrap();
         city.population = 6;
-        city.buildings.insert(BuildingKind::Market);
         economy::player_income(&s, P0).gold.total
     };
     assert!(income(Some(FactionRule::IndiaRemittance)) > income(None));

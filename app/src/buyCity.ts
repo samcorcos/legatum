@@ -1,4 +1,4 @@
-// Byzantium's Buy a city and the fall of Constantinople (core `buy_city`, rules 65): the words and
+// Byzantium's Buy a city and the fall of Constantinople (core `buy_city`, rules 66): the words and
 // numbers every surface shares (city panel, tile card, banner tooltip and chip, turn report, advisor).
 // The core owns every rule and number; this file only reads `PlayerView.city_buys`, `city_offers` and
 // `byzantine_capitals` and says them in the player's terms.
