@@ -117,6 +117,48 @@
  },
  "accepted": [
   {
+   "set": "units-miniature",
+   "a": "barbarian-crossbowman",
+   "b": "barbarian-rifleman",
+   "why": "At 45 px the hooded crossbow carrier stands still with the bow at the ground; the rifle carrier strides in a broad hat with a long gun and diagonal bandolier. Separate paintings and silhouettes."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-infantry",
+   "b": "barbarian-rifleman",
+   "why": "At 45 px the capped guerrilla carries a short horizontal submachine gun; the broad-hatted rifle carrier has a long diagonal weapon and bandolier. Separate equipment and poses."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-artillery",
+   "b": "barbarian-rocket-artillery",
+   "why": "At 45 px two figures flank a low narrow gun on mismatched wheels, while the rocket rack rises from the bed of a closed-cab pickup. The shared low base causes coarse silhouette overlap."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-field-cannon",
+   "b": "barbarian-rocket-artillery",
+   "why": "At 45 px a person hauls a high bronze cannon on spoked wheels; the other piece is a civilian pickup under a raised tube rack. Vehicle body and gun crew remain distinct."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-howitzer",
+   "b": "chariot-archer",
+   "why": "At 45 px two crouched figures surround a steep mortar without wheels; the chariot has two horses and broad spoked wheels. The shared wide composition is the metric overlap."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-infantry",
+   "b": "crossbowman",
+   "why": "At 45 px the moving capped figure holds a short horizontal gun, while the crossbow carrier stands upright behind a tall rectangular shield. The silhouettes and equipment differ."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-rocket-artillery",
+   "b": "howitzer",
+   "why": "At 45 px the dark pickup cab and angled tube rack remain separate from the pale, high-barrel wheeled howitzer. Both are independently painted equipment on the same cream disc."
+  },
+  {
    "set": "resources",
    "a": "cattle",
    "b": "wheat",
