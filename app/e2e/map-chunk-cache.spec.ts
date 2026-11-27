@@ -240,6 +240,29 @@ test('a wheel zoom holds its chunk level until it rests, and the soft stand-in l
   }
 });
 
+// A frame that repaints only the hover mark's boxes runs the terrain too. When the zoom came to rest on such a frame, the
+// boxes got the new zoom level and the rest of the map kept the old one, scaled: a pale rectangle round the pointer.
+test('a pointer moving as a wheel zoom settles leaves the whole map at one zoom level', async ({ page }: { page: Page }) => {
+  test.setTimeout(300_000);
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await open(page, readFileSync(`${dir}p893-zoom-scout-t34.current.legatum`, 'utf8'));
+  const pos = await page.evaluate(() => { const s = (window as unknown as Win).legatum.getState(), v = s.views[s.seat]; return v.units.find((u: any) => u.owner === v.me).pos; });
+  await camTo(page, pos, 0.84); await settle(page);
+  let worst = 0;
+  for (let i = 0; i < 8; i++) {
+    await page.mouse.wheel(0, i % 2 ? 120 : -120);
+    const t0 = Date.now();
+    for (let k = 0; Date.now() - t0 < 700; k++) await page.mouse.move(500 + 180 * Math.cos(k / 5), 350 + 130 * Math.sin(k / 5));
+    await page.waitForTimeout(1200); await settle(page);
+    const shown = await mapPng(page);
+    await page.evaluate(() => (window as any).legatumMap.redraw());
+    await page.waitForTimeout(500);
+    const d = await compare(page, shown, await mapPng(page));
+    worst = Math.max(worst, d.diff);
+  }
+  expect(worst, 'pixels a full redraw changed after the zoom settled (the map was showing two zoom levels at once)').toBeLessThan(500);
+});
+
 // Sprites that arrive over half a minute (a slow machine; the box under a full verify) repaint the chunks that hold a town, once each.
 test('late city art repaints the chunks that hold a town once each: p892-sea-rect-t141 at 1440x900', async ({ page }: { page: Page }) => {
   test.setTimeout(300_000);

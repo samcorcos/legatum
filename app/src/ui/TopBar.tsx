@@ -95,7 +95,7 @@ export function TopBar() {
   const goldNotes = <>
     {queued > 0 && <div className="bd-note" data-testid="queued-gold-note">Treasury {e.gold} · queued this turn −{queued} · left to spend {gold}</div>}
     {decadence > 0 && mePublic && <DecadenceNote percent={decadence} lead={mePublic.lead_percent ?? 0} />}
-    <div className="bd-note" data-testid="desert-note">If your treasury cannot pay what your units cost, a unit deserts.</div>
+    <div className="bd-note" data-testid="desert-note">If your treasury cannot pay your upkeep, a unit deserts.</div>
   </>;
   const goldSummary = [
     queued > 0 ? `Treasury ${e.gold}, ${queued} queued this turn` : '',
@@ -135,7 +135,6 @@ export function TopBar() {
               {decadence > 0 && mePublic && <DecadenceNote percent={decadence} lead={mePublic.lead_percent ?? 0} />}
               <div className="bd-note"><Amount n={r.progress} unit="Science" /> stored toward research.</div>
               {noScience && <div className="bd-note"><Amounts text={noScience} /></div>}
-              {e.upkeep > 0 && <div className="bd-note">Upkeep <Amount n={e.upkeep} unit="Gold" /> a turn: military units (the first 2 and all Scouts are free) and Alliances.{e.upkeep_breakdown && <BreakdownTable b={e.upkeep_breakdown} title="Upkeep" unit="Gold/turn" />}</div>}
             </>
           }
           summary={noScience ?? <ScienceHoverSummary view={view} />}

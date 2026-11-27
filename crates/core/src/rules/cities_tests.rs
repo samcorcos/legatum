@@ -2929,12 +2929,15 @@ fn experimental_city_research_tracks_ownership_diffusion_and_resolution() {
 }
 
 #[test]
-fn experimental_city_upkeep_is_paid_and_forecast_and_no_tech_discounts_it() {
+fn city_upkeep_is_paid_and_forecast_and_no_tech_discounts_it() {
     let mut s = two_players();
     for (x, y) in [(5, 5), (12, 5), (5, 12), (12, 12)] {
         found(&mut s, P0, at(x, y));
     }
-    s.setup.rule_experiments.city_upkeep = true;
+    // Four cities are within the free six: nothing to pay.
+    assert_eq!(economy::upkeep(&s, P0), 0);
+    // With two free cities, each of the four costs 4 - 2 = 2 Gold.
+    s.setup.rule_experiments.city_upkeep_free = Some(2);
     s.player_mut(P0).gold = 100;
     s.player_mut(P0).techs.extend(TechId::ALL);
     assert_eq!(economy::upkeep(&s, P0), 8);

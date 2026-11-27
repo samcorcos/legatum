@@ -1,6 +1,6 @@
 # Byzantium's Buy a city and the fall of Constantinople: non-obvious points (2026-11-26)
 
-Rules 63 (`crates/core/src/buy_city.rs`).
+Rules 65 (`crates/core/src/buy_city.rs`).
 
 - **A literal "fail if the price rose" breaks offers on growth.** The price counts population and buildings, so a city that grows or finishes a building during the three-turn countdown would fail the offer (and cost Byzantium the 10% fee) without the owner doing anything. The offer stores its first price step (`CityOffer::base`: base, population, buildings) and the failure check (`buy_city::offer_price`) recomputes only Walls, armed units and goal VP: the counters the seller actually controls.
 - **The price check skips the order's own turn.** The escrow is priced before movement; a seller unit that happens to step next to the city that same turn would otherwise fail an offer the seller never saw. Cancellation (War, change of owner) is checked from the first turn end.

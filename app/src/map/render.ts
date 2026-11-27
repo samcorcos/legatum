@@ -259,9 +259,12 @@ export function stepTerrain(): boolean {
   return lastTerrain ? lastTerrain.step(TERRAIN_BUDGET_MS) : true;
 }
 
-/** Whether the last `draw` finished a terrain chunk: a clipped frame that did has not shown it yet. */
+/**
+ * Whether the last `draw` changed what the terrain shows: it finished a chunk, or drew another zoom level than the
+ * frame before. A clipped frame that did has shown it inside its boxes only, so the whole map is drawn next.
+ */
 export function terrainLanded(): boolean {
-  return !!lastTerrain && lastTerrain.landed > 0;
+  return !!lastTerrain && (lastTerrain.landed > 0 || lastTerrain.relevelled);
 }
 
 // ---- performance probe (read by tests and the perf script via window.legatumMap.perf) ----

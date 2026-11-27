@@ -390,6 +390,7 @@ pub fn forecast_air_strike(
             .unsupplied
             .map(|_| crate::resources::unsupplied_penalty(stats.ranged)),
         upgrade_supply_blocker: None,
+        upgrade_held_back: None,
         siege: false,
         siege_offer: None,
         sight: None,

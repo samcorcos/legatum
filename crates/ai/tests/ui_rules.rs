@@ -388,6 +388,7 @@ fn ui_rules_match_core() {
         "swissInterestThreshold": data::SWISS_INTEREST_THRESHOLD,
         "swissTollPopulation": data::SWISS_TOLL_POPULATION,
         "startGold": data::START_GOLD,
+        "cityUpkeepFree": data::CITY_UPKEEP_FREE,
         "resources": resources,
         "improvements": {
             "kinds": improvement_kinds,

@@ -1,4 +1,4 @@
-//! Byzantium's **Buy a city** and **the fall of Constantinople** (core `buy_city.rs`, rules 63),
+//! Byzantium's **Buy a city** and **the fall of Constantinople** (core `buy_city.rs`, rules 65),
 //! played from both sides. AI only: every read is the planner's own `PlayerView` (the public
 //! prices in `city_buys`, the public offers in `city_offers`, the public capitals in
 //! `byzantine_capitals`, public treasuries and armies), never the game state (pillar 6).

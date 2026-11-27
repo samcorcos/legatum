@@ -992,7 +992,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         placeInspector.current?.();
       }
       // Terrain chunks still rendering, or fonts and icons arriving: keep drawing.
-      // A clipped frame that finished a chunk has not shown it.
+      // A clipped frame that finished a chunk, or settled on another zoom level, has shown it in its boxes only.
       if (fontEpoch() !== lastFonts || (pulseOnly && terrainLanded())) dirty.current = true;
       if (pending) terrainWaiting = true;
       lastFonts = fontEpoch();

@@ -331,7 +331,8 @@ pub struct UnitView {
     pub occupation_lock: Option<PlayerId>,
     /// Gold to upgrade now, if possible (own units in own territory with the tech).
     pub upgrade_cost: Option<i32>,
-    /// Newest researched upgrade and the paid forms along the way.
+    /// The upgrade this unit takes (the most advanced researched form its strategic supply
+    /// allows, `rules::units::supplied_upgrade_plan`) and the paid forms along the way.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub upgrade_to: Option<UnitKind>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -352,6 +353,10 @@ pub struct UnitView {
     /// Own units: why the upgrade can't take the supply it needs now (the build card's sentence).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub upgrade_supply_blocker: Option<String>,
+    /// Own units whose upgrade stops short of the newest researched form for want of supply
+    /// (`rules::units::upgrade_held_back`): that form and why it can't be supplied.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub upgrade_held_back: Option<UpgradeHeldBack>,
     /// The unit has bought Siege (`Unit::siege`): its attacks on a city ignore the Walls its owner's
     /// technology reaches. Public: the siege gear is drawn beside it.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -365,6 +370,16 @@ pub struct UnitView {
     /// An Heir only (public): the Byzantium empire whose goal he carries, whoever holds him now.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heir_of: Option<PlayerId>,
+}
+
+/// The newest researched form a unit's upgrade skips for want of strategic supply.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct UpgradeHeldBack {
+    pub to: UnitKind,
+    /// The resource it would use and the empire can't spare ("Musketman needs Niter").
+    pub need: crate::resources::Resource,
+    /// The first sentence of the supply refusal ("No Niter to spare."); the fix is on the build card.
+    pub reason: String,
 }
 
 /// Military upkeep effect of building one more of this unit, for the production picker card
@@ -1122,6 +1137,9 @@ pub struct GoalCityView {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PlayerView {
+    /// Added Gold per turn if this empire gains one city; zero while the next city is free.
+    #[serde(default)]
+    pub added_city_upkeep: i32,
     #[serde(
         default,
         skip_serializing_if = "crate::experiments::RuleExperiments::is_default"
@@ -2073,6 +2091,7 @@ pub fn player_view_cached(
 
     let (Some(income), Some(forecasts)) = (income, forecasts) else {
         return PlayerView {
+            added_city_upkeep: crate::economy::added_city_upkeep(state, me),
             rule_experiments: state.setup.rule_experiments,
             ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
             diplomacy: crate::diplomacy::view(state, me).into(),
@@ -2222,6 +2241,7 @@ pub fn player_view_cached(
     let city_buys = crate::buy_city::buy_views(state, me, &known_cities);
     let city_offers = crate::buy_city::offer_views(state, me, &known_cities);
     PlayerView {
+        added_city_upkeep: crate::economy::added_city_upkeep(state, me),
         rule_experiments: state.setup.rule_experiments,
         ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
         diplomacy: crate::diplomacy::view(state, me).into(),
@@ -2298,6 +2318,10 @@ pub fn player_view_cached(
 fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
     let stats = state.unit_stats_of(u);
     let own = u.owner == me;
+    // The upgrade this unit takes: the most advanced researched form its supply allows.
+    let plan = own
+        .then(|| crate::rules::units::supplied_upgrade_plan(state, u.owner, u, |_| 0))
+        .flatten();
     UnitView {
         id: u.id,
         owner: u.owner,
@@ -2348,36 +2372,23 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
         resting_heal: own.then(|| crate::rules::units::resting_heal(state, u)),
         heir_of: u.heir_of,
         upgrade_cost: if own { upgrade_cost(state, u) } else { None },
-        upgrade_to: own
-            .then(|| crate::rules::units::upgrade_plan(state, u.owner, u.kind).map(|plan| plan.0))
-            .flatten(),
-        upgrade_steps: if own {
-            crate::rules::units::upgrade_plan(state, u.owner, u.kind)
-                .map(|plan| plan.1)
-                .unwrap_or_default()
-        } else {
-            Vec::new()
-        },
-        upgrade_breakdown: own
-            .then(|| crate::rules::units::upgrade_plan(state, u.owner, u.kind).map(|plan| plan.2))
-            .flatten(),
-        upgrade_need: own
-            .then(|| {
-                crate::rules::units::upgrade_plan(state, u.owner, u.kind)
-                    .and_then(|plan| crate::resources::unit_upgrade_need_to(u, plan.0))
-            })
-            .flatten(),
+        upgrade_to: plan.as_ref().map(|plan| plan.0),
+        upgrade_steps: plan.as_ref().map(|plan| plan.1.clone()).unwrap_or_default(),
+        upgrade_breakdown: plan.as_ref().map(|plan| plan.2.clone()),
+        upgrade_need: plan
+            .as_ref()
+            .and_then(|plan| crate::resources::unit_upgrade_need_to(u, plan.0)),
+        upgrade_held_back: own
+            .then(|| crate::rules::units::upgrade_held_back(state, u.owner, u))
+            .flatten()
+            .map(|(to, need, reason)| UpgradeHeldBack { to, need, reason }),
 
         unsupplied: crate::resources::unit_unsupplied(state, u),
         unsupplied_loss: crate::resources::unit_unsupplied(state, u)
             .map(|_| crate::resources::unsupplied_penalty(stats.strength)),
-        upgrade_supply_blocker: own
-            .then(|| {
-                crate::rules::units::upgrade_plan(state, u.owner, u.kind).and_then(|plan| {
-                    crate::resources::upgrade_blocker(state, u.owner, u, plan.0, 0)
-                })
-            })
-            .flatten(),
+        upgrade_supply_blocker: plan
+            .as_ref()
+            .and_then(|plan| crate::resources::upgrade_blocker(state, u.owner, u, plan.0, 0)),
         siege: u.siege,
         siege_offer: (own
             && data::can_have_siege(u.kind)
@@ -2901,6 +2912,33 @@ pub(crate) mod tests {
 
     fn city(view: &PlayerView, id: CityId) -> Option<&CityView> {
         view.cities.iter().find(|c| c.id == id)
+    }
+
+    #[test]
+    fn added_city_upkeep_is_in_player_view_json() {
+        let mut s = test_state(40, 24);
+        for i in 0..5 {
+            add_city(&mut s, P0, at(2 + i * 5, 3), 1);
+        }
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 0);
+        add_city(&mut s, P0, at(27, 3), 1);
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 7);
+        let json = serde_json::to_value(player_view(&s, P0)).unwrap();
+        assert_eq!(json["added_city_upkeep"], 7);
+
+        add_city(&mut s, P0, at(2, 10), 1);
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 9);
+        s.setup.rule_experiments.city_upkeep_percent = Some(50);
+        // Rounding applies to each total (7*1/2 = 3, 8*2/2 = 8).
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 5);
+        s.setup.rule_experiments.city_upkeep_free = Some(8);
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 0);
+        s.setup.rule_experiments.no_city_upkeep = true;
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 0);
+        assert_eq!(
+            serde_json::to_value(player_view(&s, P0)).unwrap()["added_city_upkeep"],
+            0
+        );
     }
 
     #[test]

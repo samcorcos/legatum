@@ -56,6 +56,8 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
     && view.cities.some((c) => c.owner === unit.owner && c.pos.q === unit.pos.q && c.pos.r === unit.pos.r && c.detail?.buildings.includes('Walls'))
     && unitClass(unit.kind) === 'Melee' ? Math.min(50, 100 - unit.hp) : 0;
   const offer = unit.siege_offer;
+  // The newer unit its supply holds back: one quiet line under the upgrade, as in the build list.
+  const held = unit.upgrade_held_back;
   let upgradeWhy = improvementReason(check?.blocker ?? null, check?.need, view);
   // The Mongol era gate is a closed door, not a price you can't pay: it replaces the price, and the reason line steps aside.
   const siegeClosed = siegeBlocker === MONGOL_SIEGE_REASON ? `${faction} can buy Siege from the Medieval era.` : null;
@@ -81,6 +83,11 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
         <p>Treasury: <Amounts text={`${gold} Gold → ${gold - (check.cost ?? 0)} Gold`} />.</p>
         {unit.upgrade_breakdown && <BreakdownTable b={upgradeStepBreakdown(unit.upgrade_breakdown, unit.kind as UnitKind, unit.upgrade_steps?.length ? unit.upgrade_steps : [check.to], faction)} title="Upgrade cost" unit="Gold" plain />}
       </>} />}
+    {check && held && <div className="upgrade-line unit-better upgrade-held-back" data-better={held.to}>
+      <Tip as="span" className="upgrade-detail" placement="right" summary={held.reason} content={<p><Amounts text={held.reason} /></p>}>
+        <ResourceReason text={`${itemName({ kind: 'Unit', unit: held.to }, faction)} needs ${held.need}`} resource={held.need} />
+      </Tip>
+    </div>}
     {offer && <ImproveRow label="Siege" effect={`Covers Walls up to level ${['', 'I', 'II', 'III'][siegeTier(view.research.known)]}`}
       icon="ui-siege" cost={offer.price.total} resource={SIEGE_USES_IRON ? 'Iron' : null}
       closed={siegeClosed} primary={primary === 'siege'} active={pending === 'UpgradeSiege'} blocked={!!siegeBlocker} reasonId={siegeClosed ? `${id}-siege-closed` : siegeReasonId} onClick={siegeSelected}

@@ -196,7 +196,7 @@ fn watching_ais_mark_the_conqueror_within_a_few_turns() {
     assert_eq!(
         first,
         BTreeMap::from([
-            // Rules 63 (Buy a city, the fall of Constantinople, no thin levies) moved three
+            // Rules 65 (Buy a city, the fall of Constantinople, no thin levies) moved three
             // watchers a turn or two earlier; none names another threat.
             (PlayerId(2), 40),
             (SPARTA, 36),

@@ -534,7 +534,7 @@ export const uniquePieceGain = (faction: Faction): string => {
   return piece ? [piece.effect, ...piece.rules.map((r) => r.replace(/\.$/, ''))].join('. ') : '';
 };
 const BYZANTIUM_LEGIONARY = uniquePieceText(UNIQUE_PIECE.Byzantium);
-/** Byzantium's rule break, Buy a city (core `buy_city`, rules 63): the card's rule; the Guide prints `byzantiumBuyCityDetail`. */
+/** Byzantium's rule break, Buy a city (core `buy_city`, rules 65): the card's rule; the Guide prints `byzantiumBuyCityDetail`. */
 export const BYZANTIUM_BUY_CITY = `Buy a rival’s city with Gold. The owner gets the Gold and ${RULES.buyCity.offerTurns} turns’ warning.`;
 /** Its price, the fall of Constantinople (core `buy_city::capital_fall`). */
 export const BYZANTIUM_COLLAPSE = 'Lose your capital and you lose every city, unless the Heir shelters in another one.';
@@ -1148,6 +1148,8 @@ export const SWISS_INTEREST_THRESHOLD = RULES.swissInterestThreshold;
 export const SWISS_TOLL_POPULATION = RULES.swissTollPopulation;
 /** Every empire's starting treasury (core `data::START_GOLD`). */
 export const START_GOLD = RULES.startGold;
+/** City upkeep: an empire's first this many cities are free (core `data::CITY_UPKEEP_FREE`). */
+export const CITY_UPKEEP_FREE: number = RULES.cityUpkeepFree;
 
 const WALL_LEVEL_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 /** The visible Walls level, or 0 if the city has no Walls or is not in sight. */

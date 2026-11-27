@@ -324,6 +324,8 @@ export interface UnitView {
   /** Own units from a save made before the era rule: they need no supply until upgraded. */
   /** Own units: why the upgrade can't take the supply it needs now (the build card's sentence). */
   upgrade_supply_blocker?: string | null;
+  /** Own units whose upgrade stops short of the newest researched unit for want of supply (core `UpgradeHeldBack`): that unit, the resource it needs, and why it can't be supplied. */
+  upgrade_held_back?: { to: UnitKind; need: Resource; reason: string } | null;
   /** The unit has bought Siege (core `siege`): its attacks on a city ignore the Walls its owner's technology reaches. Public, like its gear on the map. */
   siege?: boolean;
   /** Own land military units without Siege: its Gold price, and why it cannot be bought now (technology, Mongol era, territory, Gold, Iron). */
@@ -954,6 +956,8 @@ export interface ArmyContribution {
 }
 
 export interface PlayerView {
+  /** Extra Gold per turn if this empire gains one city. */
+  added_city_upkeep?: number;
   army_breakdown?: ArmyContribution[];
   rule_experiments?: RuleSwitches;
   /** The game started with the AI-only teams allied in pairs. Omitted when off. */

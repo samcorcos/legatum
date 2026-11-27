@@ -1396,6 +1396,7 @@
   },
   "cityHeal": 20,
   "cityHp": 200,
+  "cityUpkeepFree": 6,
   "classBonusPercent": 40,
   "coloniaBorderReach": 2,
   "coloniaLevel": 3,
@@ -10026,7 +10027,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 63,
+  "saveVersion": 65,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,

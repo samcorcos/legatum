@@ -2,6 +2,7 @@ import { bearing, empireOfPlayer } from '../empires';
 import { rivalBuilders as rivalsOnWonder, rivalBuilderText } from '../wonderRace';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { purchasePreviews, tilePurchasePreview } from './productionPurchases';
+import { cityUpkeepForecast } from './cityUpkeepForecast';
 import { useGame } from '../store';
 import { AUTOMATION_NO_CHOICE, autoPickReason, cityAutomationFocus, FOCUS_CYCLE, focusLabel, setCityAutomation } from '../automation';
 import type { CityBuildFocus } from '../types';
@@ -667,7 +668,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           : positions.map((n) => <span className="queue-badge" key={n} title={`Position ${n} in the queue`}>{n}</span>)}</span>
         <span className="prod-cost">{progress ? <span className="prod-progress">{progress}</span> : <>{costInFactionYield(owner?.faction ?? 'India', o.cost)} <YieldIcon k={costYield(owner?.faction ?? 'India') === 'Food' ? 'food' : 'production'} size={11} /></>}{o.supply_need && <span className="prod-supply-need" title={`${needText(o.supply_need)} for as long as it exists. ${supplyRuleText(o.supply_need, view.players.find((p) => p.id === view.me)?.faction)}`}><Amounts text={needText(o.supply_need)} /></span>}</span>
         <span className="prod-turns">{o.turns > 0 ? `${o.turns} turn${o.turns === 1 ? '' : 's'}` : 'No output'}</span>
-        {o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
+        {o.item.kind === 'Unit' && o.item.unit === 'Settler' && cityUpkeepForecast(view) ? <span className="prod-upkeep paid" data-testid="settler-city-upkeep"><Amounts text={cityUpkeepForecast(view)!} /></span>
+          : o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
         {imp && <span className="prod-upkeep none">No upkeep</span>}
         <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : tombStopped ? 'Queue' : 'Build →'}</span>
       </button>

@@ -7,3 +7,5 @@ The cause was not the assault but the search. Hard Sparta's Scout circled within
 Also seen in the recording: every eliminated rival (Celts, Mongols, Athens) was still on one city and one or two Spearmen when attacked, and the Mongols' Settler stood unfounded for ten turns. That is a defence and expansion problem, not an offence one.
 
 Partial web recordings (`first_turn` > 1, `initial_state` as a JSON string) replay with `crates/sim/examples/partial_dump.rs RECORD.json OUTDIR`; `game_dump` replays from the setup and cannot read them.
+
+All numbers above were measured on rules 62. City upkeep (rules 63, `26-city-upkeep-catch-up.md`) charges wide empires, and Sparta fell from 14.0% to 9.3% all-AI win rate under it; a Sparta that conquers early will pay it sooner, so re-measure the opening on rules 63.

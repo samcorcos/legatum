@@ -146,7 +146,11 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         let Some(u) = state.units.get(unit) else {
             continue;
         };
-        let Some((to, _, _)) = units::upgrade_plan(state, player, u.kind) else {
+        // The form this list can supply: an earlier upgrade that took the last Niter leaves this
+        // one at its Iron form, as resolution will.
+        let Some((to, _, _)) =
+            units::supplied_upgrade_plan(state, player, u, |r| taken.get(&r).copied().unwrap_or(0))
+        else {
             continue;
         };
         if let Some(need) = crate::resources::unit_upgrade_need_to(u, to) {

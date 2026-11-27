@@ -1,5 +1,5 @@
 //! Byzantium's rule break, **Buy a city** (`FactionRule::ByzantiumBuyCity`), and its drawback,
-//! **the fall of Constantinople** (`FactionRule::ByzantiumCollapse`) (rules 63).
+//! **the fall of Constantinople** (`FactionRule::ByzantiumCollapse`) (rules 65).
 //!
 //! # Buy a city
 //!

@@ -87,6 +87,16 @@ class Reviews(unittest.TestCase):
                 f.write("one\n\ntwo\n")
             self.assertEqual(check.load_comments(txt), ["one", "two"])
 
+    def test_rule_and_mapgen_changes_need_the_design_reviewer(self):
+        files = ["crates/core/src/rules/cities.rs", "crates/core/src/resources/placement.rs", "crates/core/src/lib.rs",
+                 "crates/core/src/rules/cities_tests.rs", "crates/ai/src/production.rs", "app/src/ui/A.tsx"]
+        kinds = check.classify(".", "HEAD", "HEAD", files)
+        self.assertEqual(kinds["design"], ["crates/core/src/rules/cities.rs", "crates/core/src/resources/placement.rs",
+                                           "crates/core/src/lib.rs"])
+        design = dict(KINDS, code=["crates/core/src/rules/cities.rs"], copy=[], ui=[],
+                      design=["crates/core/src/rules/cities.rs"])
+        self.assertIn("legatum-design-reviewer", [r for _, r, _ in check.required_reviews(design)])
+
 
 if __name__ == "__main__":
     unittest.main()

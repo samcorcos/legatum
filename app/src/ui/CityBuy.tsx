@@ -1,4 +1,4 @@
-// Byzantium's Buy a city on a city's panel (core `buy_city`, rules 63). One block per city panel:
+// Byzantium's Buy a city on a city's panel (core `buy_city`, rules 65). One block per city panel:
 // - Byzantium, on a rival's city: the price with every line (pillar 5), the bid choices (Price, +25%, +50%, +100%)
 //   each with what stops it, one primary "Make an offer (N Gold)" that queues `Order::BuyCity` (Undo before the turn
 //   ends), or the reason it can't, in place;

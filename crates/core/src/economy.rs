@@ -893,7 +893,7 @@ pub fn treaty_upkeep(state: &GameState, p: PlayerId) -> Breakdown {
     b
 }
 
-/// Military upkeep, treaty upkeep and any opt-in city administration cost.
+/// Military upkeep, treaty upkeep and city upkeep.
 pub fn upkeep(state: &GameState, p: PlayerId) -> i32 {
     upkeep_breakdown(state, p).total
 }
@@ -925,10 +925,19 @@ pub(crate) fn upkeep_breakdown_with_military(
         ) - paid * UPKEEP_PER_UNIT,
     );
     b.add("Treaties", treaty_upkeep(state, p).total);
-    if state.setup.rule_experiments.city_upkeep {
-        b.add("City administration", city_upkeep(state, p));
+    let cities = city_upkeep(state, p);
+    if cities > 0 {
+        b.add(city_upkeep_label(state), cities);
     }
     b
+}
+
+/// The breakdown line for city upkeep.
+pub fn city_upkeep_label(state: &GameState) -> String {
+    format!(
+        "City upkeep (free up to {} cities)",
+        state.setup.rule_experiments.city_upkeep_free()
+    )
 }
 
 pub fn city_upkeep(state: &GameState, p: PlayerId) -> i32 {
@@ -936,6 +945,13 @@ pub fn city_upkeep(state: &GameState, p: PlayerId) -> i32 {
         .setup
         .rule_experiments
         .city_upkeep(state.cities_of(p).count() as i32)
+}
+
+/// Extra Gold per turn if this empire gains one city, using the same rounding as its total bill.
+pub fn added_city_upkeep(state: &GameState, p: PlayerId) -> i32 {
+    let cities = state.cities_of(p).count() as i32;
+    let rules = state.setup.rule_experiments;
+    rules.city_upkeep(cities + 1) - rules.city_upkeep(cities)
 }
 
 /// Food a city needs to grow, less decadence (rounding down once).
@@ -1084,8 +1100,8 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     for (label, amount) in treaties.parts {
         gold.add(format!("Treaty upkeep: {label}"), -amount);
     }
-    if state.setup.rule_experiments.city_upkeep {
-        gold.add("City administration", -administration);
+    if administration > 0 {
+        gold.add(city_upkeep_label(state), -administration);
     }
     PlayerIncome {
         cities,

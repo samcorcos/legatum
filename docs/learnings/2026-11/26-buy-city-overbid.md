@@ -1,7 +1,7 @@
 # Buy a city: the overbid makes the counter cost something; the price had to fall to a third
 
 2026-11-26, Byzantium's Buy a city with overbids (`Order::BuyCity { city, gold }`, core
-`buy_city.rs`; AI `crates/ai/src/byzantium.rs`), rules 63 (unreleased).
+`buy_city.rs`; AI `crates/ai/src/byzantium.rs`), rules 65.
 
 - Before the overbid, an offer was held at exactly the price, so one armed unit moved next to the
   city (+25% of the base, the first constants) always broke it: 15 of 18 AI offers in 128 eight-empire Hard games failed
