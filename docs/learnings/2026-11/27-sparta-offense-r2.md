@@ -28,3 +28,4 @@ RAYON_NUM_THREADS=6 target/release/examples/offense_ladder \
   --out /tmp/sparta-offense-r2-recheck.jsonl
 ```
 
+Held-out check (seeds 2001-2300, 300 paired full games, rules 63): `sparta_chain_opening` 0 -> 1 raised wins 50 -> 61 (paired +3.7 ± 3.4 points) and final VP share 0.206 -> 0.216 (+0.010 ± 0.014); capitals by T50 0.73 -> 0.80. The gain holds on fresh seeds.
