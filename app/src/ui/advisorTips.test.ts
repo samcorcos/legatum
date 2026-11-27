@@ -122,13 +122,56 @@ describe('situational tips', () => {
     v.turn += TIP_COOLDOWN.food;
     expect(strategyTip(v, { [`food:${city.id}`]: 20, '#food': 1 })?.id).toBe(`tip:food:${city.id}`);
     city.population = 1;
-    expect(strategyTip(v, {})?.why).toBe(`${city.name} needs more Food but cannot shrink below 1 population.`);
+    expect(strategyTip(v, {})?.why).toBe(`${city.name} uses more Food than it makes.`);
     city.population = 2;
     detail.yields.total.food = 2 * city.population;
     expect(strategyTip(v, {})?.id).not.toBe(`tip:food:${city.id}`);
     detail.yields.total.food = 0;
     detail.options = [];
     expect(strategyTip(v, {})?.id).not.toBe(`tip:food:${city.id}`);
+  });
+
+  it('uses a pending build choice to detect both a new Food deficit and its recovery', async () => {
+    const v = await game();
+    const city = mine(v), detail = city.detail!;
+    city.population = 2;
+    detail.producing = null;
+    const granary = detail.options.find((o) => o.item.kind === 'Building' && o.item.building === 'Granary')!;
+    const other = detail.options.find((o) => itemKey(o.item) !== itemKey(granary.item))!;
+    detail.options = [granary, other];
+    detail.yields = { ...detail.yields, total: { ...detail.yields.total, food: 4 } };
+    granary.yields = { ...granary.yields, total: { ...granary.yields.total, food: 5 } };
+    other.yields = { ...other.yields, total: { ...other.yields.total, food: 0 } };
+    expect(strategyTip(v, {})?.id).not.toBe(`tip:food:${city.id}`);
+    const losing: Order[] = [{ type: 'SetProduction', city: city.id, item: other.item }];
+    expect(strategyTip(v, {}, false, null, losing)).toMatchObject({ id: `tip:food:${city.id}`,
+      title: `${city.name} is starving`, why: `${city.name} loses Food each turn and will shrink.`,
+      steps: [{ instruction: `Click ${city.name}.`, target: { kind: 'tile', hex: city.pos } },
+        { instruction: 'Build Granary.', target: { kind: 'control', name: 'build', value: 'b:Granary' } }] });
+    detail.yields.total.food = 0;
+    const recovering: Order[] = [{ type: 'SetProduction', city: city.id, item: granary.item }];
+    expect(strategyTip(v, {}, false, null, recovering)?.id).not.toBe(`tip:food:${city.id}`);
+  });
+
+  it('uses idle yields when a pending choice clears production', async () => {
+    const v = await game();
+    const city = mine(v), detail = city.detail!;
+    city.population = 2;
+    const granary = detail.options.find((o) => o.item.kind === 'Building' && o.item.building === 'Granary')!;
+    detail.producing = granary.item;
+    detail.options = [granary];
+    granary.yields = { ...granary.yields, total: { ...granary.yields.total, food: 5 } };
+    detail.yields = granary.yields;
+    detail.idle_yields = { ...detail.yields, total: { ...detail.yields.total, food: 0 } };
+    const clear: Order[] = [{ type: 'SetProductionQueue', city: city.id, queue: [] }];
+    expect(strategyTip(v, {})?.id).not.toBe(`tip:food:${city.id}`);
+    expect(strategyTip(v, {}, false, null, clear)).toMatchObject({ id: `tip:food:${city.id}`,
+      title: `${city.name} is starving`, why: `${city.name} loses Food each turn and will shrink.`,
+      steps: [{ instruction: `Click ${city.name}.`, target: { kind: 'tile', hex: city.pos } },
+        { instruction: 'Build Granary.', target: { kind: 'control', name: 'build', value: 'b:Granary' } }] });
+    detail.yields.total.food = 0;
+    detail.idle_yields.total.food = 4;
+    expect(strategyTip(v, {}, false, null, clear)?.id).not.toBe(`tip:food:${city.id}`);
   });
 
   it('suggests Peace for two locked units, but only with a living rival still at War', async () => {

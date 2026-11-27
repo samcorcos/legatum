@@ -5,7 +5,8 @@
  * cooldown per key, a gap between any two tips, and a tip shows only while its situation still holds.
  */
 import { distance, hexAt, hexEq } from '../hex';
-import { buildingStatsFor, itemKey, itemName, UNIT_STATS } from '../data';
+import { buildingStatsFor, itemKey, itemName, sameItem, UNIT_STATS } from '../data';
+import { effectiveProduction } from '../orders';
 import { empireOfPlayer } from '../empires';
 import { ownerName } from '../barbarians';
 import { atWar, isThreat } from '../diplomacy';
@@ -105,19 +106,25 @@ function healTip(v: PlayerView, touch: boolean, selection: { kind: string; id: n
         target: canHealHere ? { kind: 'control', name: 'heal' } : city ? tile(city.pos) : null }] };
 }
 
-function foodTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null): Tip | null {
+function foodTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null, orders: readonly Order[]): Tip | null {
   for (const city of ownCities(v)) {
     const detail = city.detail;
-    if (!detail || detail.yields.total.food - 2 * city.population >= 0 || city.occupation_lock != null) continue;
+    if (!detail || city.occupation_lock != null) continue;
+    const pending = orders.some((o) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city.id);
+    const producing = effectiveProduction([...orders], city.id, detail.producing);
+    const changed = pending && !(sameItem(producing, detail.producing) || (!producing && !detail.producing));
+    const selected = producing ? detail.options.find((o) => sameItem(o.item, producing)) : null;
+    const yields = changed ? producing ? selected?.yields ?? detail.yields : detail.idle_yields ?? detail.yields : detail.yields;
+    if (yields.total.food - 2 * city.population >= 0) continue;
     const faction = v.players.find((p) => p.id === v.me)?.faction;
     const option = detail.options.find((o) => o.item.kind === 'Building' && faction && (buildingStatsFor(faction, o.item.building).yields.food ?? 0) > 0
-      && o.yields.total.food > detail.yields.total.food)
-      ?? detail.options.find((o) => o.item.kind === 'Project' && o.item.project === 'Food' && o.yields.total.food > detail.yields.total.food)
-      ?? detail.options.find((o) => o.item.kind === 'Improvement' && o.yields.total.food > detail.yields.total.food);
+      && o.yields.total.food > yields.total.food)
+      ?? detail.options.find((o) => o.item.kind === 'Project' && o.item.project === 'Food' && o.yields.total.food > yields.total.food)
+      ?? detail.options.find((o) => o.item.kind === 'Improvement' && o.yields.total.food > yields.total.food);
     if (!option) continue;
     const name = itemName(option.item, v.players.find((p) => p.id === v.me)?.faction);
     return { key: `food:${city.id}`, kind: 'food', title: `${city.name} is starving`,
-      why: city.population > 1 ? `${city.name} loses Food each turn and will shrink.` : `${city.name} needs more Food but cannot shrink below 1 population.`,
+      why: city.population > 1 ? `${city.name} loses Food each turn and will shrink.` : `${city.name} uses more Food than it makes.`,
       current: selection?.kind === 'city' && selection.id === city.id ? 1 : 0,
       steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) },
         { instruction: `${option.item.kind === 'Project' ? 'Choose' : 'Build'} ${name}.`, target: { kind: 'control', name: 'build', value: itemKey(option.item) } }] };
@@ -235,7 +242,7 @@ export function strategyTip(view: PlayerView, saved: TipLog, touch = false, sele
     if (view.turn - lastOfKind(tip.kind) < wait) return false;
     return view.turn - lastOther(tip.key) >= TIP_GAP;
   };
-  const tips = [offerTip(view), garrisonTip(view, locks), armyTip(view), warTip(view, touch, selection, events, plan), healTip(view, touch, selection), foodTip(view, touch, selection), resourceTip(view, touch, selection, orders, placingTile), buyTip(view, touch, selection, orders), goldTip(view, touch, selection)].filter((t): t is Tip => !!t);
+  const tips = [offerTip(view), garrisonTip(view, locks), armyTip(view), warTip(view, touch, selection, events, plan), healTip(view, touch, selection), foodTip(view, touch, selection, orders), resourceTip(view, touch, selection, orders, placingTile), buyTip(view, touch, selection, orders), goldTip(view, touch, selection)].filter((t): t is Tip => !!t);
   const tip = tips.find((t) => shownThisTurn(t.key)) ?? tips.find(ready);
   if (!tip) return null;
   return { id: `tip:${tip.key}`, title: tip.title, why: tip.why, steps: tip.steps, current: tip.current ?? 0, acknowledge: true, tip: true };
