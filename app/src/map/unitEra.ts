@@ -24,15 +24,26 @@ const DARK_METAL = new Set([0, 1, 3, 5, 6, 7]);
 
 export const unitEra = (kind: UnitKind): number => unitEraTier(kind);
 
+const MATCHUP_CACHE_LIMIT = 2048;
+const matchupCache = new Map<string, number>();
+
 /** A unit's strength in a fight against `other`, as the forecast's first lines count it (base, promotion, wounds, class bonus); no terrain or fortify. */
 export function matchupStrength(u: UnitView, faction: Faction | undefined, other: UnitView, attacking: boolean): number {
   const f = faction ?? 'India';
   const kind = u.kind as UnitKind;
   const shot = shoots(attacking ? u : other, attacking ? other : u);
+  const key = `${f}|${kind}|${u.hp}|${u.level ?? 0}|${other.kind}|${attacking ? 1 : 0}|${shot ? 1 : 0}`;
+  const hit = matchupCache.get(key);
+  if (hit !== undefined) return hit;
   const b = attacking
     ? (shot ? unitRangedStrength(kind, u.hp, f, u.level ?? 0) : unitAttackStrength(kind, u.hp, f, u.level ?? 0))
     : unitDefenseStrength(kind, u.hp, 'Grassland', 0, f, u.level ?? 0);
   addFightClassBonus(b, kind, other.kind as UnitKind, attacking, shot, f);
+  if (matchupCache.size >= MATCHUP_CACHE_LIMIT) {
+    const oldest = matchupCache.keys().next().value;
+    if (oldest !== undefined) matchupCache.delete(oldest);
+  }
+  matchupCache.set(key, b.total);
   return b.total;
 }
 
@@ -42,20 +53,36 @@ export function shoots(attacker: UnitView, target: UnitView): boolean {
   return !attacksInMelee(attacker.kind) || distance(attacker.pos, target.pos) <= Math.max(1, attacker.range ?? 1);
 }
 
+const attackableCache = new WeakMap<PlayerView, Map<string, UnitView[]>>();
+
 /**
  * The enemy military units `sel` could attack this turn: within its range for a ranged unit, else on a tile it can reach
  * (moving onto an enemy is the attack). Enemies are units of empires at War with you, and barbarians.
  */
-export function attackableEnemies(view: PlayerView, sel: UnitView): UnitView[] {
+export function attackableEnemies(view: PlayerView, sel: UnitView, getReach?: () => Set<number>): UnitView[] {
+  if (!sel.military) return [];
+  let byUnit = attackableCache.get(view);
+  if (!byUnit) attackableCache.set(view, byUnit = new Map());
+  const key = `${sel.id}|${sel.pos.q},${sel.pos.r}|${sel.max_moves}|${sel.range ?? ''}|${view.units.length}`;
+  const hit = byUnit.get(key);
+  if (hit) return hit;
   const enemies = view.units.filter((u) => u.military && u.owner !== view.me && atWar(view, u.owner));
-  if (!enemies.length || !sel.military) return [];
-  const inRange = (u: UnitView) => distance(u.pos, sel.pos) <= Math.max(1, sel.range ?? 2);
-  if (sel.ranged > 0 && !attacksInMelee(sel.kind)) return enemies.filter(inRange);
-  const reach = reachTiles(view, sel);
-  const reachable = (u: UnitView) => reach.has(tileIndex(u.pos, view.width, view.height));
-  // A Keshig can shoot what is in range and charge what it can reach.
-  if (sel.ranged > 0) return enemies.filter((u) => inRange(u) || reachable(u));
-  return enemies.filter(reachable);
+  let out: UnitView[];
+  if (!enemies.length) {
+    out = [];
+  } else {
+    const inRange = (u: UnitView) => distance(u.pos, sel.pos) <= Math.max(1, sel.range ?? 2);
+    if (sel.ranged > 0 && !attacksInMelee(sel.kind)) {
+      out = enemies.filter(inRange);
+    } else {
+      const reach = getReach ? getReach() : reachTiles(view, sel);
+      const reachable = (u: UnitView) => reach.has(tileIndex(u.pos, view.width, view.height));
+      // A Keshig can shoot what is in range and charge what it can reach.
+      out = sel.ranged > 0 ? enemies.filter((u) => inRange(u) || reachable(u)) : enemies.filter(reachable);
+    }
+  }
+  byUnit.set(key, out);
+  return out;
 }
 
 /** "one era newer", "two eras older", "same era". */

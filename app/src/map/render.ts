@@ -882,7 +882,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const lockMarks: { x: number; y: number; w: number }[] = [];
   const order = [...displayUnits].sort((a, b) => a.pos.r - b.pos.r || Number(a.id === inp.selectedUnit || a.id === inp.selectedAir) - Number(b.id === inp.selectedUnit || b.id === inp.selectedAir));
   const strengthCue: StrengthCue | null = ownSel && ownSel.military && !inp.unitPos.size
-    ? { sel: ownSel, selFaction: factionOf.get(ownSel.owner), targets: new Set(attackableEnemies(view, ownSel).map((t) => t.id)), neutralBarbarians: neutralBarbarianCue(view, BARBARIAN) }
+    ? { sel: ownSel, selFaction: factionOf.get(ownSel.owner), targets: new Set(attackableEnemies(view, ownSel, () => reachOf(view, ownSel)).map((t) => t.id)), neutralBarbarians: neutralBarbarianCue(view, BARBARIAN) }
     : null;
   if (inp.march?.size && !far) drawMarchDust(ctx, inp.march, (p) => worldToScreen(cam, w, h, p.x, p.y), tw, z, dpr);
   for (const unit of order) {
