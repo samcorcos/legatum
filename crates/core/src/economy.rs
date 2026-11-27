@@ -496,17 +496,7 @@ fn nile<const FULL: bool>(
     let rules = state.setup.rule_experiments;
     let food = y.y.total.food;
     if food > 0 {
-        let at_war = rules.egypt_war_food.is_some()
-            && state.players.iter().any(|p| {
-                p.alive
-                    && !p.id.is_barbarian()
-                    && p.id != city.owner
-                    && state.at_war(city.owner, p.id)
-            });
-        let pct = match rules.egypt_war_food {
-            Some(war) if at_war => i32::from(war),
-            _ => rules.egypt_nile_food_percent(),
-        };
+        let pct = rules.egypt_nile_food_percent();
         let extra = (i64::from(food) * i64::from(pct - 100) / 100) as i32;
         y.add(
             || {
@@ -521,25 +511,17 @@ fn nile<const FULL: bool>(
             Yields::new(extra, 0, 0, 0),
         );
     }
-    if rules.egypt_army_food.is_some() || rules.egypt_army_food_era {
-        let per = rules.egypt_army_food.unwrap_or(1);
+    if !rules.rule_off(FactionRule::EgyptArmyFood) {
         let units = state
             .units_of(city.owner)
             .filter(|u| crate::rules::is_military(u.kind) && u.kind != UnitKind::Scout)
             .filter(|u| !data::is_aircraft(u.kind))
-            .map(|u| {
-                if rules.egypt_army_food_era {
-                    i32::from(data::unit_era_tier(u.kind)) + 1
-                } else {
-                    1
-                }
-            })
-            .sum::<i32>();
+            .count() as i32;
         let mut ids: Vec<_> = state.cities_of(city.owner).map(|c| c.id).collect();
         ids.sort();
         let n = ids.len().max(1) as i32;
         let idx = ids.iter().position(|&c| c == city.id).unwrap_or(0) as i32;
-        let total = units * i32::from(per);
+        let total = units * 3;
         let eat = total / n + i32::from(idx < total % n);
         if eat > 0 {
             y.add("The Nile: the army eats Food", Yields::new(-eat, 0, 0, 0));
@@ -1385,10 +1367,6 @@ pub fn buy_percent(state: &GameState, owner: PlayerId) -> i32 {
             .rule_off(FactionRule::SwissCheapBuys)
     {
         SWISS_BUY_PERCENT
-    } else if let Some(pct) = state.setup.rule_experiments.egypt_buy
-        && state.player(owner).faction == Faction::Egypt
-    {
-        BUY_COST_PERCENT * i32::from(pct) / 100
     } else {
         BUY_COST_PERCENT
     }

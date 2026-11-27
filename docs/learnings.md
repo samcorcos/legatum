@@ -20,7 +20,7 @@ To find the full entry for a line, search `docs/learnings/` for the words in the
 - A public fact that feeds passage or legality must be set in both `PlayerView` constructors (`player_view_cached` and `order_check_view`). [2026-10]
 - The AI reads some human-facing strings (cost labels, blocker text); do not drop labels from AI views until those reads use structured fields. [2026-10]
 - Two cargo processes sharing one `target/` produce E0460 and stale builds; give watchers their own target dir. Never share one `CARGO_TARGET_DIR` between git worktrees, even serially: cargo judges freshness by mtime, so a worktree with older files runs another branch's binaries ("Finished in 0.05s", no "Compiling" lines); serial CI uses one worktree and `git checkout --detach` per branch. A fresh container can corrupt the pinned toolchain if two cargo commands race its first install (`rustup toolchain uninstall <ver>`, then one cargo command). [2026-09, 2026-11]
-- Egypt's Nile applies to city totals in `economy::nile`; per-tile numbers stay raw because the AI reads them, so the app wraps display yields (`resources.ts::nileYields`). [2026-11]
+- Egypt's Nile applies to city totals in `economy::nile`; per-tile numbers stay raw because the AI reads them, so the app wraps display yields (`resources.ts::nileYields`). Its land military units now eat 3 Food each, shared across cities; the 2026-11-27 eleven-faction census still misses the 1.5× balance target. [2026-11]
 
 ## Rules and the rules reference
 

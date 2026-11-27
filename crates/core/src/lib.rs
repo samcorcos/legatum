@@ -61,7 +61,8 @@ pub mod rules;
 /// 63: City upkeep: an empire with up to six cities pays nothing; past that every city it owns (the first six too) costs (cities - 6) Gold a turn, shown as "City upkeep (free up to 6 cities)" in the Gold breakdown. The save shape is unchanged.
 /// 64: A unit's upgrade goes to the most advanced researched unit of its line whose strategic supply is spare (`rules::units::supplied_upgrade_plan`), not only the newest researched one: with Iron but no Niter a Phalangite becomes a Pikeman. Save shape unchanged; the view adds `UnitView::upgrade_held_back`.
 /// 65: India's Revenue Offices waive their city's upkeep while it still counts toward the empire's city count. A non-capital Office remits all Gold. Save shape unchanged.
-pub const RULES_VERSION: u32 = 65;
+/// 66: Egypt's land army eats 3 Food per unit each turn, shared across its cities.
+pub const RULES_VERSION: u32 = 66;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;

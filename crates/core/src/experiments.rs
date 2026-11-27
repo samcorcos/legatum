@@ -126,6 +126,7 @@ faction_rules! {
     EgyptChariotArcher => ("egypt_chariot_archer", Egypt, Strength),
     IndiaOfficeUpkeep => ("india_office_upkeep", India, Strength),
     IndiaOfficeFull => ("india_office_full", India, Strength),
+    EgyptArmyFood => ("egypt_army_food", Egypt, Drawback),
 }
 
 impl FactionRule {
@@ -338,18 +339,6 @@ pub struct RuleExperiments {
     /// The Nile: build progress per 100 surplus Food (default `EGYPT_NILE_BUILD_PERCENT`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub egypt_nile_build: Option<u16>,
-    /// Candidate Egypt cost (sims only): Egypt's Gold purchase price in percent of everyone's.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub egypt_buy: Option<u16>,
-    /// Candidate Egypt cost (sims only): the Nile's Food percent while Egypt is at war with an empire.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub egypt_war_food: Option<u16>,
-    /// Candidate Egypt cost (sims only): Food each Egyptian land military unit eats, shared by its cities.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub egypt_army_food: Option<u16>,
-    /// Candidate Egypt cost (sims only): each Egyptian land military unit eats Food equal to its era (1-based).
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub egypt_army_food_era: bool,
     /// A Gold project's share of city Production for every empire but Germany, in percent
     /// (default `data::PROJECT_GOLD_PERCENT`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -539,7 +528,6 @@ impl RuleExperiments {
             "wall-masonry" => self.wall_masonry = true,
             "hard-v2-ai" => self.hard_v2_ai = true,
             "start-met" => self.start_met = true,
-            "egypt-army-food-era" => self.egypt_army_food_era = true,
             _ => {
                 let (name, value) = flag
                     .split_once('=')
@@ -565,9 +553,6 @@ impl RuleExperiments {
                     ("egypt-nile-build", 25..=400) => {
                         self.egypt_nile_build = (value != EGYPT_NILE_BUILD_PERCENT).then_some(value)
                     }
-                    ("egypt-buy", 100..=400) => self.egypt_buy = Some(value),
-                    ("egypt-war-food", 100..=400) => self.egypt_war_food = Some(value),
-                    ("egypt-army-food", 1..=4) => self.egypt_army_food = Some(value),
                     ("project-gold", 1..=100) => {
                         self.project_gold =
                             (value != crate::data::PROJECT_GOLD_PERCENT).then_some(value)

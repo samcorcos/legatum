@@ -102,7 +102,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     lore: 'The Nile flood fed the builders of Egypt. In play, each city chooses between building with its Food and growing with it.',
     ratings: { aggression: 2, economy: 5, complexity: 3 },
     pairs: [
-      { strength: 'Egyptian cities get double Food, and surplus Food builds what the city is working on.', strengthDetail: `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${EGYPT_NILE_BUILD_PERCENT === 100 ? '' : `: ${EGYPT_NILE_BUILD_PERCENT} progress for every 100 Food`}.`, price: "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it.", strengthIcon: 'yield-food', priceIcon: 'yield-production' },
+      { strength: 'Egyptian cities get double Food, and surplus Food builds what the city is working on.', strengthDetail: `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${EGYPT_NILE_BUILD_PERCENT === 100 ? '' : `: ${EGYPT_NILE_BUILD_PERCENT} progress for every 100 Food`}.`, price: "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it. Your army eats 3 Food per unit, shared by your cities.", strengthIcon: 'yield-food', priceIcon: 'yield-production' },
       { strength: 'Royal Granary replaces the Granary and gives +3 Food total.', strengthIcon: 'building-royalgranary', onCard: true },
       specialRow('Egypt', 'unit-chariot-archer'),
     ],

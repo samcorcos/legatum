@@ -159,6 +159,52 @@ fn grow() -> ProductionItem {
 }
 
 #[test]
+fn egypt_army_food_is_shared_by_city_id_and_can_be_switched_off() {
+    use legatum_core::experiments::FactionRule;
+
+    let mut s = state(Faction::Egypt);
+    let first = city(&mut s, at(4, 4));
+    let second = city(&mut s, at(12, 4));
+    let original = [first, second].map(|id| {
+        economy::city_yields_for(&s, &s.cities[&id], Some(grow()))
+            .total
+            .food
+    });
+    game::spawn_unit(&mut s, P, UnitKind::Scout, at(5, 4));
+    game::spawn_unit(&mut s, P, UnitKind::Biplane, at(5, 5));
+    game::spawn_unit(&mut s, P, UnitKind::Spearman, at(6, 4));
+    for (i, id) in [first, second].into_iter().enumerate() {
+        let yields = economy::city_yields_for(&s, &s.cities[&id], Some(grow()));
+        let cost = if i == 0 { 2 } else { 1 };
+        assert_eq!(yields.total.food, original[i] - cost);
+        assert!(yields.sources.iter().any(|source| {
+            source.label == "The Nile: the army eats Food" && source.yields.food == -cost
+        }));
+    }
+    game::spawn_unit(&mut s, P, UnitKind::Archer, at(7, 4));
+    for (i, id) in [first, second].into_iter().enumerate() {
+        let food = economy::city_yields_for(&s, &s.cities[&id], Some(grow()))
+            .total
+            .food;
+        assert_eq!(food, original[i] - 3);
+    }
+    s.setup
+        .rule_experiments
+        .faction_rules_off
+        .insert(FactionRule::EgyptArmyFood);
+    for (i, id) in [first, second].into_iter().enumerate() {
+        let yields = economy::city_yields_for(&s, &s.cities[&id], Some(grow()));
+        assert_eq!(yields.total.food, original[i]);
+        assert!(
+            !yields
+                .sources
+                .iter()
+                .any(|source| source.label == "The Nile: the army eats Food")
+        );
+    }
+}
+
+#[test]
 fn nile_surplus_food_builds_everything_and_a_building_city_does_not_grow() {
     let mut s = state(Faction::Egypt);
     let id = city(&mut s, at(4, 4));

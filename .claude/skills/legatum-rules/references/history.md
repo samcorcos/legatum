@@ -5,6 +5,8 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 
 ## Save compatibility
 
+**Rules 66 (2026-11-26).** Each Egyptian land military unit other than a Scout or aircraft consumes 3 Food each turn. The cost is shared across cities by city ID after the Nile doubles Food. `--rule-off egypt_army_food` removes the cost. The sim-only Egypt buy, war-Food, and era-scaled army-Food experiments are removed; old saves are refused by version.
+
 **Rules 59 (designer, 2026-11-25).** The tech tree's research goal: `Order::SetResearchGoal` and `Player::research_goal` (`research-and-eras.md`, Research goal). No existing order resolves differently; the new field is omitted when empty, so a rules-58 save is still refused like any other.
 
 **Rules 64 (2026-11-26).** A unit's upgrade targets the most advanced researched form of its line whose strategic supply is spare (`rules::units::supplied_upgrade_plan`; `units.md`). Order validation and resolution both use it, so a version-63 tape can resolve an upgrade differently. The view only gains `UnitView::upgrade_held_back`.

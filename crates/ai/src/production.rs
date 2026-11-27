@@ -2793,7 +2793,7 @@ impl Planner<'_> {
     /// idle city grows.
     /// Hard Egypt grows instead of training a Settler or combat unit while the city is out of
     /// danger (`egypt_grow_to`, `egypt_peace_army`): a building Nile city does not grow, so
-    /// every unit it trains in peace costs it population.
+    /// every extra land unit also consumes 3 Food each turn under Egypt’s army rule.
     fn egypt_grow_instead(&self, c: &CityView, unit: UnitKind) -> bool {
         if self.difficulty != AiDifficulty::Hard {
             return false;
