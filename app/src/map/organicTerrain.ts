@@ -5,7 +5,7 @@
 //             region's edge, and a spine through every range of hills or mountains;
 //   plan      the sprites to draw, in world coordinates. Big forests and hills scatter overlapping
 //             clusters on a world-space lattice that ignores hex edges (dense inside, thinning with a
-//             wobbly outline at the edge); small groves and small ranges keep one cluster per hex;
+//             wobbly outline at the edge); small groves and small ranges keep a main cluster per hex;
 //             a big range puts large peaks along its spine and foothills at its margins.
 //
 // Everything is computed only from what the viewer knows (`kindAt` returns null for unexplored tiles)
@@ -386,7 +386,16 @@ function scatter(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[], c
   }
 }
 
-/** Classic one cluster per hex (groves and small ranges), centred like the per-hex variants. */
+/** Smaller peaks close the high and low openings around a mountain's main peak. */
+function fillMountain(i: number, w: number, sprite: number, out: OrganicElem[]) {
+  const x = centerX(i, w);
+  const y = centerY(i, w);
+  for (const [k, dx, dy, scale] of [[0, -0.25, -0.2, 0.75], [1, 0.25, -0.2, 0.75], [2, 0, 0.3, 0.82]]) {
+    out.push({ x: x + dx * R, y: y + dy * R, kind: 'Mountains', sprite: (sprite + k + 1) % 4, scale, tile: i });
+  }
+}
+
+/** Classic main cluster per hex (groves and small ranges), centred like the per-hex variants. */
 function classic(inp: PlanInput, out: OrganicElem[], covered: Uint8Array) {
   const { regions } = inp;
   const { w } = regions;
@@ -400,6 +409,7 @@ function classic(inp: PlanInput, out: OrganicElem[], covered: Uint8Array) {
       const rr = (i - c) / w;
       const sprite = kind === 'Forest' && inp.tundraNear(i) ? 3 : Math.floor(rnd(c, rr, 211) * (kind === 'Forest' ? 3 : 4));
       out.push({ x: centerX(i, w), y: centerY(i, w), kind, sprite, scale: kind === 'Forest' ? 0.92 : kind === 'Hills' && !inp.far ? 1.05 : 1, tile: i });
+      if (kind === 'Mountains' && !inp.far) fillMountain(i, w, sprite, out);
       if (kind === 'Mountains' || inp.far) continue;
       // A grove's hexes are all edge: two smaller clusters beside the main one fill the hex, so it still reads as its type.
       const turn = rnd(c, rr, 221) * Math.PI * 2;
@@ -440,7 +450,9 @@ function ranges(inp: PlanInput, out: OrganicElem[], covered: Uint8Array) {
       scale = Math.min(cap, scale) * (0.95 + rnd(c, rr, 401) * 0.1);
       // Big peaks sit a little low so they rise over their own hex and the range behind, not the row above.
       const lift = (scale - 1) * 0.28 * R;
-      out.push({ x: centerX(i, w) + (rnd(c, rr, 402) - 0.5) * 0.18 * R, y: centerY(i, w) + lift + (rnd(c, rr, 403) - 0.5) * 0.12 * R, kind: 'Mountains', sprite: Math.floor(rnd(c, rr, 211) * 4), scale, tile: i });
+      const sprite = Math.floor(rnd(c, rr, 211) * 4);
+      out.push({ x: centerX(i, w) + (rnd(c, rr, 402) - 0.5) * 0.18 * R, y: centerY(i, w) + lift + (rnd(c, rr, 403) - 0.5) * 0.12 * R, kind: 'Mountains', sprite, scale, tile: i });
+      if (!far) fillMountain(i, w, sprite, out);
       if (massif && edge[i] === 0 && !far) {
         // A low outer peak on the side facing the lowlands (the outer neighbour nearest the bottom of the screen
         // first, so it draws in front), so the range steps down at its margin instead of ending in a wall.
