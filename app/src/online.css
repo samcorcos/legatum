@@ -198,20 +198,11 @@ div.seat {
   font: 400 12px/1.3 var(--sans);
   color: var(--muted);
 }
-.mp-hint i {
-  font: italic 600 15px/1 var(--display);
-  font-variant-numeric: lining-nums;
-  color: var(--ink);
-}
 .mp-field.wrong .lobby-input {
   border-color: var(--bad);
 }
 .mp-field.wrong .mp-hint {
   color: var(--bad);
-}
-.mp-once {
-  padding-top: 8px;
-  border-top: 1px solid var(--rule);
 }
 .mp-door-fill {
   flex: 1 1 auto;
@@ -333,19 +324,9 @@ div.seat {
     grid-template-columns: minmax(0, 360px);
   }
 }
-/* With a game open, Resume sits above the doors: the Host door drops its "Once you host" line to keep the height. */
-.title-screen:has(.title-resume) .mp-once {
-  display: none;
-}
 /* A short window (1000x600) keeps the menu above the title footer even with Resume and a notice: the doors drop
-   their ledes and "Once you host", and the Join door lists two games. */
+   their ledes. */
 @media (max-height: 700px) {
-  .mp-once {
-    display: none;
-  }
-  .open-games.compact .online-room:nth-child(n + 3) {
-    display: none;
-  }
   .mp-door {
     gap: 6px;
     padding: 10px 16px 8px;

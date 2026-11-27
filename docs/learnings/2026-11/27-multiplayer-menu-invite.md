@@ -8,13 +8,13 @@ doors were also unbalanced: Host held a code field, Host Game and a "Host from a
 while Join held one button above empty space.
 
 **What changed.**
-- The game room opens an "Invite friends" card at the top of its side column. It shows the listed name in large type,
+- The game room opens an "Invite friends" band above the seats, so it shows at every window size. It shows the listed name in large type,
   the private code when the game is locked, and a Copy invite link button. The link is `?join=<room>` on this build's
   own versioned URL (`buildUrl(BUILD_ID, …)`), so a friend lands on the same version. It never carries the code. If
-  the clipboard is refused, the card shows the link in a read-only box, already selected.
+  the clipboard is refused, the band shows the link in a read-only box, already selected.
 - The Multiplayer menu's doors are two framed cards of equal height. The Host door holds the private code field (its
-  hint becomes the error when the code is too short), a line saying the game gets a name and a link, Host Game, and
-  "Host a saved game…" as a plain underlined link. The Join door lists the first three open games, each with its own
+  hint becomes the error when the code is too short; Enter presses the door's main button), Host Game, and "Host a
+  saved game…" as a plain underlined link. The Join door lists the first two open games, each with its own
   Join button (`ui/OpenGamesList.tsx`, shared with the Open games screen), then Join Game ("See all N open games").
 - Player text says "private code" everywhere: the Host door, the guest's box, the length error, the Guide and the
   README. A field inside the Host door never starts with "Join", so the old name "join code" had to go everywhere.

@@ -336,14 +336,16 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
                     spellCheck={false}
                     disabled={busy}
                     onChange={(e) => setCode(typedJoinCode(e.target.value))}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' || busy || codeNote) return;
+                      e.preventDefault();
+                      // Enter presses the door's main button: Host this save when a save was brought here.
+                      if (hostSave) hostFromSave();
+                      else void hostOnline();
+                    }}
                   />
                   <span className="mp-hint">{codeNote ?? 'Friends type this code to take a seat.'}</span>
                 </label>
-                <div className="mp-field mp-once">
-                  <span className="mp-label">Once you host</span>
-                  <span className="mp-hint">Your game gets a name, like <i>Golden Harbour 42</i>, and an invite link to send.</span>
-                </div>
                 <div className="mp-door-fill" />
                 {hostSave ? (
                   <button className={`btn big mp-door-main ${savePrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostFromSave}>
@@ -402,7 +404,7 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
 }
 
 /** The games the Join door lists before its Join Game button opens the full list. */
-const JOIN_DOOR_GAMES = 3;
+const JOIN_DOOR_GAMES = 2;
 
 /** A door's heading: a ringed mark (a banner to host, an arrow to join), the name and one line on what it does. */
 function DoorHead({ id, kind, title, lede }: { id: string; kind: 'host' | 'join'; title: string; lede: string }) {
