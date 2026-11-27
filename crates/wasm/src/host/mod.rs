@@ -245,7 +245,8 @@ impl Game {
             .collect()
     }
 
-    fn can_resolve(&self) -> bool {
+    /// Expiry supplies readiness, but never bypasses seat participation or game-over checks.
+    fn can_resolve(&self, ignore_ready: bool) -> bool {
         let mut living_seats = self
             .seats
             .iter()
@@ -256,10 +257,11 @@ impl Game {
         if living_seats.clone().next().is_none() {
             // Every human is eliminated: connected observers pace the remaining AI turns.
             let mut observers = self.seats.iter().filter(|s| s.connection.is_some());
-            return observers.clone().next().is_some() && observers.all(|s| s.ready);
+            return observers.clone().next().is_some()
+                && observers.all(|s| ignore_ready || s.ready);
         }
         living_seats.clone().any(|s| s.connection.is_some())
-            && living_seats.all(|s| s.joined && (s.connection.is_none() || s.ready))
+            && living_seats.all(|s| s.joined && (s.connection.is_none() || ignore_ready || s.ready))
     }
 }
 
@@ -968,8 +970,7 @@ impl Host {
         if game.turn_timer_seconds == 0 || game.session.state.finished {
             return;
         }
-        let active = game.seats.iter().any(|s| s.connection.is_some())
-            && game.seats.iter().all(|s| s.joined);
+        let active = game.can_resolve(true);
         if !active {
             game.turn_deadline = None;
             if game.turn_seconds_left.take().is_some() {
@@ -996,7 +997,7 @@ impl Host {
 
     fn resolve_if_ready(&mut self) {
         let Some(game) = &mut self.game else { return };
-        if !game.can_resolve() {
+        if !game.can_resolve(false) {
             return;
         }
         let before: Vec<_> = game
@@ -1879,6 +1880,80 @@ mod tests {
         host.tick_turn_timer(999_000.0);
         assert_eq!(host.status(true).turn, 2);
         assert!(host.game.as_ref().unwrap().turn_seconds_left.is_none());
+    }
+
+    #[test]
+    fn turn_timer_pauses_when_only_an_eliminated_observer_is_connected() {
+        let mut host = two_seat_host();
+        let (a, _a) = peer(&mut host);
+        let (b, _b) = peer(&mut host);
+        join(&mut host, a, 0);
+        join(&mut host, b, 1);
+        let game = host.game.as_mut().unwrap();
+        game.turn_timer_seconds = 30;
+        // Synthetic eliminated state has no matching recorded archive.
+        game.session.history = None;
+        game.session.state.player_mut(game.seats[1].player).alive = false;
+        host.tick_turn_timer(0.0);
+        host.disconnect(a);
+        host.tick_turn_timer(60_000.0);
+        let game = host.game.as_ref().unwrap();
+        assert_eq!(game.session.state.turn, 1);
+        assert_eq!(game.turn_seconds_left, None);
+        assert!(game.turn_deadline.is_none());
+        assert!(
+            !game.seats[0].ready,
+            "timeout cannot ready an absent living player"
+        );
+        let (reconnected, _messages) = peer(&mut host);
+        join(&mut host, reconnected, 0);
+        assert_eq!(
+            host.status(true).turn,
+            1,
+            "reconnection does not resolve immediately"
+        );
+        host.tick_turn_timer(60_000.0);
+        assert_eq!(host.game.as_ref().unwrap().turn_seconds_left, Some(30));
+        host.tick_turn_timer(89_999.0);
+        assert_eq!(host.status(true).turn, 1);
+        host.tick_turn_timer(90_000.0);
+        assert_eq!(host.status(true).turn, 2);
+    }
+
+    #[test]
+    fn turn_timer_rehost_preserves_joined_status_for_an_eliminated_seat() {
+        let mut original = two_seat_host();
+        let game = original.game.as_mut().unwrap();
+        game.turn_timer_seconds = 30;
+        // Synthetic eliminated state has no matching recorded archive.
+        game.session.history = None;
+        game.session.state.player_mut(game.seats[1].player).alive = false;
+        let mut host = Host::new(Some(&original.save_game().unwrap()), 5).unwrap();
+        let (a, _messages) = peer(&mut host);
+        join(&mut host, a, 0);
+        assert!(host.game.as_ref().unwrap().seats[1].joined);
+        host.tick_turn_timer(0.0);
+        assert_eq!(host.game.as_ref().unwrap().turn_seconds_left, Some(30));
+        host.tick_turn_timer(30_000.0);
+        assert_eq!(host.status(true).turn, 2);
+    }
+
+    #[test]
+    fn turn_timer_all_eliminated_observers_can_pace_ai_turns() {
+        let mut host = two_seat_host();
+        let game = host.game.as_mut().unwrap();
+        game.turn_timer_seconds = 30;
+        // Synthetic eliminated state has no matching recorded archive.
+        game.session.history = None;
+        for seat in &game.seats {
+            game.session.state.player_mut(seat.player).alive = false;
+        }
+        let (a, _messages) = peer(&mut host);
+        join(&mut host, a, 0);
+        host.tick_turn_timer(0.0);
+        assert_eq!(host.game.as_ref().unwrap().turn_seconds_left, Some(30));
+        host.tick_turn_timer(30_000.0);
+        assert_eq!(host.status(true).turn, 2);
     }
 
     #[test]
