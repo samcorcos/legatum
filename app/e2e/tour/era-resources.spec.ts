@@ -205,12 +205,13 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'e06-pikeman-upgrade-needs-niter');
 
-    // The city's build list: the Musketman card blocked for want of Niter.
+    // The city's build list keeps a quiet blocked row for Musketman.
     await selectThing(page, 'city', city);
-    const musket = page.locator('.production-choice').filter({ hasText: 'Uses 1 Niter' }).first();
-    await musket.scrollIntoViewIfNeeded();
-    // The Build card is aria-disabled; clicking it opens the supply breakdown.
-    await musket.getByRole('button', { name: /^Build / }).click({ force: true });
+    await expect(page.locator('.city-panel')).toContainText('Musketman needs');
+    await expect(page.locator('.city-panel').getByRole('button', { name: 'Queue Musketman' })).toBeDisabled();
+    const musketSupply = page.locator('.city-panel').getByRole('button', { name: 'Open Niter supply' }).first();
+    await musketSupply.scrollIntoViewIfNeeded();
+    await musketSupply.click();
     await expect(page.locator('.supply-tip')).toContainText('Missing Niter');
     await page.keyboard.press('Escape');
     await page.mouse.move(5, size.height / 2);

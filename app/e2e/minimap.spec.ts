@@ -1,7 +1,7 @@
 import { expectRaceWhole } from './tour/helpers';
 import type { Browser, Page } from '@playwright/test';
 import type { useGame } from '../src/store';
-import { test, expect } from './fixtures';
+import { test, expect, skipPeopleIntro } from './fixtures';
 import { auditOverlaySlots } from './layoutAudit';
 import { setMapSeed } from './mapSeed';
 
@@ -16,6 +16,7 @@ type Watch = (context: import('@playwright/test').BrowserContext) => void;
 async function start(browser: Browser, baseURL: string | undefined, watchErrors: Watch, size: { width: number; height: number }, touch = false) {
   const context = await browser.newContext({ baseURL, viewport: size, hasTouch: touch, isMobile: touch && size.width < 700 });
   watchErrors(context);
+  await context.addInitScript(skipPeopleIntro);
   await context.addInitScript(() => {
     if (!location.protocol.startsWith('http')) return;
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));

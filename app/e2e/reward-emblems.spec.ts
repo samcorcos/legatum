@@ -86,7 +86,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
           await expect(vignette).toHaveAttribute('src', new RegExp(`moment-${VIGNETTES[kind]}-104\\.png`));
           await expect(vignette).toBeVisible();
           expect(await vignette.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(104);
-          expect(await vignette.evaluate((image) => image.getBoundingClientRect().width)).toBe(104);
+          expect(await vignette.evaluate((image) => image.getBoundingClientRect().width)).toBe(height <= 700 ? 76 : 104);
         } else await expect(vignette).toHaveCount(0);
         if (kind === 'lost') {
           await expect(card).toHaveClass(/\bloss\b/);
@@ -97,14 +97,14 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
         await expect(card.locator('.moment-chevron')).toHaveCount(0);
         await card.screenshot({ path: path.join(shots, `${kind}-${width}x${height}.png`) });
         await page.screenshot({ path: path.join(shots, `full-${kind}-${width}x${height}.png`) });
-        // The whole card shows: it never scrolls inside its cap, and both buttons sit inside it and the window.
+        // The whole card shows: it never scrolls inside its cap, and its one primary sits inside it and the window.
         const fit = await card.evaluate((el) => {
           const box = el.getBoundingClientRect();
           const buttons = [...el.querySelectorAll('footer button')].map((b) => b.getBoundingClientRect());
           return { scrolls: el.scrollHeight - el.clientHeight, buttons: buttons.length,
             clipped: buttons.filter((b) => b.bottom > box.bottom + 0.5 || b.bottom > window.innerHeight).length };
         });
-        expect(fit.buttons).toBe(2);
+        expect(fit.buttons).toBe(1);
         expect(fit.scrolls).toBeLessThanOrEqual(1);
         expect(fit.clipped).toBe(0);
         const issues = (await auditLayout(page, { minTarget: 24 })).filter((i) => /moment-card|moment-lane/.test(i.where) && i.kind !== 'overlap' && !/sr-only/.test(i.where));

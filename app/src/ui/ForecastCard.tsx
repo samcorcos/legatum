@@ -158,7 +158,7 @@ export function forecastModel(f: BattleForecast, ranged: boolean, view: PlayerVi
   const headline = forecastHeadline({
     win, loss, winLabel, unitLabel, defName, cityName: city?.name ?? null,
     youLose: f.attacker_hp - hpAfter, theyLose: f.defender_hp - defAfter, ranged,
-    wallsLose: city && !(defUnit && defUnit.military) ? (f.walls?.expected_damage ?? (assault ? Math.max(0, (assault.walls_hp ?? 0) - (assault.walls_hp_after ?? 0)) : 0)) : 0,
+    wallsLose: city && !(defUnit && defUnit.military) ? (assault ? Math.max(0, (assault.walls_hp ?? 0) - (assault.walls_hp_after ?? 0)) : f.walls?.expected_damage ?? 0) : 0,
   });
   // Sparta kills heal (see `killHeals`); a melee winner advances onto the defender's tile, so what
   // waits there next turn is part of the headline (p881 horseman).
@@ -357,7 +357,7 @@ export function ForecastCard({
           max={m.defMax}
           after={m.defAfter}
           walls={city && !(m.defUnit && m.defUnit.military) && f.walls && (f.walls.max_hp ?? 0) > 0
-            ? { hp: f.walls.hp ?? 0, max: f.walls.max_hp ?? 0, loss: Math.min(f.walls.hp ?? 0, f.walls.expected_damage ?? 0) } : undefined}
+            ? { hp: f.walls.hp ?? 0, max: f.walls.max_hp ?? 0, loss: Math.min(f.walls.hp ?? 0, m.assault ? Math.max(0, (m.assault.walls_hp ?? 0) - (m.assault.walls_hp_after ?? 0)) : f.walls.expected_damage ?? 0) } : undefined}
           right
         />
       </div>

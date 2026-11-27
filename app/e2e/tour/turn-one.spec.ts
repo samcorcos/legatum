@@ -1,7 +1,7 @@
 // Screen tour, the first turns, cities, production and the turn report. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
 // `npx playwright test e2e/tour/turn-one`. Shots land in test-results/screen-tour/<size>/turn-one/.
 import type { Hex } from '../../src/types';
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { endPlanning } from '../turnActions';
 import { coreFixture } from '../../src/test/coreFixture';
 import { wallsFixture } from '../../src/test/wallsFixture';
@@ -24,20 +24,15 @@ test.describe.configure({ mode: 'parallel' });
 for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
 
-  test('first contact at Peace: the hint warns of a same-turn declaration', async ({ page }) => {
+  test('first contact at Peace: the guide explains a same-turn declaration', async ({ page }) => {
     const setup = wallsFixture();
     for (const relation of setup.fixture.diplomacy!.relations) relation.state = 'Peace';
     await loadFixture(page, coreFixture(setup.fixture), 2, true);
-    const hint = page.getByTestId('first-game-hint');
-    for (let i = 0; i < 3; i++) {
-      await expect(hint).toBeVisible();
-      const title = await hint.locator('h3').innerText();
-      if (title === 'A rival in sight') break;
-      await page.getByRole('button', { name: `Dismiss hint: ${title}` }).click();
-      await expect(hint.locator('h3')).not.toHaveText(title);
-    }
-    await expect(hint).toContainText('A rival in sight');
-    await expect(hint).toContainText('A rival can declare War and attack in the same turn.');
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    await page.getByRole('button', { name: /^How to Play/ }).click();
+    await page.getByRole('navigation', { name: 'How to Play chapters' }).getByRole('button', { name: /Your first turns/ }).click();
+    await expect(page.locator('.guide-page')).toContainText('Declaring War while at Peace is a surprise war.');
+    await expect(page.locator('.guide-page')).toContainText('an attack ordered with it resolves the same turn');
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'first-contact-peace');
   });
@@ -74,7 +69,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '11b-redoubt-build-120');
   });
 
-  test('city panel: the queue section, the in-place Queued confirmation, and healing', async ({ page, browser }) => {
+  test('city panel: the queue section, the in-place Queued confirmation, and healing', async ({ page, browser, baseURL }) => {
     test.setTimeout(180_000);
     // Your own walled city, idle with nothing built, as in queue-click.spec.ts.
     const setup = wallsFixture();
@@ -95,7 +90,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
     // A damaged city of yours: it heals, or says in red why not.
     for (const [name, blocked] of [['19b-city-healing', false], ['19c-city-not-healing', true]] as const) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         const hurt = wallsFixture();
@@ -138,7 +133,9 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.getByRole('button', { name: /^Start game/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await expect(page.locator('.loading-screen')).toHaveCount(0);
-    await expect(page.getByTestId('first-game-hint')).toContainText('Pick production');
+    await expect(page.getByTestId('advisor')).toContainText('Your advisor will guide you');
+    await page.getByTestId('advisor').getByRole('button', { name: /^Continue/ }).click();
+    await expect(page.getByTestId('advisor')).toBeVisible();
     const opening = await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
       const mine = v.units.filter((u) => u.owner === v.me);
@@ -250,7 +247,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.keyboard.press('Escape');
   });
 
-  test('production banking: banked progress, switching, and a city that must choose', async ({ page, browser }) => {
+  test('production banking: banked progress, switching, and a city that must choose', async ({ page, browser, baseURL }) => {
     // Your city builds a Spearman (12 so far) with a Settler (38) and a Granary (20) banked from earlier switches.
     const setup = wallsFixture();
     const own = setup.fixture.cities.find((c) => c.id === setup.own)!;
@@ -270,7 +267,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '28b-production-switch');
 
     // The city shrank to 1 and banked its Settler: it asks for a new build and says until when.
-    const parked = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const parked = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p2 = await parked.newPage();
       const again = wallsFixture();

@@ -6,7 +6,9 @@ import { coreFixture } from '../src/test/coreFixture';
 import { wallsFixture } from '../src/test/wallsFixture';
 
 test('an older save explains itself in the save list and remains on disk', async ({ page }: { page: Page }) => {
-  const game = coreFixture(wallsFixture().fixture).replace(/"save_version":\d+/, '"save_version":5');
+  const fixture = wallsFixture().fixture;
+  fixture.players.forEach((p, i) => { p.isHuman = i === 0; fixture.setup.players[i].is_human = i === 0; });
+  const game = coreFixture(fixture).replace(/"save_version":\d+/, '"save_version":5');
   const save = JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
     names: ['Ada'], playtest: 'Playtest 8.9.19', savedAt: new Date().toISOString(), game });
   await page.addInitScript((contents) => {

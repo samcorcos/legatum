@@ -98,7 +98,7 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     }
     await expect(tech).toBeVisible();
     await expect(card).toHaveAttribute('data-advisor-id', 'research');
-    await expect(card).toContainText('Step 2 of 2');
+    await expect(card).toContainText('Step 2 of 4');
     await expect(ring).toBeVisible();
     await capture('05-research-card-ring');
     if (onTree) {
@@ -176,6 +176,10 @@ test.describe('locked garrison lesson 1000x600', () => {
       await page.waitForTimeout(400);
     }
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
+    // The peace offer is an unanswered decision and takes precedence over the garrison lesson.
+    await page.getByRole('button', { name: /^Respond to offer/ }).click();
+    await page.getByRole('button', { name: /^Decline/ }).first().click();
+    await page.keyboard.press('Escape');
     const card = page.locator('[data-testid="advisor"][data-advisor-id="garrisonLock"]');
     await expect(card).toBeVisible();
     await expect(card).toContainText('Your military units in Vestige stay as its garrison until Peace with Switzerland or their elimination. Vestige builds nothing until then.');

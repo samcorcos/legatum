@@ -95,6 +95,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.clock.install();
     await loadFixture(page, coreFixture(setup.fixture), 2);
     await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
     const choices = page.getByRole('group', { name: 'Map animations' });
     await expect(page.locator('.combat-fx-settings')).toContainText('Off: instant moves; damage numbers still show');
     await expect(choices.getByRole('button', { name: 'On' })).toHaveAttribute('aria-pressed', 'true');
@@ -102,10 +103,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await choices.getByRole('button', { name: 'Off' }).click();
     await expect(choices.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true');
     await shot(page, size, '06-fx-setting-off');
-    // Close the menu as a click elsewhere does (the menu listens for a pointerdown outside it).
-    await page.evaluate(() => document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
-    await page.clock.runFor(100);
-    await expect(page.locator('#game-menu')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Close settings' }).click();
+    await expect(page.locator('dialog.settings-modal')).toHaveCount(0);
     await storm(page, setup);
     await page.clock.runFor(1500);
     expect(await fxFrames(page)).toBe(0);

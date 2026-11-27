@@ -13,7 +13,7 @@ for (const size of SIZES) test.describe(`give gold ${size.name}`, () => {
   test('your team: amount, forecast, out of range, queued, order line and report lines', async ({ page }) => {
     await loadFixture(page, coreFixture(capitalsFixture().fixture), 2);
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ diplomacyOpen: true }));
-    const panel = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+    const panel = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
     const team = panel.getByTestId('team-gifts');
     await expect(team).toBeVisible();
     await page.mouse.move(4, size.height / 2);

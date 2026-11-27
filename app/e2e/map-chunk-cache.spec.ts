@@ -269,7 +269,8 @@ test('late city art repaints the chunks that hold a town once each: p892-sea-rec
   await page.setViewportSize({ width: 1440, height: 900 });
   let asked = 0, served = 0;
   await page.route(/\/assets\/(?:[a-z]+-(?:hamlet|town|city|metropolis|walls)|(?:hamlet|town|city|metropolis)-mark)[^/]*\.png$/, async (route) => {
-    await new Promise((done) => setTimeout(done, 3000 + 2500 * asked++));
+    // Keep arrivals spread across half a minute even when a larger art set requests many sprites.
+    await new Promise((done) => setTimeout(done, 3000 + 2500 * (asked++ % 12)));
     await route.continue();
     served++;
   });

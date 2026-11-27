@@ -185,7 +185,7 @@ for (const width of [1024, 1440]) for (const look of ['atlas']) {
       });
       expect(frames).toEqual([]);
       await expect(page.getByTestId('first-game-hint')).toHaveCount(0);
-      await expect(page.getByRole('button', { name: 'Show on map', exact: true })).toBeVisible();
+      await expect(page.locator('.moment-card').getByRole('button', { name: /^Show on map/ })).toBeVisible();
       if (width < 700) {
         expect((await page.locator('.moment-card').boundingBox())!.height).toBeLessThanOrEqual(184);
         await expect(page.locator('.population-counter')).toBeHidden();
@@ -318,9 +318,10 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
       await expect(page.locator('.moment-gains li')).toHaveText(['+50 Gold']);
       await expect(page.locator('.moment-gains li .amt-icon')).toHaveCount(1);
       await expect(page.locator('.moment-chevron')).toHaveCount(0);
-      await expect(page.getByRole('button', { name: 'Show on map', exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Turn report', exact: true })).toBeVisible();
+      await expect(page.locator('.moment-card').getByRole('button', { name: /^Show on map/ })).toBeVisible();
       await page.screenshot({ path: path.join(art, `camp-${width}x${height}.png`) });
+      await page.getByRole('button', { name: 'Dismiss celebration' }).click();
+      await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
     });
   }
 }

@@ -18,7 +18,7 @@
 //  romeOffRing: you are Rome; a level 3 veteran stands on your own land, off the gilt rings
 import { fromOffset, within } from '../hex';
 import { FixtureClient } from './fixtureEngine';
-import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
+import { createState, makeStandardSetup, meetAll, spawnUnit } from './fixtureEngine';
 import { idxOf, refreshVision } from './fixtureEngine';
 import type { Faction } from '../types';
 
@@ -54,6 +54,7 @@ export function goalCitiesFixture(mode: GoalCityMode) {
   client.endTurn(Object.fromEntries([0, 1, 2].map((p) => [p, s.units.filter((u) => u.owner === p).map((u) => ({ type: 'FoundCity' as const, unit: u.id }))])));
   const f = client.debugState();
   f.turn = 40;
+  meetAll(f);
   for (const r of f.diplomacy!.relations) r.state = 'Peace';
   const at = (col: number, row: number) => f.cities.find((c) => c.pos.q === fromOffset(col, row).q && c.pos.r === fromOffset(col, row).r)!;
   const A = at(5, 5), B = at(12, 7), C = at(6, 10), D = at(23, 5), E = at(23, 10);

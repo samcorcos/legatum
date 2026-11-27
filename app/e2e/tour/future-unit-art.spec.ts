@@ -24,7 +24,7 @@ for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
 
   test('the Hunter-Killer on the map beside the units around it, its panel and build card', async ({ page }) => {
     test.setTimeout(180_000);
-    const s = improvementCity({ techs: ['Robotics', 'StealthTechnology', 'Flight'] });
+    const s = improvementCity({ techs: TECHS.filter((tech) => TECH_ERA[tech] <= TECH_ERA.Robotics) });
     const city = s.cities[0];
     await loadFixture(page, coreFixture(s), 12);
     const at = { q: city.pos.q + 4, r: city.pos.r - 2 };
@@ -66,8 +66,9 @@ for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
       const game = (window as unknown as GameWindow).legatum.getState();
       game.select({ kind: 'city', id }, true);
     }, city.id);
-    const card = page.locator('.city-panel').getByText('Hunter-Killer', { exact: true }).first();
-    await card.scrollIntoViewIfNeeded().catch(() => undefined);
+    const card = page.locator('.city-panel .production-choice[data-item="u:HunterKiller"]');
+    await card.scrollIntoViewIfNeeded();
+    await expect(card).toBeVisible();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'a4-hunter-killer-build-card');
   });

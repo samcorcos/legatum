@@ -115,7 +115,7 @@ export function techCardUnlocks(research: ResearchView, tech: TechId, faction: F
       for (const row of users) row.notes.push(`uses ${supply[2]}`);
       continue;
     }
-    effects.push(effect(label));
+    effects.push(effect(label === 'Each Biplane can upgrade to either one, your choice' ? 'Biplanes can upgrade to either one' : label));
   }
   const reveals = revealedByTech(tech).map((resource): TechCardUnlock => ({
     label: `Reveals ${resource} on the map${faction === 'Germany' && resource === 'Iron' ? ' · your deposits supply twice as much' : ''}`, key: null, icon: `resource-${resource.toLowerCase()}`, kind: 'Effect',

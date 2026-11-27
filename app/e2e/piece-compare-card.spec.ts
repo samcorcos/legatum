@@ -31,7 +31,10 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     test.setTimeout(90_000);
     await mkdir(out, { recursive: true });
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (location.protocol.startsWith('http')) {
+        localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+        localStorage.setItem('legatum.research-view.v1', 'era');
+      }
     });
     await page.setViewportSize(size);
     await page.goto('/?client=wasm');
@@ -44,10 +47,10 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
         await pieceFixture(faction);
       }, c.faction);
       const card = page.locator(`.city-panel .production-choice[data-item="${c.item}"]`);
-      await card.scrollIntoViewIfNeeded();
       const line = card.getByTestId('piece-vs');
       // A basic unit sits behind the production list's "Also: ..." disclosure (the Spartan Hoplite is the Spearman).
       if (!(await card.isVisible())) for (const also of await page.locator('.city-panel summary', { hasText: /^Also/ }).all()) await also.click();
+      await card.scrollIntoViewIfNeeded();
       const more = card.locator('.production-more');
       if (!(await more.evaluate((el) => (el as HTMLDetailsElement).open))) await more.locator('summary').click();
       await card.scrollIntoViewIfNeeded();
@@ -69,7 +72,10 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     test.setTimeout(90_000);
     await mkdir(out, { recursive: true });
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (location.protocol.startsWith('http')) {
+        localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+        localStorage.setItem('legatum.research-view.v1', 'era');
+      }
     });
     await page.setViewportSize(size);
     await page.goto('/?client=wasm');

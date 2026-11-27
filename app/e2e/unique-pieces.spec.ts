@@ -9,6 +9,7 @@ import type { useGame } from '../src/store';
 import type { Hex } from '../src/types';
 import { coreFixture } from '../src/test/coreFixture';
 import { phalanxFixture } from '../src/test/uniquePiecesFixture';
+import { skipPeopleIntro, soloAutosaves } from './fixtures';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void; toScreen(h: Hex): { x: number; y: number } } };
 const out = process.env.UNIQUE_PIECE_SHOTS ? path.resolve(process.env.UNIQUE_PIECE_SHOTS) : path.resolve('test-results/unique-pieces');
@@ -27,6 +28,8 @@ const test = base.extend<{}, { devURL: string }>({
 });
 
 async function open(page: Page, game: string, turn: number, names: [string, string]) {
+  await page.addInitScript(skipPeopleIntro);
+  await page.addInitScript(soloAutosaves);
   await page.addInitScript(({ game, turn, names }) => {
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names, savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));

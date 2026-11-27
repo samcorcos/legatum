@@ -1,7 +1,7 @@
 import { revealSidebar } from '../sidebarAssertions';
 // Screen tour, faction goals and signature mechanics. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
 // `npx playwright test e2e/tour/factions`. Shots land in test-results/screen-tour/<size>/factions/.
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { endPlanning } from '../turnActions';
 import { coreFixture } from '../../src/test/coreFixture';
 import { wallsFixture } from '../../src/test/wallsFixture';
@@ -38,7 +38,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '90e-race-heir-card');
   });
 
-  test('Byzantium: the Heir card, the Heir at home, and the Heir captured by a rival', async ({ page, browser }) => {
+  test('Byzantium: the Heir card, the Heir at home, and the Heir captured by a rival', async ({ page, browser, baseURL }) => {
     test.setTimeout(180_000);
     const none = forgeHeirFixture('Byzantium', 'none');
     await loadFixture(page, coreFixture(none.fixture), 2);
@@ -60,7 +60,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await closeLedger(page);
 
     for (const [heir, id] of [['own', '91b-heir-own-map-and-panel'], ['captured', '91c-heir-captured-map-and-panel']] as const) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         const fx = forgeHeirFixture('Byzantium', heir);
@@ -102,9 +102,9 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
   });
 
-  test('Sparta 7b: Agoge in the production picker, older-save message', async ({ browser }) => {
+  test('Sparta 7b: Agoge in the production picker, older-save message', async ({ browser, baseURL }) => {
     // Agoge: an Sparta city whose picker offers it (needs Chivalry).
-    const ctx = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const ctx = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p2 = await ctx.newPage();
       const w = wallsFixture();
@@ -121,7 +121,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await ctx.close(); }
 
     // The title screen explains an older save that no longer loads, in plain words.
-    const old = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const old = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p3 = await old.newPage();
       const game = coreFixture(wallsFixture().fixture).replace(/"save_version":\d+/, '"save_version":5');
@@ -133,7 +133,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await old.close(); }
   });
 
-  test('goal actions: Sakoku and the broadcast confirms, the received broadcast and its picker', async ({ page, browser }) => {
+  test('goal actions: Sakoku and the broadcast confirms, the received broadcast and its picker', async ({ page, browser, baseURL }) => {
     test.setTimeout(240_000);
     const state = () => page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return { view: s.views![s.seat], orders: s.orders[s.seat] }; });
     await loadFixture(page, sakokuCoreSave(), 60);
@@ -175,7 +175,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await shot(page, size, '88-sakoku-closed');
     }
 
-    const other = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const other = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p2 = await other.newPage();
       await loadFixture(p2, broadcastCoreSave(), 90);
@@ -192,7 +192,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await expect(r2).toContainText('Ordered');
     } finally { await other.close(); }
 
-    const rival = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const rival = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p3 = await rival.newPage();
       await loadFixture(p3, freeTechsCoreSave(), 91);
@@ -224,7 +224,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await rival.close(); }
   });
 
-  test('Sparta retires veterans (valid cities marked, confirm, the goal completes) and the Celts call the Wild', async ({ page, browser }) => {
+  test('Sparta retires veterans (valid cities marked, confirm, the goal completes) and the Celts call the Wild', async ({ page, browser, baseURL }) => {
     test.setTimeout(180_000);
     const units = () => page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
@@ -270,7 +270,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.locator('.unit-panel')).toHaveCount(0);
 
     // The third retirement completes the goal: the legendary card, then the finished goal.
-    const done = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const done = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await done.newPage();
       await loadFixture(p, retireCoreSave(2), 130);
@@ -301,7 +301,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await done.close(); }
 
     // The Celts: Call the Wild in the race panel, the confirm, the camps ghosted on the map.
-    const wild = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const wild = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await wild.newPage();
       await loadFixture(p, wildCoreSave(), 100);
@@ -335,7 +335,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await wild.close(); }
 
     // A rival clears a camp: the Celts lose the points, with a sober card and a report line.
-    const cleared = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const cleared = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await cleared.newPage();
       await loadFixture(p, wildClearedCoreSave(), 101);

@@ -3,7 +3,7 @@ import { access, mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { test as base, expect, type BrowserContext, type Page } from '@playwright/test';
+import { test as base, expect, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from '@playwright/test';
 // @ts-expect-error plain .mjs helper without types
 import { startStaticServer } from '../e2e-hosted/serve.mjs';
 
@@ -48,8 +48,70 @@ export const closeMeetingPlates = () => {
   if (document.documentElement) start(); else document.addEventListener('DOMContentLoaded', start);
 };
 
+/**
+ * Fixture saves are built from two-human setups (the co-op target), but a save with more than one human player now
+ * continues only as an online host: Continue takes it to "Host this save" (TitleScreen.tsx, needsOnlineHost). A spec
+ * that injects such a save into the autosave slot means a local game, so the save is made single-player as it is
+ * written: the first human keeps its seat and every other human becomes an AI empire. A spec about hosting a
+ * many-human save uses `test.use({ saves: 'as-written' })` (or testWithFailingRequests, which has no rewrite).
+ */
+export const soloAutosaves = () => {
+  // The game JSON holds u64 bitset words that a JavaScript number would round, so it is never re-serialized: the
+  // flags are flipped in place. A walk of the parsed copy (keys in document order) finds which `"is_human":true`
+  // occurrences belong to a player other than the one kept.
+  const solo = (text: string) => {
+    const file = JSON.parse(text) as { names?: string[]; game?: string };
+    if (typeof file.game !== 'string') return text;
+    const game = JSON.parse(file.game) as { players?: { id?: number; is_human?: boolean }[] };
+    const keep = (game.players ?? []).find((p) => p.is_human);
+    if (!keep || (game.players ?? []).filter((p) => p.is_human).length < 2) return text;
+    const keepId = keep.id ?? (game.players ?? []).indexOf(keep);
+    const flips: boolean[] = [];
+    const walk = (v: unknown, inPlayers: boolean) => {
+      if (Array.isArray(v)) {
+        v.forEach((x, i) => {
+          if (inPlayers && x && typeof x === 'object' && (x as { is_human?: unknown }).is_human === true) {
+            const id = (x as { id?: number }).id ?? i;
+            for (const [k, y] of Object.entries(x)) {
+              if (k === 'is_human') flips.push(id !== keepId);
+              else walk(y, false);
+            }
+          } else walk(x, false);
+        });
+      } else if (v && typeof v === 'object') {
+        for (const [k, y] of Object.entries(v)) {
+          if (k === 'is_human' && y === true) flips.push(false);
+          else walk(y, k === 'players');
+        }
+      }
+    };
+    walk(game, false);
+    let n = 0;
+    file.game = file.game.replace(/"is_human":true/g, (m) => (flips[n++] ? '"is_human":false' : m));
+    if (Array.isArray(file.names)) file.names = file.names.slice(0, 1);
+    return JSON.stringify(file);
+  };
+  const write = Storage.prototype.setItem;
+  Storage.prototype.setItem = function (key: string, value: string) {
+    if (key === 'legatum.autosave.v1') {
+      try { value = solo(value); } catch { /* not JSON: the app reports it as an unreadable save */ }
+    }
+    return write.call(this, key, value);
+  };
+};
+
+/** A separate local-game context gets the same save and intro setup as the page fixture. */
+export async function soloContext(browser: Browser, options: BrowserContextOptions = {}): Promise<BrowserContext> {
+  const context = await browser.newContext(options);
+  await context.addInitScript(skipPeopleIntro);
+  await context.addInitScript(soloAutosaves);
+  await context.addInitScript(closeMeetingPlates);
+  return context;
+}
+
 type Fixtures = {
   meetings: 'close' | 'show';
+  saves: 'solo' | 'as-written';
   watchErrors: (context: BrowserContext) => void;
   guestPage: Page;
 };
@@ -121,10 +183,11 @@ ${log}`);
 
 export const test = testWithFailingRequests.extend<Fixtures>({
   meetings: ['close', { option: true }],
+  saves: ['solo', { option: true }],
 
   // Installed before navigation, including on a second (guest) context. No error
   // allowlist: resource errors, console.error and uncaught exceptions all fail.
-  watchErrors: [async ({ context, meetings }, use) => {
+  watchErrors: [async ({ context, meetings, saves }, use) => {
     const errors: string[] = [];
     const watch = (ctx: BrowserContext) => {
       ctx.on('console', (message) => {
@@ -140,6 +203,7 @@ export const test = testWithFailingRequests.extend<Fixtures>({
     };
     watch(context);
     await context.addInitScript(skipPeopleIntro);
+    if (saves === 'solo') await context.addInitScript(soloAutosaves);
     if (meetings === 'close') await context.addInitScript(closeMeetingPlates);
     await use(watch);
     expect(errors, 'No browser console errors or uncaught exceptions').toEqual([]);

@@ -123,6 +123,7 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await expect(t.getByTestId('era-up-objectives')).toHaveCount(0);
     await expect(t).not.toContainText('Victory points open now');
     await page.keyboard.press('Enter');
+    // The era card now advances directly to the held score check.
     const check = page.getByTestId('score-check');
     await expect(check).toBeVisible();
     await expect(check.locator('.sc-kicker')).toHaveText('The Medieval Age begins · Turn 92');

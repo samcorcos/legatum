@@ -1,6 +1,7 @@
 import { endPlanning } from './turnActions';
 import { test as base, expect } from '@playwright/test';
 import { createServer } from 'vite';
+import { skipPeopleIntro } from './fixtures';
 
 // Other suites serve the production build. Feedback diagnostics deliberately exist only in dev.
 const test = base.extend<{}, { devURL: string }>({
@@ -23,6 +24,7 @@ for (const viewport of [{ width: 1024, height: 1366 }]) {
     test('logs one queue and ready from direct research intent', async ({ page }) => {
       const errors: string[] = [];
       page.on('pageerror', (error) => errors.push(error.message));
+      await page.addInitScript(skipPeopleIntro);
       await page.goto('/?client=wasm');
       await page.getByRole('button', { name: /^Single Player/ }).click();
       await page.getByRole('button', { name: /^Start game/ }).click();

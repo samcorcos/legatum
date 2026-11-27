@@ -52,7 +52,7 @@ test('War declared on you: a full-screen declaration before the report; Return c
 
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('alarm-screen')).toHaveCount(0);
-  // The map centres on their nearest force in sight.
+  // The map frames their nearest force in sight clear of the panels.
   const focus = await page.evaluate(() => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
     const hex = s.focus!.hex;
@@ -62,8 +62,9 @@ test('War declared on you: a full-screen declaration before the report; Return c
   await expect.poll(() => page.evaluate((hex) => {
     const p = (window as unknown as GameWindow).legatumMap.toScreen(hex);
     const b = document.querySelector('[data-game-map]')!.getBoundingClientRect();
-    return Math.hypot(p.x - b.width / 2, p.y - b.height / 2);
-  }, focus.hex)).toBeLessThan(4);
+    const x = b.left + p.x, y = b.top + p.y;
+    return x >= b.left && x < b.right && y >= b.top && y < b.bottom && !!document.elementFromPoint(x, y)?.closest('[data-game-map]');
+  }, focus.hex)).toBe(true);
 
   // The event stays reachable: the report line (red, down arrow) and a new red war pin in the race.
   await expect.poll(async () => {
@@ -90,6 +91,14 @@ test('War declared on you: Esc closes it where it is; Open diplomacy opens Spart
   await expect(primary).toHaveAccessibleName(/^Show on map/);
   await expect(primary).toBeInViewport();
   await expect(page.getByTestId('alarm-screen')).toHaveAttribute('data-armed', '');
+  // Isolate the alarm's Escape behavior from the first-contact story queued behind it.
+  await page.evaluate(() => {
+    const game = (window as unknown as GameWindow).legatum.getState();
+    const report = game.report!;
+    const moments = [...(report.moments ?? [])];
+    moments[game.seat] = [];
+    game.set({ report: { ...report, moments } });
+  });
   const before = await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().focus);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('alarm-screen')).toHaveCount(0);

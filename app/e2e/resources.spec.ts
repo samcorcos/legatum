@@ -155,7 +155,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     expect(errors).toEqual([]);
   });
 
-  test('with no Iron supplied the Iron unit cards are greyed out with the reason where their price is', async ({ page }) => {
+  test('with no Iron supplied the Iron unit row explains the shortage and cannot be queued', async ({ page }) => {
     test.setTimeout(90_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -172,19 +172,12 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
       await expect(select).toBeVisible();
       await expect(select.locator('option', { hasText: reason }).first()).toBeDisabled();
     } else {
-      const blocked = page.locator('.production-choice').filter({ hasText: reason });
-      expect(await blocked.count()).toBeGreaterThan(0);
-      for (const card of await blocked.all()) {
-        await expect(card).toHaveClass(/supply-blocked/);
-        await expect(card.getByRole('button', { name: /^Build / })).toHaveAttribute('aria-description', /Needs 1 Iron.*Open Iron supply/);
-        await expect(card.locator('.prod-go')).toHaveText('Blocked');
-        await expect(card.locator('.prod-supply-need')).toContainText('Uses 1 Iron');
-        await expect(card.locator('.production-blocker')).toHaveText(reason);
-        await expect(card.locator('.prod-effect')).not.toHaveText(reason);
-      }
-      await blocked.first().scrollIntoViewIfNeeded();
-      // The card deliberately exposes aria-disabled while still opening its supply reason on click.
-      await blocked.first().getByRole('button', { name: /^Build / }).click({ force: true });
+      const blocked = page.locator('.city-panel').getByRole('button', { name: 'Queue Reisläufer' });
+      await expect(blocked).toBeDisabled();
+      await expect(page.locator('.city-panel')).toContainText('Reisläufer needs');
+      const supply = page.locator('.city-panel').getByRole('button', { name: 'Open Iron supply' }).first();
+      await supply.scrollIntoViewIfNeeded();
+      await supply.click();
       await expect(page.locator('.supply-tip')).toBeVisible();
       await expect(page.locator('.supply-tip')).toContainText('No Iron deposit inside your borders yet');
       await page.keyboard.press('Escape');

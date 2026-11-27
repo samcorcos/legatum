@@ -2,8 +2,13 @@ import { expect, type Page } from '@playwright/test';
 
 /** A selected unit collapses map options to a Lens toggle. Open it before using its controls. */
 export async function showMapOptions(page: Page) {
+  await expect(page.locator('.map-lenses')).toBeVisible();
   const toggle = page.getByRole('button', { name: /^Lens: / });
-  if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
+  if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') !== 'true') {
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  }
+  await expect(page.locator('.lens-content')).toBeVisible();
 }
 
 /** Yields checkbox in the map lens bar. */

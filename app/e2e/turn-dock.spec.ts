@@ -21,9 +21,10 @@ for (const look of ['atlas'] as const) {
     // Many known cities (as in a long game): add foreign cities to the local view only.
     await page.evaluate(() => {
       const store = (window as unknown as { legatum: { getState(): { views: unknown[]; set(p: object): void } } }).legatum;
-      const s = store.getState(), v = structuredClone(s.views[0]) as { cities: { id: number; owner: number; name: string; detail: unknown }[] };
+      const s = store.getState(), v = structuredClone(s.views[0]) as { me: number; players: { id: number }[]; cities: { id: number; owner: number; name: string; detail: unknown }[] };
       const base = v.cities[0];
-      for (let i = 0; i < 12; i++) v.cities.push({ ...base, id: 900 + i, owner: (i % 7) + 1, name: `Far City ${i}`, detail: null });
+      const rivals = v.players.map((p) => p.id).filter((id) => id !== v.me);
+      for (let i = 0; i < 12; i++) v.cities.push({ ...base, id: 900 + i, owner: rivals[i % rivals.length], name: `Far City ${i}`, detail: null });
       s.set({ views: [v] });
     });
     await revealSidebar(page, 'turn-more');
@@ -36,14 +37,20 @@ for (const look of ['atlas'] as const) {
   });
 }
 
-// Playtest-6 B1/H5: at the 1000x600 laptop window, each human seat added a row to This Turn and
-// pushed End Turn and Ready anyway off the bottom with 2 or 3 humans. The primary action stays
-// whole in the window in every seat setup, and the objective sheet closes back onto it.
-for (const humans of [1, 2, 3]) {
-  test(`1000×600 with ${humans} human seat${humans > 1 ? 's' : ''}: the turn's primary action stays in the window`, async ({ page }) => {
+// The primary action stays whole at the laptop size with up to two AI teammates,
+// and the score sheet closes back onto it.
+for (const teammates of [0, 1, 2]) {
+  test(`1000×600 with ${teammates} AI teammate${teammates === 1 ? '' : 's'}: the turn's primary action stays in the window`, async ({ page }) => {
     await page.setViewportSize({ width: 1000, height: 600 });
     const fixture = wallsFixture().fixture;
-    fixture.players.forEach((p, i) => { p.isHuman = i < humans; fixture.setup.players[i].is_human = i < humans; });
+    fixture.players.forEach((p, i) => {
+      p.isHuman = i === 0;
+      fixture.setup.players[i].is_human = i === 0;
+      if (i > 0 && i <= teammates) {
+        p.team = fixture.players[0].team;
+        fixture.setup.players[i].team = fixture.setup.players[0].team;
+      }
+    });
     await page.addInitScript((game) => {
       if (!location.protocol.startsWith('http')) return;
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
@@ -52,7 +59,7 @@ for (const humans of [1, 2, 3]) {
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Continue/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('2');
-    await expect(page.locator('.seatbar .local-seat')).toHaveCount(humans > 1 ? humans : 0);
+    await expect(page.locator('.seatbar .local-seat')).toHaveCount(0);
     const whole = async (selector: string) => {
       const el = page.locator(selector).first();
       await expect(el).toBeVisible();

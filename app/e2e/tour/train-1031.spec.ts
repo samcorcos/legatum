@@ -3,7 +3,7 @@
 // the Mongol Siege reason, the relations tab and a viewer eliminated mid-game.
 // Run alone with `npx playwright test e2e/tour/train-1031`; shots land in test-results/screen-tour/<size>/train-1031/.
 import type { Page } from '@playwright/test';
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { endPlanning } from '../turnActions';
 import { TECHS } from '../../src/data';
 import { fromOffset } from '../../src/hex';
@@ -70,7 +70,7 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     await shot(page, size, '09-city-panel-auto-pick-after-turn');
   });
 
-  test('build list: nested upgrades early, then a German city with every technology (Ruhr Foundry, aircraft Oil, Artillery)', async ({ page, browser }) => {
+  test('build list: nested upgrades early, then a German city with every technology (Ruhr Foundry, aircraft Oil, Artillery)', async ({ page, browser, baseURL }) => {
     test.setTimeout(180_000);
     const early = citiesFixture();
     const geneva = early.cities.filter((c) => c.owner === 0).sort((a, b) => a.id - b.id)[3];
@@ -88,7 +88,7 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     await page.waitForTimeout(500);
     await shot(page, size, '11-nested-upgrade-hover');
 
-    const ctx = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const ctx = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await ctx.newPage();
       const g = citiesFixture('Germany');
@@ -113,7 +113,7 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     } finally { await ctx.close(); }
   });
 
-  test('Mongol Siege before Medieval, the relations tab, and a viewer eliminated mid-game', async ({ page, browser }) => {
+  test('Mongol Siege before Medieval, the relations tab, and a viewer eliminated mid-game', async ({ page, browser, baseURL }) => {
     test.setTimeout(180_000);
     const m = citiesFixture('Mongols');
     m.players[0].techs.push('Mathematics');
@@ -124,7 +124,7 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     await park(page);
     await shot(page, size, '16-mongol-siege-reason');
 
-    const ctx = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const ctx = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await ctx.newPage();
       await loadFixture(p, allianceCoreSave(), 50);
@@ -140,7 +140,7 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
       await shot(p, size, '19-diplomacy-relations-hover');
     } finally { await ctx.close(); }
 
-    const ctx2 = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const ctx2 = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await ctx2.newPage();
       const s = eliminatedState();

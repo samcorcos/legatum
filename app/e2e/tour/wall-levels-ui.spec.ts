@@ -106,12 +106,17 @@ for (const size of SIZES) test.describe(`wall levels UI ${size.name}`, () => {
       s.jumpTo(v.units.find((u) => u.id === id)!.pos);
     }, attacker.id);
     const line = page.getByTestId('forecast-walls').first();
+    const compactPartial = kind === 'partial' && size.width === 1000;
     await expect.poll(async () => {
       const at = await cityPoint(page, setup.walled);
       await page.mouse.move(at.x + 3, at.y + 3);
       await page.mouse.move(at.x, at.y, { steps: 3 });
-      return line.isVisible();
+      return compactPartial ? page.getByTestId('forecast-defender-walls').isVisible() : line.isVisible();
     }, { intervals: [500, 1000, 1000, 2000] }).toBe(true);
+    if (compactPartial) {
+      await expect(page.getByTestId('forecast-defender-walls')).toContainText(/200\s*→\s*175/);
+      await expect(line).toBeHidden();
+    }
     await page.waitForTimeout(500);
     await shot(page, size, `forecast-walls-${kind}`);
   });
@@ -138,7 +143,7 @@ for (const size of SIZES) test.describe(`wall levels UI ${size.name}`, () => {
     await page.getByRole('button', { name: /^How to Play/ }).click();
     const guide = page.getByRole('dialog', { name: 'How to Play', exact: true });
     await guide.getByRole('button', { name: /Simultaneous combat/ }).click();
-    const p = guide.locator('.guide-page p', { hasText: 'Walls begin at level I.' });
+    const p = guide.locator('.guide-page p', { hasText: 'Walls are a second bar in front of the city’s health.' });
     await p.scrollIntoViewIfNeeded();
     await p.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await page.mouse.move(5, size.height / 2);

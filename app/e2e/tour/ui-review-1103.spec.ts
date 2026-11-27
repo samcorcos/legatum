@@ -1,7 +1,7 @@
 // UI review of train-1103: the shots the tour was missing for world wonders (map art beside the painted works, tile card,
 // moments for completion, capture and loss, the raze confirm in a wonder city, the expanded ledger row, How to Play chapter)
 // and the Aztec rule note in view. Run alone: `npx playwright test e2e/tour/ui-review-1103`.
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { TECHS } from '../../src/data';
 import { coreFixture } from '../../src/test/coreFixture';
 import { improvementCity } from '../../src/test/improvementsFixture';
@@ -81,7 +81,7 @@ for (const size of SIZES) test.describe(`ui review 1103 ${size.name}`, () => {
     await shot(page, size, 'm1-wonder-completed-moment');
   });
 
-  test('wonder capture: the captor and the loser', async ({ page, browser }) => {
+  test('wonder capture: the captor and the loser', async ({ page, browser, baseURL }) => {
     test.setTimeout(180_000);
     const f = wonderCapture('captured');
     await loadFixture(page, f.game, 12);
@@ -91,10 +91,11 @@ for (const size of SIZES) test.describe(`ui review 1103 ${size.name}`, () => {
       { type: 'GreatWorkLost', player: f.builder, of: f.builder, building: 'Pyramids', vp: 2 },
       { type: 'GreatWorkCompleted', player: f.captor, of: f.builder, building: 'Pyramids', vp: 2, again: true },
     ]);
-    await expect(page.locator('.moment-card')).toContainText(`Taken with ${f.cityName}`);
+    await expect(page.locator('.moment-card')).toContainText(`World wonder taken`);
+    await expect(page.locator('.moment-card')).toContainText(f.cityName);
     await page.waitForTimeout(600);
     await shot(page, size, 'm2-wonder-city-captured-by-you');
-    const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await context.newPage();
       const l = wonderCapture('lost');
@@ -105,7 +106,8 @@ for (const size of SIZES) test.describe(`ui review 1103 ${size.name}`, () => {
         { type: 'GreatWorkLost', player: l.builder, of: l.builder, building: 'Pyramids', vp: 2 },
         { type: 'GreatWorkCompleted', player: l.captor, of: l.builder, building: 'Pyramids', vp: 2, again: true },
       ]);
-      await expect(p.locator('.moment-card')).toContainText(`Lost with ${l.cityName}`);
+      await expect(p.locator('.moment-card')).toContainText(`World wonder lost`);
+      await expect(p.locator('.moment-card')).toContainText(l.cityName);
       await p.waitForTimeout(600);
       await shot(p, size, 'm3-wonder-city-taken-from-you');
     } finally { await context.close(); }

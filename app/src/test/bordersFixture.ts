@@ -3,7 +3,6 @@
 // has several neighbours and their borders meet. Towns belong to the nearest capital's empire and
 // claim land three hexes around themselves, first come first served. Seat 0 has explored the lot.
 import { distance, fromOffset, within } from '../hex';
-import { FixtureClient } from './fixtureEngine';
 import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
 import { idxOf, refreshVision } from './fixtureEngine';
 import type { MCity, MState } from './fixtureState';
@@ -17,15 +16,12 @@ export function bordersFixture(opts: { players?: number; width?: number; height?
   const setup = makeStandardSetup(seed, 'Mongols', 'Sparta', 'Ada', 'Marrow');
   setup.width = width; setup.height = height;
   const names = ['Ada', 'Marrow', 'Hive', 'Toll', 'Byzantium', 'Celts', 'Forge', 'Signal'];
-  setup.players = setup.players.slice(0, players).map((p, i) => ({ ...p, team: i, is_human: i === 0, faction: FACTIONS[i], name: names[i] }));
-  const s = createState(setup);
-  s.units = s.units.filter((u) => u.kind === 'Settler'); s.cities = []; s.nextCityId = 0;
-  s.owner.fill(-1); s.tileCity.fill(-1);
-  for (const p of s.players) p.explored.fill(1);
-  const client = new FixtureClient();
-  client.load(JSON.stringify(s));
-  client.endTurn(Object.fromEntries(s.players.map((p) => [p.id, s.units.filter((u) => u.owner === p.id && u.kind === 'Settler').slice(0, 1).map((u) => ({ type: 'FoundCity' as const, unit: u.id }))])));
-  const f: MState = client.debugState();
+  setup.players = Array.from({ length: players }, (_, i) => ({ ...setup.players[i % setup.players.length], team: i, is_human: i === 0, faction: FACTIONS[i], name: names[i] }));
+  // New games now start with founded capitals, rather than Settlers waiting for a
+  // FoundCity order. Keep those capitals as the centers of this territory fixture.
+  const f: MState = createState(setup);
+  f.units = [];
+  for (const p of f.players) p.explored.fill(1);
   f.turn = 90;
   for (const r of f.diplomacy?.relations ?? []) r.state = 'Peace';
   const capitals = f.cities.filter((c) => c.isCapital);

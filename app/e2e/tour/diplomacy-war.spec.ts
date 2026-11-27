@@ -1,6 +1,6 @@
 // Screen tour, diplomacy, treaties, war declarations and alarms. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
 // `npx playwright test e2e/tour/diplomacy-war`. Shots land in test-results/screen-tour/<size>/diplomacy-war/.
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { endPlanning } from '../turnActions';
 import { coreFixture } from '../../src/test/coreFixture';
 import { wallsFixture } from '../../src/test/wallsFixture';
@@ -21,7 +21,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
 
 
-  test('diplomacy: inbox, alliance offer and declaring war', async ({ page, browser }) => {
+  test('diplomacy: inbox, alliance offer and declaring war', async ({ page, browser, baseURL }) => {
     test.setTimeout(120_000);
     await loadFixture(page, diplomacyCoreSave(16, { met: true }), 16);
     await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
@@ -31,7 +31,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '16-diplomacy-inbox');
 
     // An incoming Alliance offer: one decision card.
-    const offer = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const offer = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p2 = await offer.newPage();
       const state = diplomacyState(10);
@@ -50,7 +50,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await offer.close(); }
 
     // An ally's war: a call to arms is one decision card, Join primary and Decline beside it.
-    const call = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const call = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p3 = await call.newPage();
       await loadFixture(p3, callToArmsCoreSave(), 16);
@@ -66,7 +66,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await call.close(); }
 
     // Declaring war: order a Spearman onto a unit of a team at Peace.
-    const war = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const war = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p3 = await war.newPage();
       await loadFixture(p3, warPromptCoreSave(), 1);
@@ -298,10 +298,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '86f-great-works-placed-ring');
   });
 
-  test('Great Works have no Buy control for any faction and a free Alliance offer against the leader', async ({ page, browser }) => {
+  test('Great Works have no Buy control for any faction and a free Alliance offer against the leader', async ({ page, browser, baseURL }) => {
     // The Great Works section in a big city that meets the Foundry's requirement, every tech known.
     for (const [faction, name] of [['Switzerland', '86a-great-works-switzerland'], ['India', '86b-great-works-india']] as const) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         const setup = wallsFixture();

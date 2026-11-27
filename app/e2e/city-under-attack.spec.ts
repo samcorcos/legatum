@@ -170,11 +170,11 @@ for (const size of SIZES) test.describe(`city under attack ${size.name}`, () => 
     const card = page.locator(`.seatbar .siege-card[data-city="${setup.own}"]`);
     await expect(card).toBeVisible();
     // A save has no turn report: the card says only what the city's own record says.
-    await expect(card.locator('.siege-lost')).toHaveText('Took damage last turn');
-    await expect(card.locator('.siege-num')).toHaveText('120/200 health');
-    await expect(card.locator('.siege-forecast')).toHaveText('Holds about 2 turns unless reinforced');
+    await expect(card.locator('.siege-lost')).toHaveText('Hit last turn');
+    await expect(card.locator('.siege-num')).toHaveText('100/100 Walls');
+    await expect(card.locator('.siege-forecast')).toHaveText('Holds about 4 turns unless reinforced');
     await expect(card.locator('.siege-head')).toContainText(/Waypost Seven is under attack · .+/);
-    await expect(card.locator('.siege-compact-facts')).toHaveText('120/200 health · Took damage last turn · Falls in 2 turns');
+    await expect(card.locator('.siege-compact-facts')).toHaveText('100/100 Walls · Hit last turn · Falls in 4 turns');
     expect(await card.locator('.siege-compact-facts').evaluate((el) => el.scrollWidth <= el.clientWidth), 'the deciding facts fit on the compact line').toBe(true);
     const pos = await cityHex(page, setup.own);
     await page.evaluate(({ hex }) => (window as unknown as GameWindow).legatum.getState().jumpTo(hex), { hex: pos });

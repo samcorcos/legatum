@@ -74,7 +74,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
           return { kind: u.kind, open };
         });
       });
-      expect(boxes.map((b) => b.kind).sort()).toEqual(['Arquebusier', 'Musketman', 'FieldCannon', 'Archer', 'Rifleman', 'Scout', 'Spearman', 'Spearman']);
+      expect(boxes.map((b) => b.kind).sort()).toEqual(['Archer', 'Arquebusier', 'FieldCannon', 'Musketman', 'Rifleman', 'Scout', 'Spearman', 'Spearman']);
       for (const b of boxes) expect(b, `${b.kind} is framed at ${size.width}x${size.height}`).toMatchObject({ open: true });
     });
 
@@ -119,7 +119,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
         await page.mouse.move(b!.x + p.x, b!.y + p.y, { steps: 3 });
       };
       await expect.poll(async () => { await hoverCity(); return page.getByTestId('forecast-walls').first().isVisible(); }, { intervals: [400, 800, 1000, 2000] }).toBe(true);
-      await expect(page.getByTestId('forecast-walls').first()).toContainText('Siege: your Spearman ignores');
+      await expect(page.getByTestId('forecast-walls').first()).toContainText('Siege covers up to level I, so full damage');
       await shot(page, size, '02-forecast-covered');
     });
 
@@ -142,7 +142,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
         await page.mouse.move(b!.x + p.x, b!.y + p.y, { steps: 3 });
       };
       await expect.poll(async () => { await hoverCity(); return page.getByTestId('forecast-walls').first().isVisible(); }, { intervals: [400, 800, 1000, 2000] }).toBe(true);
-      await expect(page.getByTestId('forecast-walls').first()).toContainText('Siege built in: your Rifleman ignores');
+      await expect(page.getByTestId('forecast-walls').first()).toContainText('built-in Siege covers up to level IV, so full damage');
       await shot(page, size, '04-forecast-rifleman');
     });
   });

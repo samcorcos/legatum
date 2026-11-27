@@ -3197,8 +3197,10 @@ dialog.settings-modal {
 }
 /* Short windows: the full card fits beside its hex inside the map (never under the window edge). */
 @media (max-height: 760px) {
-  .forecast-sides { padding: 8px 16px; }
-  .forecast-bd { padding: 8px 16px; gap: 12px; }
+  .forecast-head { gap: 2px; padding: 6px 16px 4px; }
+  .forecast-sides { padding: 6px 16px; }
+  .forecast-bd { padding: 5px 16px; gap: 12px; }
+  .forecast-odds { padding-block: 4px; }
   .forecast-bd .bd-total { min-height: 24px; line-height: 24px; }
   /* The whole-fight card is the tallest: its strength tables give up a few pixels a row at short windows. */
   .forecast:has(.forecast-assault) .forecast-bd .bd-row { min-height: 19px; line-height: 19px; }
@@ -3211,7 +3213,7 @@ dialog.settings-modal {
   .forecast:has(.forecast-assault) .forecast-walls:not(.good) { display: none; }
   /* The defender's Walls bar adds two rows to the sides, so a walled city's card yields the same two lines as the whole-fight card. */
   .forecast:has(.fside-walls-bar) :is(details.forecast-strike, .forecast-walls:not(.good)) { display: none; }
-  .forecast-foot { padding-bottom: 8px; }
+  .forecast-foot { padding-bottom: 4px; }
   /* Standing caveats (visible positions, capture rules, pursuit) are in the Guide; at this height
      they would push the card past the window, so the numbers and risks keep the room. */
   .forecast .forecast-note { display: none; }
@@ -3244,6 +3246,9 @@ dialog.settings-modal {
   .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-bd { padding: 6px 16px; }
   .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-bd .bd-total { min-height: 18px; line-height: 18px; }
   .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-odds { padding: 4px 16px; }
+  .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-sides { padding-block: 3px; }
+  .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-bd { padding-block: 3px; }
+  .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-odds { padding-block: 2px; }
 }
 /* A capture card (the occupation warning shows) already states the capture and the lock, and is the tallest card: the standing notes, the
    "How city fire works" fold and the plain Walls line (the strength table shows Walls) yield at every height so it stays whole in the window. */
