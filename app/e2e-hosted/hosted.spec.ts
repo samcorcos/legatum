@@ -231,11 +231,11 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
 
   // The licence notices open inside the Credits.
   await page.getByRole('button', { name: /^How to Play/ }).click();
-  await page.getByRole('navigation', { name: 'Guide chapters' }).getByRole('button', { name: /Credits/ }).click();
+  await page.getByRole('navigation', { name: 'How to Play chapters' }).getByRole('button', { name: /Credits/ }).click();
   await expect(page.getByText('not affiliated with or endorsed by Take-Two Interactive or Firaxis Games')).toBeVisible();
   await page.getByText('Open-source licences', { exact: true }).click();
   await expect(page.locator('.guide-licences pre')).toContainText('Legatum: third-party licence notices');
-  await page.getByRole('button', { name: 'Close guide' }).click();
+  await page.getByRole('button', { name: 'Close How to Play' }).click();
 
   // Single player on a small map, as Athens.
   await page.getByRole('button', { name: /^Single Player/ }).click();
