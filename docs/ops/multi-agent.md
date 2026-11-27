@@ -37,29 +37,30 @@ If the maintainer says something like *"read the multi-agent instructions and fo
 
 ## Autonomous heartbeat (recurring check)
 
-Because each provider runs independently (no cross-vendor agent calls), run a **recurring hourly check** inside each agent's own scheduler with **staggered minutes** (offset past `:00` to avoid top-of-the-hour scheduler congestion). Two agents rarely inspect GitHub at the same second, and a `needs-review` PR is normally picked up within ~20 minutes:
+Use a **continuously replenished work queue while an execution is running**, with a **recurring hourly check** as the fallback wake-up and recovery mechanism. Each provider runs independently (no cross-vendor agent calls), with staggered minutes to avoid top-of-the-hour scheduler congestion. The hourly schedule is not a throughput limit and does not guarantee immediate pickup after an execution ends:
 
 - **Claude:** every hour at `:05`
 - **ChatGPT / Codex:** every hour at `:25`
 - **Gemini:** every hour at `:45`
 
-On each heartbeat, fetch `origin/master` and select **up to three independent actionable tasks** in this priority order. Fill available slots from higher priorities before starting lower-priority work; unblocking existing PRs beats starting new WIP. Work on the selected tasks in parallel where the platform supports it. If nothing is actionable, exit quietly with zero PR/issue noise:
+On each wake-up, fetch `origin/master` and fill available slots with independent actionable tasks in this priority order. Keep **at most three tasks active per agent family across all executions**. Whenever a task finishes or is handed off as blocked, refresh the board and refill its slot immediately in priority order, without waiting for the other tasks or the next hour. There is no per-run or per-hour task quota. Work in parallel where supported; unblocking existing PRs beats starting new WIP.
 
 1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, `headRepositoryOwner` is `samcorcos`, and no governance/security fence path is touched.
-2. **Unblock your own PRs:** `gh pr list --state open --label author:<self>` that has `changes-requested`, a failing `ci-ok`, a branch that fell behind `master` and needs updating, or a green ready PR that is missing `needs-review`.
+2. **Unblock your own PRs:** `gh pr list --state open --label author:<self>` that has `changes-requested`, a failing `ci-ok`, merge conflicts or a branch that fell behind `master` and needs updating, or a green ready PR that is missing `needs-review`.
 3. **Recover stale locks:** if any `reviewing:*` lock has had no comment or merge for >2 hours, release `reviewing:*` so another reviewer can pick it up. If a `claimed:*` Draft PR has had no commits or comments for >6 hours, post a brief status note or flag `needs-human` (never overwrite another agent's work silently).
 4. **Pick up a paused handoff:** `gh issue list --state open --label status:handoff` (or PRs with `status:handoff`).
 5. **Claim new work:** `gh issue list --state open --label agent:ready` in a lane that does not collide with open PRs (respecting the `lane:core` 1-PR lock).
 6. **Exit cleanly if idle:** do not invent speculative features or refactors just to stay busy (Pillar 1: anti-bloat). If nothing in 1–5 is actionable, report `idle` and stop.
 
-### Bounded parallel work
+### Continuous work with a concurrency limit
 
-- **Three tasks per run, not a rolling queue.** Select at most three distinct PR/issue tasks in one heartbeat; completing a task does not authorize a fourth. Three is a ceiling, not a quota: run fewer when work conflicts, capacity is limited, or fewer tasks qualify. Subtasks and specialist reviews within one PR count as that same task, not extra independent tasks.
-- **Count overlapping runs.** At most three tasks may be actively owned by one agent family across overlapping heartbeats. Inspect `claimed:<self>` and `reviewing:<self>` locks and their latest activity before claiming. Never duplicate a still-running task or infer abandonment from a new scheduled tick; use the existing stale-lock thresholds. Completed PRs waiting for independent review do not occupy active slots. If all slots are occupied, report that existing work is still active and stop.
-- **Claim serially, then delegate.** Refresh GitHub state before each claim; set the appropriate claim/review lock and post a short ownership note before starting work. New implementations still require an Issue and Draft PR immediately; existing PR fixes use `claimed:<self>`. Recheck for another owner after claiming and yield if ownership conflicts. Delegate selected tasks to same-provider subagents when available; otherwise handle the selected batch sequentially. Subagents follow the same rules and never create extra independent tasks beyond the batch.
-- **Independent means non-overlapping changes.** Give every concurrent task its own worktree and `CARGO_TARGET_DIR`, with explicit file ownership. Skip or serialize tasks touching the same files or dependent changes. The existing repository-wide `lane:core` serialization rule is unchanged; extra heartbeat slots do not authorize another rules-version PR.
-- **Review in parallel, merge serially.** A lead coordinates actual merges one at a time, refetching master and rechecking the exact head, CI, required verdicts and all five guardrails after each merge. Subagents do not race merges. Same-provider subagents are not independent model-family reviewers of their own family's PRs.
-- **Close every selected task cleanly.** Report each result with its PR/issue link. Release completed claims; if stopping unfinished work, use the existing handoff procedure with concrete next steps. Never leave an active claim merely because the heartbeat ended.
+- **Three active tasks, not three completed tasks.** Three is a ceiling, not a quota. Refill a free slot after each completion or blocked handoff; do not wait for a batch to finish. Re-read priorities 1–5 before each claim. Subtasks and specialist reviews within one PR count as that same task. Do not invent work when nothing qualifies.
+- **Count overlapping executions.** Count `claimed:<self>` and `reviewing:<self>` tasks across all runs toward the same three-slot limit, checking their latest activity. Never duplicate or take over a still-running task; use the documented stale-lock thresholds. If this execution owns active tasks, continue them and refill as they finish. If other executions occupy every slot, report that existing work is active and stop; do not create another coordinator or duplicate schedule.
+- **Claim serially, then delegate.** Refresh GitHub state and active-count checks before each claim; add the visible lock and an ownership note, then recheck both conflicts and the family-wide count before starting. If a concurrent claim exceeds capacity, yield the new claim before doing work. New implementations still require an Issue and Draft PR; existing fixes use `claimed:<self>`. Delegate independent tasks to same-provider subagents where available, otherwise work sequentially. Subagents stay within their assigned task; the lead refills slots.
+- **Release genuinely finished or blocked work.** A PR awaiting independent review or human input occupies no active slot once its work is saved and its claim released. For unfinished work, push WIP and post the documented handoff with the exact blocker and next step; use `needs-human` and direct notification when appropriate. Stop or transfer ownership of local work before releasing its slot: a still-running build or subagent is not a free slot. CI verification still owned by this execution counts as active; if handing off a pending remote CI run, include its URL/head and release the claim. Do not immediately reclaim an unchanged blocker or repeatedly post the same handoff; resume only when its blocking condition changes.
+- **Keep work independent.** Each concurrent task has its own worktree and `CARGO_TARGET_DIR`. Skip or serialize overlapping files and dependent changes. Releasing a claim does not remove an open PR's file collision or the repository-wide `lane:core` serialization rule.
+- **Merge serially.** The lead coordinates actual merges one at a time, refetching master and rechecking the exact head, CI, required verdicts and all five guardrails before each merge. Same-provider subagents are not independent model-family reviewers of their own family's PRs.
+- **Stop cleanly, then rely on the fallback.** Keep replenishing while actionable work remains and the execution can continue. If no eligible work remains, finish owned work and stop; if the execution must end earlier, use the handoff procedure and release claims. Do not busy-poll unchanged blocked work or start a detached process to keep an agent alive. The next hourly wake-up resumes discovery/recovery; this policy does not add an event trigger or guarantee a persistent worker. Report outcomes and blockers with GitHub links.
 
 ### How to set this up (reproducing this 3-agent architecture)
 
@@ -72,15 +73,15 @@ Anyone running Claude, ChatGPT/Codex, and Gemini on a GitHub repo can replicate 
 
 ### Copy-paste heartbeat prompt (for each agent's recurring schedule)
 
-When adopting this policy, update the prompt of each existing scheduled heartbeat to the template below; do not create a duplicate or change its cadence. A saved one-task prompt can otherwise keep imposing the old limit. Each provider updates its own scheduler, or the maintainer updates it; agents do not call another provider’s agent.
+When adopting this policy, update the prompt of each existing scheduled heartbeat to the template below; do not create a duplicate or change its cadence. A saved one-task or three-task batch prompt can otherwise keep imposing the old quota. Each provider updates its own scheduler, or the maintainer updates it; agents do not call another provider’s agent.
 
 ```text
 Run one autonomous heartbeat on samcorcos/legatum as <claude|chatgpt|gemini>:
 1. Fetch origin and read current instructions on origin/master; preserve existing work and use isolated worktrees.
 2. Read docs/ops/multi-agent.md and follow the Autonomous heartbeat priority order (1 -> 6).
-3. Select up to three independent tasks in priority order, counting existing active claims across overlapping runs toward a per-agent three-task ceiling. Claim serially, then parallelize with separate worktrees and CARGO_TARGET_DIRs. Preserve lane:core serialization; serialize actual merges. Do not refill completed batch slots.
+3. Keep at most three tasks active per agent family across overlapping executions. Fill free slots in priority order and refill each slot immediately when its task finishes or is handed off as blocked; there is no per-run/hour quota. Claim serially, recheck locks and capacity, then delegate independent tasks using separate worktrees and CARGO_TARGET_DIRs. Preserve lane:core serialization and serialize actual merges.
 4. Follow all 5 peer-merge guardrails strictly (never merge your own PR, forks/outside PRs, or governance/security files).
-5. If nothing is actionable, report "idle" and stop; if active claims fill all slots, report that work is still active. Report each selected task’s result or concrete blocker and follow the handoff procedure for unfinished work.
+5. Continue owned work and refill slots while actionable work remains. Skip unchanged blockers; release claims only after saving work and stopping/transferring active local execution. If only other executions occupy capacity, report existing work active and stop. If no work remains, report outcomes or "idle"; use the handoff procedure if execution must end early. The hourly schedule is fallback discovery/recovery, not a throughput limit. Do not create another recurring automation.
 ```
 
 
