@@ -104,3 +104,5 @@
 /* Rome: the Colonia Victrix lead on a site that counts's card, in gilt like the forecast's VP line. */
 .settlement-colonia { display: flex; align-items: flex-start; gap: 6px; margin: 0 0 6px; padding: 4px 6px; font-weight: 600; border-left: 3px solid #c9a227; background: color-mix(in srgb, #c9a227 12%, transparent); }
 .settlement-colonia svg { flex: 0 0 auto; color: #8f6f1c; }
+/* An open lens sheet or the Settle legend is what the player asked for: keep it above the advisor card (z-index 65) on short windows. */
+.game .map-lenses[data-open='true'], .map-lenses:has(.lens-legend) { z-index: 67; }

@@ -22,6 +22,7 @@ import { PortraitFrame, PortraitRoundel } from './premium';
 import { RingMedallion, TreatyEmblem } from './ringMedallion';
 import { Amount, Amounts } from './Amounts';
 import { GIFT_RIVAL_RULE, GiftControl, TeamGifts } from './GiveGold';
+import { QueuedDiplomacyLine, useJustQueued } from './QueuedDiplomacyLine';
 import { RivalLevy } from './Levy';
 import { aiLevel } from '../aiLevel';
 import { publicRelationsModel } from '../relations';
@@ -159,16 +160,18 @@ function actionLines(action: DiplomaticAction, view: PlayerView): ForYou[] {
 }
 
 /**
- * A diplomatic order's toggle. `compact` is the bare button, for decision cards that explain it
+ * A diplomatic order. `compact` is used by decision cards that explain it
  * themselves. `gold` (deals) is the Gold an offer carries, from our side: positive we pay it,
  * negative we ask for it (`DealGold`).
  */
 function Action({ action, view, orders, compact = false, gold = 0 }: { action: DiplomaticAction; view: PlayerView; orders: Order[]; compact?: boolean; gold?: number }) {
   const queuedOrder = orders.find((o) => sameDiplomaticAction(o, action.order));
   const queued = !!queuedOrder;
+  const justQueued = useJustQueued(queued);
   const label = actionLabel(action, view);
   const chipId = useId();
   const offer = action.order.type === 'ProposeTreaty';
+  const offerKind = action.order.type === 'ProposeTreaty' ? action.order.kind : null;
   const deal = offer ? clampDealGold(gold) : 0;
   // Gold we would pay that we don't have: the offer can't be sent (core `afford`).
   const short = deal > 0 && deal > freeGold(view, orders);
@@ -179,24 +182,18 @@ function Action({ action, view, orders, compact = false, gold = 0 }: { action: D
   const queuedGold = queuedOrder?.type === 'ProposeTreaty' ? queuedOrder.gold ?? 0 : 0;
   // "You ask": the Gold we would get shows as a green chip, as "You pay" shows its red one.
   const asks = !queued && !action.blocked_reason && deal < 0 ? -deal : 0;
-  const undo = () => useGame.getState().editOrders((orders) => orders.filter((o) => !sameDiplomaticAction(o, action.order)));
-  // A compact button (decision cards) still says it is queued; the full one stays pressed with the
-  // sentence-plus-Undo line under it that gifts use.
-  const text = queued && compact ? `Queued: ${label} · undo` : label;
+  const cancel = () => useGame.getState().editOrders((orders) => orders.filter((o) => !sameDiplomaticAction(o, action.order)));
   const button = <button className={`btn${spends.length || asks ? ' spends' : ''}`}
-    aria-label={queued ? `Queued: ${label}` : label} aria-describedby={spends.length ? chipId : undefined} aria-pressed={queued} disabled={!!action.blocked_reason || view.finished || (!queued && short)}
-    onClick={() => queued ? undo() : useGame.getState().editOrders((orders) => queueDiplomacy(orders, withDealGold(action.order, deal), view))}>
-    <span>{text}</span>
+    aria-label={label} aria-describedby={spends.length ? chipId : undefined} disabled={!!action.blocked_reason || view.finished || short}
+    onClick={() => useGame.getState().editOrders((orders) => queueDiplomacy(orders, withDealGold(action.order, deal), view))}>
+    <span>{label}</span>
     {asks > 0 && <GainChip amount={asks} when="if accepted" />}
     <CostChip id={chipId} spends={spends} when={offer ? 'if accepted' : undefined} />
   </button>;
-  if (compact) return button;
-  // Once queued, the full card swaps its button for a plain "ready" line with its own Cancel, so a
-  // second click on the same button can't silently take the order back.
-  const queuedLine = queued && <p className="diplomacy-queued" data-testid="diplomacy-queued">
-    <Icon name="ui-check" size={13} className="ui-mark" />{' '}
-    <Amounts text={`${offer ? 'Offer ready: it is sent' : `${label} is ready: it happens`} when you end the turn.${queuedGold > 0 ? ` You pay ${queuedGold} Gold if they accept.` : queuedGold < 0 ? ` You ask ${-queuedGold} Gold.` : ''}`} />{' '}
-    <button className="link" onClick={undo}>Cancel</button></p>;
+  const queuedLine = queued && <QueuedDiplomacyLine name={offerKind ? `${treatyLabel(offerKind)} offer` : label} onCancel={cancel} testId="diplomacy-queued" focus={justQueued}>
+    <Amounts text={`${offer ? 'sent' : 'happens'} when you end the turn.${queuedGold > 0 ? ` You pay ${queuedGold} Gold if they accept.` : queuedGold < 0 ? ` You ask ${-queuedGold} Gold.` : ''}`} />
+  </QueuedDiplomacyLine>;
+  if (compact) return queuedLine || button;
   const lines = action.blocked_reason ? [] : actionLines(action, view);
   // One diplomatic order per empire per turn: say in place which queued order this one replaces.
   const replaces = !queued && !action.blocked_reason && !view.finished ? replacesText(view, orders, action.order) : null;
@@ -503,6 +500,7 @@ function OfferCard({ p, view, forecastView, orders, current, ending }: {
   const scope = kind === 'Peace' ? peaceScope(view, p) : null;
   const queuedAccept = !!accept && orders.some((o) => sameDiplomaticAction(o, accept.order));
   const queuedDecline = !!decline && orders.some((o) => sameDiplomaticAction(o, decline.order));
+  const justAnswered = useJustQueued(queuedAccept || queuedDecline);
   // A disabled Accept shows one plain reason ("Can't accept now"), never a warning about accepting.
   const blocked = !!accept?.blocked_reason;
   const members = empireMembers(view, p.from);
@@ -533,7 +531,7 @@ function OfferCard({ p, view, forecastView, orders, current, ending }: {
     {kind === 'Alliance' && termBlock}
     {/* The immediate costs lead, then Accept and Decline stay visible at 1000x600.
         The longer payment rule and other details stay folded below. */}
-    {/* G17: an answered offer shows the answer as its state, with Undo; the other choice steps back. */}
+    {/* An answered offer shows a ready line; the other choice steps back. */}
     {ending && !queuedAccept && !queuedDecline ? <>
       <div className="offer-answered">
         <span className="offer-status offer-answer" role="status"><Icon name="ui-check" size={12} className="ui-mark" /> {endingText(ending, empireTitle(view, proposalCounterparty(view, p, view.team)))}</span>
@@ -541,12 +539,15 @@ function OfferCard({ p, view, forecastView, orders, current, ending }: {
       <p className="muted offer-undo-note">Nothing to answer: the offer ends when this turn resolves. To answer it instead, undo that order first.</p>
     </> : queuedAccept || queuedDecline ? <>
       <div className="offer-answered">
-        <span className="offer-status offer-answer" role="status"><Icon name="ui-check" size={12} className="ui-mark" /> {scope ? queuedAccept ? `Accepted ${scope.subject}; when both teams agree, it ${scope.ending}` : `Declined ${scope.subject}; your wars continue` : queuedAccept ? `Accepted: ${treatyName(p)} ${p.kind === 'OpenBorders' ? 'start' : 'starts'} turn ${accept!.effective_turn}` : 'Declined'}</span>
-        <button className="btn" onClick={() => useGame.getState().editOrders((o) => o.filter((x) => !sameDiplomaticAction(x, (queuedAccept ? accept : decline)!.order)))}>Undo</button>
+        <QueuedDiplomacyLine name={queuedAccept ? `Accept ${treatyName(p)}` : `Decline ${treatyName(p)}`} testId="diplomacy-queued" focus={justAnswered}
+          onCancel={() => useGame.getState().editOrders((o) => o.filter((x) => !sameDiplomaticAction(x, (queuedAccept ? accept : decline)!.order)))}>
+          {queuedAccept ? 'you accept' : 'you decline'} when you end the turn.{scope
+            ? queuedAccept ? ` When both teams agree, it ${scope.ending}.` : ' Your wars continue.'
+            : queuedAccept ? ` It starts turn ${accept!.effective_turn}.` : ''}
+        </QueuedDiplomacyLine>
         {queuedAccept ? decline && <OfferResponse p={p} action={decline} view={forecastView} demoted />
           : accept && !blocked && <OfferResponse p={p} action={accept} view={forecastView} demoted />}
       </div>
-      <p className="muted offer-undo-note">Takes effect once this turn resolves; you can undo until you end the turn.</p>
     </> : <div className="offer-actions">
       {accept && <OfferResponse p={p} action={accept} view={forecastView} hotkey={current && !accept.blocked_reason ? 'A' : undefined} />}
       {decline && <OfferResponse p={p} action={decline} view={forecastView} hotkey={current ? 'D' : undefined} />}
@@ -590,6 +591,7 @@ function CallCard({ call, view, forecastView, orders, current }: { call: WarCall
   const decline = responses.find((a) => a.order.type === 'RespondToProposal' && !a.order.accept);
   const queuedJoin = !!join && orders.some((o) => sameDiplomaticAction(o, join.order));
   const queuedDecline = !!decline && orders.some((o) => sameDiplomaticAction(o, decline.order));
+  const justAnswered = useJustQueued(queuedJoin || queuedDecline);
   const members = empireMembers(view, call.ally);
   const leader = members[0];
   const ally = empireTitle(view, call.ally), target = empireTitle(view, call.target);
@@ -614,12 +616,13 @@ function CallCard({ call, view, forecastView, orders, current }: { call: WarCall
     </div>
     {queuedJoin || queuedDecline ? <>
       <div className="offer-answered">
-        <span className="offer-status offer-answer" role="status"><Icon name="ui-check" size={12} className="ui-mark" /> {queuedJoin ? `Joining the war on ${target} from turn ${join!.effective_turn}` : 'Declined: the Alliance stands'}</span>
-        <button className="btn" onClick={() => useGame.getState().editOrders((o) => o.filter((x) => !sameDiplomaticAction(x, (queuedJoin ? join : decline)!.order)))}>Undo</button>
+        <QueuedDiplomacyLine name={queuedJoin ? `Join the war on ${target}` : 'Decline the call to arms'} testId="diplomacy-queued" focus={justAnswered}
+          onCancel={() => useGame.getState().editOrders((o) => o.filter((x) => !sameDiplomaticAction(x, (queuedJoin ? join : decline)!.order)))}>
+          {queuedJoin ? 'you join' : 'you decline'} when you end the turn.
+        </QueuedDiplomacyLine>
         {queuedJoin ? decline && <CallResponse call={call} action={decline} view={forecastView} demoted />
           : join && !join.blocked_reason && <CallResponse call={call} action={join} view={forecastView} demoted />}
       </div>
-      <p className="muted offer-undo-note">Takes effect once this turn resolves; you can undo until you end the turn.</p>
     </> : <div className="offer-actions">
       {join && <CallResponse call={call} action={join} view={forecastView} hotkey={current && !join.blocked_reason ? 'A' : undefined} />}
       {decline && <CallResponse call={call} action={decline} view={forecastView} hotkey={current ? 'D' : undefined} />}

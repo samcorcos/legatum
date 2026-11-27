@@ -104,7 +104,7 @@ it('Yields stacks over either lens and shows its one-line key', () => {
   try {
     act(() => checkbox(m.host, 'Yields').click());
     expect(getOverlays().yields).toBe(true);
-    expect(m.host.querySelector('.lens-yield-line')?.textContent).toContain('1 icon per point');
+    expect(m.host.querySelector('.lens-yield-line')?.textContent).toContain('One icon per point');
     act(() => radio(m.host, 'Settle').click());
     expect(m.lens).toBe('settle');
     expect(getOverlays().yields).toBe(true);

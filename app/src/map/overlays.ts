@@ -14,7 +14,7 @@ export type OverlaySet = Readonly<Record<Overlay, boolean>>;
 
 export const OVERLAY_NAMES: Record<Overlay, string> = { yields: 'Yields' };
 export const OVERLAY_KEYS: Record<Overlay, string> = { yields: 'Y' };
-export const OVERLAY_LEGENDS: Record<Overlay, string> = { yields: '1 icon per point · a number from 5' };
+export const OVERLAY_LEGENDS: Record<Overlay, string> = { yields: 'One icon per point; 5 or more shows a number.' };
 export const OVERLAY_HINTS: Record<Overlay, string> = {
   yields: 'Shows what each tile gives you. Hover or tap a tile for exact numbers.',
 };

@@ -96,7 +96,7 @@ it('focuses the join code box on a locked game and marks a refused code in the b
   const socket = Socket.all[0];
   act(() => {
     socket.open();
-    socket.push({ type: 'error', code: 'wrong_join_code', message: 'That join code is not right.' });
+    socket.push({ type: 'error', code: 'wrong_join_code', message: 'That private code is not right.' });
   });
   expect(useGame.getState()).toMatchObject({ busy: null, error: null, joinCodeRejected: 'WOLF41' });
   expect(host.querySelector('.toast')).toBeNull();

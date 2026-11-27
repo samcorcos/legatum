@@ -370,16 +370,83 @@ select.lobby-select option {
   margin: 10px auto 16px;
   font-size: 16px;
 }
-/* The game's name in the public list, under the host's role line, so the host can tell friends which game to join. */
-.lobby-role + .lobby-listed {
-  margin-top: -8px;
-}
-.lobby-listed {
-  font-variant-numeric: lining-nums;
-  max-width: 760px;
+/* The host's invitation, a band under the title: the game's name as the list shows it, how friends find it, the
+   private code and a link to copy. It sits above the seats so it shows at every window size. */
+.invite-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 24px;
+  max-width: 1256px;
   margin: 0 auto 16px;
-  font-size: 15px;
+  padding: 10px 20px;
+  color: var(--ink);
+  border: var(--frame-pad) solid transparent;
+  border-image: var(--frame-image);
+}
+.invite-name {
+  font: var(--display-weight) 30px/1.05 var(--display);
+  /* Lining figures: the number tells two games apart, and an old-style 0 reads as o. */
+  font-variant-numeric: lining-nums;
+  white-space: nowrap;
+}
+.invite-how p {
+  margin: 0;
+  font: italic 500 15px/1.3 var(--display);
   color: var(--ink-2);
+}
+.invite-how .invite-row {
+  margin-top: 4px;
+  font: 400 13px/1.3 var(--sans);
+  font-style: normal;
+  color: var(--ink-2);
+}
+.invite-code {
+  margin-left: 6px;
+  font: 600 15px/1 var(--sans);
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.invite-act {
+  position: relative;
+}
+.invite-copy {
+  min-width: 200px;
+  min-height: 42px;
+  font: var(--display-weight) 19px/1 var(--display);
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: inset 0 0 0 2px var(--btn-bg), inset 0 0 0 3px var(--rule);
+}
+/* The status sits under the button without taking room of its own, so the band never changes height. */
+.invite-status {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 2px 0 0;
+  font: 600 11px/1.2 var(--sans);
+  color: var(--good);
+  text-align: center;
+}
+.invite-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.invite-fallback .lobby-input {
+  width: 100%;
+  height: 30px;
+  font: 400 12px/1 var(--sans);
+}
+@media (max-width: 760px) {
+  .invite-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .lobby-dock-note {
   font: italic 400 15px/1.3 var(--display);

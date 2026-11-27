@@ -4,7 +4,7 @@
 // elsewhere in the game fix those too"). Coverage is pixel coverage: the share of a hex's area that sits on an opaque pixel
 // of a sprite the plan paints, read from the shipped sprite PNGs, so it measures what the player sees.
 // Before the fixes: wood edge hexes 0.55 (one-hex arms 0.25, groves 0.5), hills edge hexes 0.28 (arms 0.25, a lone hill 0.33),
-// mountains already 0.45+ (their peaks are big and opaque).
+// Mountains also need a dense centre and foot: separate opaque peaks can otherwise leave a grass valley through an impassable hex.
 // Desert and Tundra are not painted by this layer (a tinted biome colour with a small glyph in terrain.ts), so they are not
 // measured here.
 import { describe, expect, it } from 'vitest';
@@ -104,6 +104,27 @@ for (const kind of ['Forest', 'Hills', 'Mountains'] as const) {
       const grove = fixture(kind, (c, r) => r === 8 && c >= 8 && c <= 10);
       for (let c = 8; c <= 10; c++) expect(coverage(grove.plan, kind, at(c, 8))).toBeGreaterThan(f.grove);
     });
+
+    if (kind === 'Mountains') {
+      it('covers each mountain hex, including its centre band, in small groups and long ranges', () => {
+        const shapes = [
+          [[8, 8]],
+          [[8, 8], [9, 8]],
+          [[8, 8], [9, 8], [9, 9]],
+          [8, 9, 10, 11].map((c) => [c, 8]),
+          [6, 7, 8, 9, 10, 11, 12].map((c) => [c, 8]),
+          [8, 9, 10, 11].flatMap((c) => [[c, 8], [c, 9]]),
+        ];
+        for (const cells of shapes) {
+          const set = new Set(cells.map(([c, r]) => at(c, r)));
+          const { plan } = fixture(kind, (c, r) => set.has(at(c, r)));
+          for (const tile of set) {
+            expect(coverage(plan, kind, tile), `tile ${tile} in ${cells.length}-tile group`).toBeGreaterThanOrEqual(0.8);
+            expect(coverage(plan, kind, tile, (dx, dy) => Math.abs(dx) <= HEX_SIZE * 0.45 && Math.abs(dy) <= HEX_SIZE * 0.3)).toBeGreaterThan(0.95);
+          }
+        }
+      });
+    }
 
     if (kind === 'Mountains') return;
     it('the gap faces the open neighbour, not the middle of the hex', () => {
