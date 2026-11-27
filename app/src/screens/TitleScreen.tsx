@@ -201,7 +201,7 @@ function MainMenu({ onMultiplayer, onHostSave }: { onMultiplayer: () => void; on
         {olderAuto ? 'Cannot continue with these rules' : unreadableAuto ? "This save file is damaged"
           // The reason (online play is unavailable) is said once, under Multiplayer.
           : autoBlocked ? 'This game has other players'
-          : auto && autoNeedsHost ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · host it online, the others join the new game`
+          : auto && autoNeedsHost ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · host this save online, then others join it`
           : auto && elsewhere ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · opens in the version it started on`
           : auto ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}` : records === null ? 'Looking for your game…' : 'No autosave yet'}
       </span>
