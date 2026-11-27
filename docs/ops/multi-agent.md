@@ -9,14 +9,34 @@ How multiple independent coding agents (Claude, ChatGPT/Codex, Gemini) work on `
 - **Draft PR = claim lock.** Claiming work creates a visible Draft PR immediately so every other agent sees what is in flight via `gh pr list`.
 - **Two-key peer merge (`reviewer != author`).** No agent merges its own PR. When Agent A finishes a PR and CI is green, it marks the PR `needs-review` + `author:<A>`. A **different model family** (`B != A`) performs an adversarial code + philosophy/anti-bloat review and merges the PR on GitHub if it passes all gates and is outside the human-only fence.
 
-## Autonomous work loop (priority order)
+## Autonomous heartbeat (recurring check)
 
-When an agent is running autonomously and looking for its next action, pull work in this order (finishing and unblocking merges always beats starting new WIP):
+Because each provider runs independently (no cross-vendor agent calls), run a **recurring hourly check** inside each agent's own scheduler with **staggered minutes** so two agents rarely inspect GitHub at the same second and a `needs-review` PR is normally picked up within ~20 minutes:
 
-1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, and `headRepositoryOwner` is `samcorcos`.
-2. **Address review feedback on your own PR:** `gh pr list --state open --label changes-requested --label author:<self>`.
-3. **Pick up a paused handoff:** `gh issue list --state open --label status:handoff` (or PRs with `status:handoff`).
-4. **Claim new work:** `gh issue list --state open --label agent:ready` in a lane that does not collide with open PRs.
+- **Claude:** every hour at `:00`
+- **ChatGPT / Codex:** every hour at `:20`
+- **Gemini:** every hour at `:40`
+
+On each heartbeat, pull `origin/master` and take the **first actionable item** in this priority order (unblocking merges always beats starting new WIP; if nothing is actionable, exit quietly in seconds with zero PR/issue noise):
+
+1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, `headRepositoryOwner` is `samcorcos`, and no governance/security fence path is touched.
+2. **Unblock your own PRs:** `gh pr list --state open --label author:<self>` that has `changes-requested`, a failing `ci-ok`, a branch that fell behind `master` and needs updating, or a green ready PR that is missing `needs-review`.
+3. **Recover stale locks:** if any `reviewing:*` lock has had no comment or merge for >2 hours, release `reviewing:*` so another reviewer can pick it up. If a `claimed:*` Draft PR has had no commits or comments for >6 hours, post a brief status note or flag `needs-human` (never overwrite another agent's work silently).
+4. **Pick up a paused handoff:** `gh issue list --state open --label status:handoff` (or PRs with `status:handoff`).
+5. **Claim new work:** `gh issue list --state open --label agent:ready` in a lane that does not collide with open PRs (respecting the `lane:core` 1-PR lock).
+6. **Exit cleanly if idle:** do not invent speculative features or refactors just to stay busy (Pillar 1: anti-bloat). If nothing in 1–5 is actionable, report `idle` and stop.
+
+### Copy-paste heartbeat prompt (for each agent's recurring schedule)
+
+```text
+Run one autonomous heartbeat on samcorcos/legatum as <claude|chatgpt|gemini>:
+1. git fetch origin && git checkout origin/master (or your branch).
+2. Read docs/ops/multi-agent.md and follow the Autonomous heartbeat priority order (1 -> 6).
+3. Take at most one meaningful task per run (review & merge one PR, fix one PR, continue one handoff, or claim one agent:ready issue).
+4. Follow all 5 peer-merge guardrails strictly (never merge your own PR, forks/outside PRs, or governance/security files).
+5. If nothing in steps 1-5 is actionable, stop immediately and report "idle".
+```
+
 
 ## Pre-flight check (mandatory before starting any task)
 
