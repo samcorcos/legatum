@@ -4,6 +4,7 @@ import { advisorOrders } from '../automation';
 import { buildingStatsFor, effectiveTurnLimit, itemKey, itemName, TECH_NAME, wallsRepairing, wallsUpgradeName } from '../data';
 import { WALLS_HP_PER_LEVEL } from '../combat';
 import { isThreat } from '../diplomacy';
+import { ownerName } from '../barbarians';
 import { distance, hexEq } from '../hex';
 import { effectiveResearchQueue, pendingResearchQueue } from '../orders';
 import { pendingDecisions } from '../turnFlow';
@@ -11,11 +12,13 @@ import { HOLD_TURNS } from '../victoryHold';
 import { techCardUnlocks } from './techCardUnlocks';
 import { YIELD_LABEL, type YieldKey } from './yieldKeys';
 import { strategyTip, tipKind, type TipLog } from './advisorTips';
+import type { LockLog } from './advisorTips';
+import { occupiedCityName } from './forecastWarnings';
 import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, UnitView } from '../types';
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'diplomacy' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
 export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean; tip?: boolean }
 export interface AdvisorContext {
@@ -190,13 +193,21 @@ export function howToWin(v: PlayerView): Suggestion {
     steps: [{ instruction: 'Score VP with Age cards, rival capitals, world wonders and your faction goal. The Victory race shows the score.', target: control('race') }] };
 }
 
-export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}, tips: TipLog = {}): Suggestion | null {
+export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}, tips: TipLog = {}, locks: LockLog = {}): Suggestion | null {
   const v = ctx.view;
   if (v.finished || v.players.find((p) => p.id === v.me)?.alive === false) return null;
   if (v.turn === 1 && !seen.includes('welcome')) return { id: 'welcome', title: 'Your advisor will guide you', why: "I'll suggest what to do each turn and show you where to click.", steps: [], current: 0, acknowledge: true };
   if (v.turn > 1 && seen.includes('welcome') && !seen.includes('report')) return { id: 'report', title: 'Read the Turn report', why: 'The Turn report lists battles, discoveries and failed orders.', steps: [{ instruction: 'Press L to open it.', key: ctx.touch ? undefined : 'L', target: null }], current: 0, acknowledge: true };
   // How to win, early: before the first score check, so a new player knows what VP are for.
   if (v.turn >= 3 && seen.includes('report') && !seen.includes('howToWin')) return howToWin(v);
+  const garrison = ownUnits(v).find((u) => u.occupation_lock != null);
+  if (garrison && !seen.includes('garrisonLock')) {
+    const city = occupiedCityName(v, garrison), people = ownerName(v, garrison.occupation_lock!);
+    return { id: 'garrisonLock', title: `Your ${unitName(v, garrison)} holds ${city}`,
+      why: `Units in a city you conquer stay as its garrison until Peace with ${people}. ${city} builds nothing until then.`,
+      steps: [{ instruction: `Make Peace with ${people} in Diplomacy, or take their last city, to free it.`, target: control('diplomacy') }],
+      current: 0, acknowledge: true };
+  }
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
@@ -218,7 +229,7 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   }
   // Situational advice comes before the routine decisions, but never interrupts a unit or panel already in hand.
   if (seen.includes('welcome') && !ctx.techOpen) {
-    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx), ctx.placingTile ?? null);
+    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx), ctx.placingTile ?? null, locks);
     if (tip && !skipped.includes(tip.id) && (!ctx.selection || tip.current > 0)) return tip;
   }
   // Follow the screen: the open Research panel or the selected city or unit is the decision in hand.
@@ -252,16 +263,16 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${solo ? 'End turn' : 'Ready'}.`, key: ctx.touch ? undefined : 'Return', target: control('turn', 'end') }], current: 0 };
 }
 
-interface AdvisorPreferences { enabled: boolean; seen: string[]; practice: Practice; tips: TipLog }
+interface AdvisorPreferences { enabled: boolean; seen: string[]; practice: Practice; tips: TipLog; locks: LockLog }
 export function readAdvisorPreferences(): AdvisorPreferences {
   try {
     const raw: unknown = JSON.parse(globalThis.localStorage?.getItem(ADVISOR_KEY) ?? 'null');
     if (raw && typeof raw === 'object') {
       const p = raw as { enabled?: unknown; seen?: unknown; tutorial?: unknown; practice?: unknown };
-      return { enabled: p.enabled !== false, practice: readPractice(p.practice), tips: readTips((p as { tips?: unknown }).tips), seen: Array.isArray(p.seen) ? p.seen.filter((x): x is string => typeof x === 'string') : Array.isArray(p.tutorial) ? p.tutorial.filter((x): x is string => typeof x === 'string') : [] };
+      return { enabled: p.enabled !== false, practice: readPractice(p.practice), tips: readTips((p as { tips?: unknown }).tips), locks: readTips((p as { locks?: unknown }).locks), seen: Array.isArray(p.seen) ? p.seen.filter((x): x is string => typeof x === 'string') : Array.isArray(p.tutorial) ? p.tutorial.filter((x): x is string => typeof x === 'string') : [] };
     }
   } catch { /* Storage may be unavailable. */ }
-  return { enabled: true, seen: [], practice: {}, tips: {} };
+  return { enabled: true, seen: [], practice: {}, tips: {}, locks: {} };
 }
 const PRACTICE_KINDS: readonly PracticeKind[] = ['move', 'fortify', 'skip', 'explore', 'endTurn', 'closeResearch'];
 function readPractice(raw: unknown): Practice {
@@ -277,8 +288,8 @@ function readTips(raw: unknown): TipLog {
   if (!raw || typeof raw !== 'object') return {};
   return Object.fromEntries(Object.entries(raw as Record<string, unknown>).filter((e): e is [string, number] => typeof e[1] === 'number' && Number.isFinite(e[1])));
 }
-function savePreferences({ enabled, seen, practice, tips }: AdvisorPreferences) {
-  try { globalThis.localStorage?.setItem(ADVISOR_KEY, JSON.stringify({ enabled, seen, practice, tips })); } catch { /* Session state still works. */ }
+function savePreferences({ enabled, seen, practice, tips, locks }: AdvisorPreferences) {
+  try { globalThis.localStorage?.setItem(ADVISOR_KEY, JSON.stringify({ enabled, seen, practice, tips, locks })); } catch { /* Session state still works. */ }
 }
 interface AdvisorState extends AdvisorPreferences {
   skippedTurn: number;
@@ -291,6 +302,7 @@ interface AdvisorState extends AdvisorPreferences {
   resetPractice(): void;
   /** Record a tip as shown on this turn. An earlier turn than any logged means a new game: the log starts over. */
   noteTip(key: string, turn: number): void;
+  observeLocks(view: PlayerView): void;
   skip(id: string, turn: number): void;
   setEnabled(enabled: boolean): void;
 }
@@ -315,6 +327,17 @@ export const useAdvisor = create<AdvisorState>((set) => ({
     const next = { ...s, tips: { ...log, [key]: turn, [count]: (log[count] ?? 0) + 1 } };
     savePreferences(next);
     return next;
+  }),
+  observeLocks: (view) => set((s) => {
+    const locks: Record<string, number> = {};
+    for (const unit of view.units) {
+      if (unit.owner !== view.me || unit.occupation_lock == null) continue;
+      const key = `${unit.id}:${unit.occupation_lock}`;
+      const since = s.locks[key];
+      locks[key] = since !== undefined && since <= view.turn ? since : view.turn;
+    }
+    if (Object.keys(locks).length === Object.keys(s.locks).length && Object.entries(locks).every(([key, since]) => s.locks[key] === since)) return s;
+    const next = { ...s, locks }; savePreferences(next); return next;
   }),
   resetPractice: () => set((s) => { const next = { ...s, practice: {}, practised: [] }; savePreferences(next); return next; }),
   setEnabled: (enabled) => set((s) => { const next = { ...s, enabled }; savePreferences(next); return next; }),

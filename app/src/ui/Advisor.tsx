@@ -25,6 +25,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
       : first('.seatbar .cta', '.phone-turn-dock button[aria-label^="Next decision"]');
     // The rivals table, not the whole panel: the panel's centre can sit under the turn button.
     case 'race': return first('.game .panel.vp .rivals', '.phone-vp-strip');
+    case 'diplomacy': return first('.game .panel.vp .rivals-foot button', '.game .panel.vp .rivals button.rv-row');
     case 'found': return action(/^Found City/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);
     case 'skip': return action(/^Skip/i);
@@ -148,8 +149,9 @@ export function Advisor() {
   const placingTile = useGame((s) => (s.place?.intent === 'tile' ? s.place.city : null));
   const guideOpen = useGuide((s) => s.open);
   const { active: celebration, holding } = useCelebration();
-  const { enabled, seen, skipped, skippedTurn, practice, tips, markSeen, skip, setEnabled, noteTip } = useAdvisor();
+  const { enabled, seen, skipped, skippedTurn, practice, tips, locks, markSeen, skip, setEnabled, noteTip, observeLocks } = useAdvisor();
   usePractice();
+  useEffect(() => { if (view) observeLocks(view); }, [view, observeLocks]);
   const [, refreshPlan] = useState(0);
   useEffect(() => {
     if (!view || !enabled || loadedWasmModule()) return;
@@ -164,7 +166,7 @@ export function Advisor() {
   const advice = view && !hidden ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
     humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
-    skippedTurn === view.turn ? skipped : [], practice, tips) : null;
+    skippedTurn === view.turn ? skipped : [], practice, tips, locks) : null;
   // While a tile is being placed, only the tip that asked for that tile keeps guiding (its last step rings the tile).
   const suggestion = placingTile !== null && !(advice?.tip && advice.current === 2) ? null : advice;
   const tipKey = !hidden && suggestion?.tip ? suggestion.id.slice('tip:'.length) : null;

@@ -7,6 +7,8 @@
 import { distance, hexAt, hexEq } from '../hex';
 import { itemName } from '../data';
 import { empireOfPlayer } from '../empires';
+import { ownerName } from '../barbarians';
+import { atWar } from '../diplomacy';
 import type { CityView, Hex, Order, PlayerView, Resource } from '../types';
 import type { AdvisorStep, Suggestion } from './advisorModel';
 import { OFFER_TURNS, keepPhrase, myOffer, queuedBuy, wallsInTime, withoutBuy } from '../buyCity';
@@ -16,11 +18,13 @@ import { freeGold } from '../deals';
  * Turns before a tip of the same kind may show again (and only if its situation still holds). Each repeat of a kind
  * doubles its wait, so advice the player chose not to follow fades instead of nagging.
  */
-export const TIP_COOLDOWN = { army: 25, resource: 20, gold: 20, buy: 20, offer: 1 } as const;
+export const TIP_COOLDOWN = { army: 25, resource: 20, gold: 20, buy: 20, offer: 1, garrison: 25 } as const;
 /** Turns between any two different tips, so advice never piles up. (An enemy army at a city is This Turn's alarm, not a tip.) */
 export const TIP_GAP = 4;
 /** Turn last shown, per tip key; `#<kind>` counts how often that kind has shown this game. */
 export type TipLog = Readonly<Record<string, number>>;
+/** First turn this browser saw each unit locked against a rival, keyed by unit and rival id. */
+export type LockLog = Readonly<Record<string, number>>;
 export const tipKind = (key: string) => key.split(':')[0];
 type TipKind = keyof typeof TIP_COOLDOWN;
 interface Tip { key: string; kind: TipKind; title: string; why: string; steps: AdvisorStep[]; current?: number }
@@ -47,6 +51,18 @@ function armyTip(v: PlayerView): Tip | null {
   return { key: 'army', kind: 'army', title: 'Build up your army',
     why: `Army points: ${name} ${teamArmy(rival.team)}, you ${mine}. They are close to you, and a weak army invites an attack.`,
     steps: [{ instruction: 'Build military units, or Walls in your border cities.', target: null }] };
+}
+
+function garrisonTip(v: PlayerView, locks: LockLog): Tip | null {
+  const held = v.units.filter((u) => u.owner === v.me && u.occupation_lock != null
+    && v.players.some((p) => p.id === u.occupation_lock && p.alive) && atWar(v, u.occupation_lock));
+  const rival = held.find((u) => held.length >= 2
+    || v.turn - (locks[`${u.id}:${u.occupation_lock}`] ?? v.turn) >= 10)?.occupation_lock;
+  if (rival == null) return null;
+  const people = ownerName(v, rival);
+  return { key: `garrison:${rival}`, kind: 'garrison', title: 'Free your army',
+    why: `A conquered city holds part of your army while you fight ${people}. Peace would free it.`,
+    steps: [{ instruction: `Consider Peace with ${people} in Diplomacy.`, target: { kind: 'control', name: 'diplomacy' } }] };
 }
 
 function resourceTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null, orders: readonly Order[], placingTile: number | null): Tip | null {
@@ -133,7 +149,7 @@ function offerTip(v: PlayerView): Tip | null {
 }
 
 /** The tip to show now, or null. A tip already shown this turn keeps showing until the player dismisses it. */
-export function strategyTip(view: PlayerView, saved: TipLog, touch = false, selection: { kind: string; id: number } | null = null, orders: readonly Order[] = [], placingTile: number | null = null): Suggestion | null {
+export function strategyTip(view: PlayerView, saved: TipLog, touch = false, selection: { kind: string; id: number } | null = null, orders: readonly Order[] = [], placingTile: number | null = null, locks: LockLog = {}): Suggestion | null {
   if (view.turn < 3) return null;
   // A log from a later turn than now belongs to another game: start clean (noteTip clears it when the next tip shows).
   const log: TipLog = Object.entries(saved).some(([k, t]) => !k.startsWith('#') && t > view.turn) ? {} : saved;
@@ -147,7 +163,7 @@ export function strategyTip(view: PlayerView, saved: TipLog, touch = false, sele
     if (view.turn - lastOfKind(tip.kind) < wait) return false;
     return view.turn - lastOther(tip.key) >= TIP_GAP;
   };
-  const tips = [offerTip(view), armyTip(view), resourceTip(view, touch, selection, orders, placingTile), buyTip(view, touch, selection, orders), goldTip(view, touch, selection)].filter((t): t is Tip => !!t);
+  const tips = [offerTip(view), garrisonTip(view, locks), armyTip(view), resourceTip(view, touch, selection, orders, placingTile), buyTip(view, touch, selection, orders), goldTip(view, touch, selection)].filter((t): t is Tip => !!t);
   const tip = tips.find((t) => shownThisTurn(t.key)) ?? tips.find(ready);
   if (!tip) return null;
   return { id: `tip:${tip.key}`, title: tip.title, why: tip.why, steps: tip.steps, current: tip.current ?? 0, acknowledge: true, tip: true };
