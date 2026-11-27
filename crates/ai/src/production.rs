@@ -2791,6 +2791,52 @@ impl Planner<'_> {
     /// as the city's doubled Food per worked tile less the 2 Food the citizen eats. Settlers and
     /// military units are never displaced (threat defense and expansion decide those), and an
     /// idle city grows.
+    /// Hard Egypt grows instead of training a Settler or combat unit while the city is out of
+    /// danger (`egypt_grow_to`, `egypt_peace_army`): a building Nile city does not grow, so
+    /// every unit it trains in peace costs it population.
+    fn egypt_grow_instead(&self, c: &CityView, unit: UnitKind) -> bool {
+        if self.difficulty != AiDifficulty::Hard {
+            return false;
+        }
+        let grow_to = self.decisions.egypt_grow_to;
+        let peace_army = self.decisions.egypt_peace_army;
+        let settler = unit == UnitKind::Settler;
+        let combat = composition::is_combat(unit);
+        if !(settler || combat) || (grow_to <= 0 && peace_army <= 0) {
+            return false;
+        }
+        let view = self.view();
+        let me = view.me;
+        let danger = view.units.iter().any(|u| {
+            u.military
+                && u.owner != me
+                && (u.owner.is_barbarian() || view.at_war(me, u.owner))
+                && u.pos.distance(c.pos) <= 8
+        });
+        if danger {
+            return false;
+        }
+        if grow_to > 0 && c.population < grow_to {
+            return true;
+        }
+        if combat && peace_army > 0 {
+            let cities = view.cities.iter().filter(|x| x.owner == me).count() as i64;
+            let army = view
+                .units
+                .iter()
+                .filter(|u| {
+                    u.owner == me
+                        && u.military
+                        && u.kind != UnitKind::Scout
+                        && composition::is_combat(u.kind)
+                })
+                .count() as i64;
+            let cap = (cities * i64::from(peace_army) / 100).max(1);
+            return army >= cap;
+        }
+        false
+    }
+
     fn egypt_nile_choice(
         &self,
         c: &CityView,
@@ -2808,6 +2854,11 @@ impl Planner<'_> {
         };
         if !d.options.iter().any(|o| o.item == grow) {
             return chosen;
+        }
+        if let Some(ProductionItem::Unit { unit }) = chosen
+            && self.egypt_grow_instead(c, unit)
+        {
+            return Some(grow);
         }
         if matches!(chosen, Some(ProductionItem::Unit { unit }) if unit == UnitKind::Settler
             || unit == UnitKind::HeirToTheThrone
