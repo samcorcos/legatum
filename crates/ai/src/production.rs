@@ -1658,6 +1658,7 @@ impl Planner<'_> {
         self.tag_buys("door");
         self.pass("modernization");
         self.plan_modernization();
+        self.retire_obsolete();
         self.tag_buys("modernization");
         self.pass("emergency_production");
         self.plan_emergency_production();

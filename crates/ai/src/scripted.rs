@@ -1572,6 +1572,12 @@ impl<'a> Planner<'a> {
     }
 
     pub(crate) fn ordinary_gold_reserve(&self) -> i32 {
+        self.ordinary_gold_reserve_with(true)
+    }
+
+    /// `ordinary_gold_reserve`, with `goal` false leaving out the Swiss hoard's saving (gene
+    /// `modern_army`: refitting an obsolete army is defence, not routine spending).
+    pub(crate) fn ordinary_gold_reserve_with(&self, goal: bool) -> i32 {
         let defender = if self.hard_defense() && self.decisions.neighbour_fall > 0 {
             self.ctx.own_cities.iter().filter(|c| self.neighbour_fall_power(c) > 0)
                 .filter_map(|c| c.detail.as_ref())
@@ -1583,7 +1589,8 @@ impl<'a> Planner<'a> {
         } else {
             0
         };
-        if self.faction == Faction::Switzerland
+        if goal
+            && self.faction == Faction::Switzerland
             && self.saving_for_goal()
             && !self.hoard_spent_at_war()
         {
