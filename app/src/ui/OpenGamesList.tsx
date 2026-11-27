@@ -95,7 +95,7 @@ export function OpenGamesList({ limit, onCount }: { limit?: number; onCount?: (n
         </div>
       )}
       {load.kind === 'ready' && load.rooms.length > 0 && (
-        <ul className="online-rooms" aria-label="Open games">
+        <ul className="online-rooms" aria-label="Hosted games">
           {(compact ? load.rooms.slice(0, limit) : load.rooms).map((room) => {
             // A game on another version the site still serves is joined there: Join opens that version.
             const other = versionProblem(room, online) ? buildForRoom(builds, room) : null;

@@ -127,6 +127,40 @@ div.seat {
 /* Online play: the Multiplayer menu. One name for every game this player is in, then two framed doors of the same
    size side by side, Host and Join, each with its own fields inside it, its main button at the same height and one
    quiet line under it. The Join door lists the first few open games, so a friend's game can be joined from here. */
+.mp-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mp-top:empty {
+  display: none;
+}
+.title-actions .mp-top:has(.title-notice):has(.title-resume) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  max-width: 696px;
+  margin-bottom: 10px;
+}
+.title-actions .mp-top:has(.title-notice):has(.title-resume) .title-notice {
+  width: auto;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.title-actions .mp-top:has(.title-notice) .btn.big.primary.title-resume {
+  min-width: 0;
+  margin: 0;
+}
+/* The Join door's rows: the Join button is outlined, so neither door holds a filled button by default. */
+.title-actions .open-games.compact .btn.primary.online-join {
+  color: var(--btn-ink);
+  background: var(--btn-bg);
+  border-color: var(--ink);
+  box-shadow: none;
+}
 .mp-name {
   display: flex;
   align-items: center;
@@ -338,6 +372,10 @@ div.seat {
     height: 32px;
   }
   .mp-door-lede {
+    display: none;
+  }
+  /* With Resume above the doors, the Join door's invite-link line gives way so both listed games fit. */
+  .title-screen:has(.title-resume) .mp-door-foot {
     display: none;
   }
   .mp-seal {

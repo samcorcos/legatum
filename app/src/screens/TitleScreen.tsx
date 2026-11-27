@@ -302,9 +302,12 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
 
   return (
     <>
-      <TitleNotice error={error ?? hostError} />
       <div className="title-actions">
-        <ResumeButton />
+        {/* A notice and Resume share one row when both show, so the doors and Back still fit at 1000x600. */}
+        <div className="mp-top">
+          <TitleNotice error={error ?? hostError} />
+          <ResumeButton />
+        </div>
         {online?.relay ? (
           <>
             <label className="mp-name">
@@ -380,13 +383,13 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
               <section className="mp-door" aria-labelledby="mp-join-head">
                 <DoorHead id="mp-join-head" kind="join" title="Join" lede="Take a seat in a friend's game." />
                 <div className="mp-field">
-                  <span className="mp-label">Open games</span>
+                  <span className="mp-label">Hosted games</span>
                   <OpenGamesList limit={JOIN_DOOR_GAMES} onCount={setOpenGames} />
                 </div>
                 <div className="mp-door-fill" />
                 <button className={`btn big mp-door-main ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
                   Join Game
-                  <span className="btn-sub">{openGames !== null && openGames > JOIN_DOOR_GAMES ? `See all ${openGames} open games` : 'See the open games'}</span>
+                  <span className="btn-sub">{openGames !== null && openGames > JOIN_DOOR_GAMES ? `See all ${openGames} hosted games` : 'See the hosted games'}</span>
                 </button>
                 <p className="mp-door-foot">Got an invite link? Just open it.</p>
               </section>

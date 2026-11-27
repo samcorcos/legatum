@@ -40,7 +40,7 @@ export function InviteCard({ room, code }: { room: string; code: string | null }
         <div id="invite-name" className="invite-name">{listedRoomName(room)}</div>
       </div>
       <div className="invite-how">
-        <p>Friends find this name under Multiplayer, Join. Or send them the link.</p>
+        <p>Friends can find your game by name in Join Game. Or send them the invite link.</p>
         {code && <p className="invite-row">Private code <b className="invite-code">{code}</b></p>}
       </div>
       <div className="invite-act">

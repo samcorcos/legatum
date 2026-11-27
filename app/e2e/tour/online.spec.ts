@@ -121,6 +121,13 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     await refuse(worst, REFUSALS[0]);
     await multiplayer(worst);
     await worst.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14, players: [{ id: 0, is_human: true, faction: 'Rome' }] }] as never }); });
+    // The worst case lists two hosted games in the Join door too.
+    const mine = await worst.evaluate(() => (window as unknown as GameWindow).legatum.getState().online as { build: string; rules_version: number; protocol: number });
+    await worst.route(`${E2E_RELAY}/lobby`, (route: Route) => route.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ rooms: [
+      { room: 'gh42', name: 'Golden Harbour 42', locked: false, players: 2, humans: 1, open_seats: 1 },
+      { room: 'sg15', name: 'Scarlet Garden 15', locked: true, players: 3, humans: 2, open_seats: 2 },
+    ].map((r) => ({ ...r, build: mine.build, rules_version: mine.rules_version, protocol: mine.protocol, phase: 'staging', turn: 0, updated_ms: 0 })) }) }));
+    await expect(worst.locator('.open-games .online-room')).toHaveCount(2, { timeout: 10_000 });
     await worst.getByLabel('Your name', { exact: true }).fill('Ada \u{1F600}');
     await worst.getByRole('button', { name: /^Host Game/ }).click();
     await expect(worst.locator('.title-notice')).toBeVisible();
