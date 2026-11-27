@@ -146,7 +146,7 @@ export function TopBar() {
         </Tip>
         <SupplyChips view={view} />
         <LevyCounter />
-        <span className="population-counter" data-celebration-counter="population" title="Total population in your cities"><Icon name="title-most-populous" size={12} className="count-icon ui-mark" label="Population" /><span className="count-label">Pop. </span><b>{view.cities.filter((c) => c.owner === view.me && c.detail).reduce((n, c) => n + c.population, 0)}</b><CounterDelta counter="population" /></span>
+        <Tip hoverOnly content="Total population in your cities"><span className="population-counter" data-celebration-counter="population"><Icon name="title-most-populous" size={12} className="count-icon ui-mark" label="Population" /><span className="count-label">Pop. </span><b>{view.cities.filter((c) => c.owner === view.me && c.detail).reduce((n, c) => n + c.population, 0)}</b><CounterDelta counter="population" /></span></Tip>
         {!phone && <Tip content={<>
           <div className="bd-title">{eraName(r.era)} era</div>
           <div>{r.era_known} of {r.era_total} {eraName(r.era)} technologies known. Only this era's technologies can be researched; finishing them all enters the next era.</div>
