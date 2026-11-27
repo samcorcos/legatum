@@ -7160,7 +7160,7 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
 {
   "parts": [
     [
-      "A: no upkeep (Revenue Office)",
+      "Revenue Offices (A): no city upkeep",
       0,
     ],
   ],
@@ -7707,7 +7707,7 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
 {
   "parts": [
     [
-      "A: no upkeep (Revenue Office)",
+      "Revenue Offices (A): no city upkeep",
       0,
     ],
   ],

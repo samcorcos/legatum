@@ -499,6 +499,8 @@ export interface CityView {
   capture_bounty?: number | null;
   greece_captive_tech?: boolean;
   greece_captive_at_risk?: boolean;
+  /** Own city only: Gold per turn saved by building its Revenue Office. */
+  revenue_office_upkeep_savings?: number;
   walls: boolean;
   walls_level?: number;
   /** Last observed Walls bar and its full size at this level (core `combat::walls_hp`). Hits land on it before the city's HP; it never heals. */

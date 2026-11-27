@@ -666,6 +666,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <span className="prod-turns">{o.turns > 0 ? `${o.turns} turn${o.turns === 1 ? '' : 's'}` : 'No output'}</span>
         {o.item.kind === 'Unit' && o.item.unit === 'Settler' && cityUpkeepForecast(view) ? <span className="prod-upkeep paid" data-testid="settler-city-upkeep"><Amounts text={cityUpkeepForecast(view)!} /></span>
           : o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
+        {o.item.kind === 'Building' && o.item.building === 'Market' && owner?.faction === 'India' && !!city.revenue_office_upkeep_savings && <span className="prod-upkeep gain" data-testid="office-city-upkeep">City upkeep: saves {city.revenue_office_upkeep_savings} Gold a turn</span>}
         {imp && <span className="prod-upkeep none">No upkeep</span>}
         <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : tombStopped ? 'Queue' : 'Build →'}</span>
       </button>

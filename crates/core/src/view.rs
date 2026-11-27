@@ -751,6 +751,9 @@ pub struct CityView {
     /// An own Athenian city's remaining free-technology liability to at least one rival.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub greece_captive_at_risk: bool,
+    /// Gold per turn this viewer saves by building a Revenue Office in their own city.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub revenue_office_upkeep_savings: Option<i32>,
     pub walls: bool,
     /// Last observed completed Walls level (0 when unwalled).
     #[serde(default)]
@@ -832,6 +835,7 @@ impl CityView {
             capture_bounty: None,
             greece_captive_tech: false,
             greece_captive_at_risk: false,
+            revenue_office_upkeep_savings: None,
             walls: city.walls,
             walls_level: city.walls_level,
             walls_hp: combat::walls_hp(city.walls_level, city.walls_damage),
@@ -2077,6 +2081,9 @@ pub fn player_view_cached(
                 && state.players.iter().any(|r| {
                     r.alive && crate::rules::battle::greece_captive_available(state, c.id, r.id)
                 });
+            observed.revenue_office_upkeep_savings = (c.owner == me)
+                .then(|| economy::revenue_office_upkeep_savings(state, c))
+                .filter(|savings| *savings > 0);
             observed.walls_building = matches!(
                 c.producing,
                 Some(ProductionItem::Building {

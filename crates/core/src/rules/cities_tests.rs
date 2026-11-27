@@ -2976,20 +2976,95 @@ fn india_revenue_office_upkeep_and_remittance_have_separate_ablations() {
     // Three cities determine the rate; only two pay it. Round the whole bill once.
     assert_eq!(economy::city_upkeep(&s, P0), 2);
     assert_eq!(economy::added_city_upkeep(&s, P0), 2);
+    assert_eq!(
+        economy::revenue_office_upkeep_savings(&s, city(&s, capital)),
+        1
+    );
+    assert_eq!(
+        economy::revenue_office_upkeep_savings(&s, city(&s, office)),
+        0
+    );
     let with_office = economy::player_income(&s, P0);
+    let label = "Revenue Offices (";
+    assert_eq!(
+        with_office
+            .gold
+            .parts
+            .iter()
+            .filter(|(name, _)| name.starts_with(label))
+            .count(),
+        1
+    );
     assert!(
         with_office
             .gold
             .parts
             .iter()
-            .any(|(label, amount)| label.contains("no upkeep (Revenue Office)") && *amount == 0)
+            .any(|(name, amount)| name.starts_with(label)
+                && name.contains(&city(&s, office).name)
+                && *amount == 1)
     );
     assert!(
-        economy::upkeep_breakdown(&s, P0)
+        with_office
+            .gold
             .parts
             .iter()
-            .any(|(label, amount)| label.contains("no upkeep (Revenue Office)") && *amount == 0)
+            .any(|(name, amount)| name.starts_with("City upkeep") && *amount == -3)
     );
+    assert_eq!(
+        with_office
+            .gold
+            .parts
+            .iter()
+            .map(|(_, amount)| amount)
+            .sum::<i32>(),
+        with_office.gold.total
+    );
+    let upkeep = economy::upkeep_breakdown(&s, P0);
+    assert!(
+        upkeep
+            .parts
+            .iter()
+            .any(|(name, amount)| name.starts_with(label) && *amount == -1)
+    );
+    assert!(
+        upkeep
+            .parts
+            .iter()
+            .any(|(name, amount)| name.starts_with("City upkeep") && *amount == 3)
+    );
+    assert_eq!(
+        upkeep.parts.iter().map(|(_, amount)| amount).sum::<i32>(),
+        upkeep.total
+    );
+    let own_view = crate::view::player_view(&s, P0);
+    let own_city = own_view
+        .cities
+        .iter()
+        .find(|city| city.id == capital)
+        .unwrap();
+    assert_eq!(own_city.revenue_office_upkeep_savings, Some(1));
+    let own_json = serde_json::to_value(own_city).unwrap();
+    assert_eq!(own_json["revenue_office_upkeep_savings"], 1);
+
+    s.setup.rule_experiments.no_city_upkeep = true;
+    assert_eq!(
+        economy::revenue_office_upkeep_savings(&s, city(&s, capital)),
+        0
+    );
+    s.setup.rule_experiments.no_city_upkeep = false;
+    s.setup.rule_experiments.city_upkeep_free = Some(3);
+    assert_eq!(
+        economy::revenue_office_upkeep_savings(&s, city(&s, capital)),
+        0
+    );
+    s.setup.rule_experiments.city_upkeep_free = Some(1);
+    s.player_mut(P0).faction = Faction::Rome;
+    assert_eq!(
+        economy::revenue_office_upkeep_savings(&s, city(&s, capital)),
+        0
+    );
+    s.player_mut(P0).faction = Faction::India;
 
     s.setup
         .rule_experiments
@@ -2997,12 +3072,16 @@ fn india_revenue_office_upkeep_and_remittance_have_separate_ablations() {
         .insert(FactionRule::IndiaOfficeUpkeep);
     assert_eq!(economy::city_upkeep(&s, P0), 3);
     assert_eq!(economy::added_city_upkeep(&s, P0), 3);
+    assert_eq!(
+        economy::revenue_office_upkeep_savings(&s, city(&s, capital)),
+        0
+    );
     assert!(
         !economy::player_income(&s, P0)
             .gold
             .parts
             .iter()
-            .any(|(label, _)| label.contains("no upkeep (Revenue Office)"))
+            .any(|(label, _)| label.starts_with("Revenue Offices ("))
     );
     s.setup
         .rule_experiments

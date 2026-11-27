@@ -4309,6 +4309,7 @@ dialog.gameover::backdrop {
 .prod-vs-item.bad { color: var(--bad); }
 .prod-vs.same { font-weight: 500; color: var(--ink-2); }
 .prod-upkeep.paid { color: var(--accent); font-weight: 600; }
+.prod-upkeep.gain { color: var(--good); font-weight: 600; }
 .prod-upkeep.free, .prod-upkeep.none { color: var(--muted); }
 /* The empire's Gold/turn once this unit exists, when that is negative: red (--accent, as paid upkeep, for contrast) even where the unit's own upkeep is free. */
 .prod-upkeep-after { color: var(--accent); font-weight: 600; }

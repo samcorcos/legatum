@@ -929,13 +929,13 @@ pub(crate) fn upkeep_breakdown_with_military(
         crate::company::count(state, p) as i32 * crate::company::UPKEEP,
     );
     b.add("Treaties", treaty_upkeep(state, p).total);
-    let cities = city_upkeep(state, p);
-    if cities > 0 {
-        b.add(city_upkeep_label(state), cities);
+    let (gross, offset, offices) = city_upkeep_charge_and_offset(state, p);
+    if gross > 0 {
+        b.add(city_upkeep_label(state), gross);
     }
-    for city in exempt_india_cities(state, p) {
-        b.parts
-            .push((format!("{}: no upkeep (Revenue Office)", city.name), 0));
+    if !offices.is_empty() {
+        b.parts.push((revenue_offices_label(&offices), -offset));
+        b.total -= offset;
     }
     b
 }
@@ -952,6 +952,21 @@ pub fn city_upkeep(state: &GameState, p: PlayerId) -> i32 {
     let cities = state.cities_of(p).count() as i32;
     let liable = cities - exempt_india_cities(state, p).count() as i32;
     city_upkeep_total(state, cities, liable)
+}
+
+fn city_upkeep_charge_and_offset(state: &GameState, p: PlayerId) -> (i32, i32, Vec<String>) {
+    let cities = state.cities_of(p).count() as i32;
+    let gross = city_upkeep_total(state, cities, cities);
+    let net = city_upkeep(state, p);
+    let mut offices: Vec<_> = exempt_india_cities(state, p)
+        .map(|city| city.name.clone())
+        .collect();
+    offices.sort();
+    (gross, gross - net, offices)
+}
+
+fn revenue_offices_label(offices: &[String]) -> String {
+    format!("Revenue Offices ({}): no city upkeep", offices.join(", "))
 }
 
 fn exempt_india_cities(state: &GameState, p: PlayerId) -> impl Iterator<Item = &City> {
@@ -978,6 +993,23 @@ pub fn added_city_upkeep(state: &GameState, p: PlayerId) -> i32 {
     let cities = state.cities_of(p).count() as i32;
     let liable = cities - exempt_india_cities(state, p).count() as i32;
     city_upkeep_total(state, cities + 1, liable + 1) - city_upkeep_total(state, cities, liable)
+}
+
+/// Gold saved each turn if this owned city builds an Indian Revenue Office now.
+pub fn revenue_office_upkeep_savings(state: &GameState, city: &City) -> i32 {
+    let p = city.owner;
+    if state.player(p).faction != Faction::India
+        || state
+            .setup
+            .rule_experiments
+            .rule_off(FactionRule::IndiaOfficeUpkeep)
+        || data::has_building(&city.buildings, BuildingKind::Market)
+    {
+        return 0;
+    }
+    let cities = state.cities_of(p).count() as i32;
+    let liable = cities - exempt_india_cities(state, p).count() as i32;
+    city_upkeep_total(state, cities, liable) - city_upkeep_total(state, cities, liable - 1)
 }
 
 /// Food a city needs to grow, less decadence (rounding down once).
@@ -1134,12 +1166,13 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     for (label, amount) in treaties.parts {
         gold.add(format!("Treaty upkeep: {label}"), -amount);
     }
-    if administration > 0 {
-        gold.add(city_upkeep_label(state), -administration);
+    let (gross, offset, offices) = city_upkeep_charge_and_offset(state, p);
+    if gross > 0 {
+        gold.add(city_upkeep_label(state), -gross);
     }
-    for city in exempt_india_cities(state, p) {
-        gold.parts
-            .push((format!("{}: no upkeep (Revenue Office)", city.name), 0));
+    if !offices.is_empty() {
+        gold.parts.push((revenue_offices_label(&offices), offset));
+        gold.total += offset;
     }
     PlayerIncome {
         cities,
