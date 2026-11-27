@@ -76,11 +76,11 @@ describe('city production warnings', () => {
     city.detail!.production_queue = [];
     city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman');
     expect(city.detail!.options).toHaveLength(1);
-    expect(cityProductionWarning(city, [], undefined, { ...view })).toBe("Nothing here fits its automation focus. Choose this turn's build.");
+    expect(cityProductionWarning(city, [], undefined, { ...view })).toBe("No economic build is available. Choose this turn's build.");
     expect(idleCitiesNeedingProduction({ ...view }, [])).toContain(city);
     city.detail!.producing = { kind: 'Unit', unit: 'Scout' };
     city.detail!.turns_to_complete = 1;
-    expect(cityProductionWarning(city, [], undefined, { ...view })).toContain('Nothing here fits its automation focus');
+    expect(cityProductionWarning(city, [], undefined, { ...view })).toContain('No economic build is available');
     expect(idleCitiesNeedingProduction({ ...view }, [])).toContain(city);
     city.detail!.turns_to_complete = 2;
     expect(cityProductionWarning(city, [], undefined, { ...view })).toBeNull();

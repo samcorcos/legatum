@@ -131,7 +131,8 @@ pub enum Order {
         tech: TechId,
     },
     /// Replace the whole plan (including the current technology). Empty cancels
-    /// research; stored science is retained. Prerequisites must precede dependents.
+    /// research; stored science is retained. A later-era technology must come after every
+    /// unknown technology of the eras before it.
     SetResearchQueue {
         techs: Vec<TechId>,
     },

@@ -25,6 +25,7 @@ mod celts_playbook;
 mod civilians;
 mod composition;
 mod decisive_buy;
+mod economic_automation;
 mod exploration;
 mod funding;
 mod goal_actions;

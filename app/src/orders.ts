@@ -328,7 +328,7 @@ export function describeOrder(o: Order, view: PlayerView): string {
     case 'SetProduction':
       return `${city(o.city)}: build ${itemName(o.item, cityFaction(o.city))}`;
     case 'SetCityAutomation':
-      return `${city(o.city)}: ${o.focus ? `build automatically: ${o.focus}${o.picked ? ` · chose ${itemName(o.picked, cityFaction(o.city))}` : ''}` : 'stop building automatically'}`;
+      return `${city(o.city)}: ${o.focus ? `automate${o.picked ? ` · chose ${itemName(o.picked, cityFaction(o.city))}` : ''}` : 'stop building automatically'}`;
     case 'SetProductionQueue':
       return `${city(o.city)}: ${o.queue.length ? o.queue.map((item, i) => `${i + 1}. ${itemName(item, cityFaction(o.city))}`).join(' → ') : 'clear production queue'}`;
     case 'BuyItem':
