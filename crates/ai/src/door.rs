@@ -145,6 +145,69 @@ impl Planner<'_> {
                 }
             }
         }
+        if self.decisions.invasion_defense > 0 && self.view().turn >= 120 {
+            let view = self.view();
+            let peace: Vec<&UnitView> = self
+                .ctx
+                .peace_armies
+                .iter()
+                .copied()
+                .filter(|e| {
+                    self.door_attacker(e)
+                        && !view
+                            .cities
+                            .iter()
+                            .any(|c| c.pos == e.pos && c.owner == e.owner)
+                        && !view.diplomacy.relations.iter().any(|r| {
+                            r.between(view.team, view.team_of(e.owner))
+                                && r.guarantee_until > view.turn
+                        })
+                })
+                .collect();
+            let reachable: Vec<_> = peace
+                .iter()
+                .map(|e| {
+                    let reach: Vec<(usize, i32, i32)> = self
+                        .ctx
+                        .own_cities
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(i, c)| {
+                            let turns =
+                                crate::hard_defense::declaration_arrival_turns(view, e, c.pos, 2)?;
+                            Some((i, e.pos.distance(c.pos), turns as i32))
+                        })
+                        .collect();
+                    (*e, reach)
+                })
+                .collect();
+            let mut nearby = std::collections::BTreeMap::new();
+            for (e, reach) in &reachable {
+                for (i, _, _) in reach {
+                    *nearby.entry((view.team_of(e.owner), *i)).or_insert(0usize) += 1;
+                }
+            }
+            for (e, reach) in reachable {
+                let Some(nearest) = reach.iter().map(|(_, distance, _)| *distance).min() else {
+                    continue;
+                };
+                for (i, distance, turns) in reach {
+                    if distance > nearest + self.decisions.threat_aim_slack {
+                        continue;
+                    }
+                    if nearby
+                        .get(&(view.team_of(e.owner), i))
+                        .copied()
+                        .unwrap_or(0)
+                        < 2
+                    {
+                        continue;
+                    }
+                    threat[i] += i64::from(unit_value(e));
+                    arrival[i] = arrival[i].min(turns.max(1));
+                }
+            }
+        }
         let mut fronts: Vec<DoorFront> = self
             .ctx
             .own_cities
@@ -247,10 +310,13 @@ impl Planner<'_> {
                     .orders
                     .iter()
                     .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id));
+                let urgent = self.decisions.invasion_defense > 0
+                    && self.view().turn >= 120
+                    && f.arrival <= 2;
                 if self.door_part(DOOR_BUY)
                     && !bought_here
                     && d.resistance <= 0
-                    && !self.military_upgrade_hold(c)
+                    && (urgent || !self.military_upgrade_hold(c))
                 {
                     let upkeep_floor = ((self.marginal_military_upkeep()
                         - self.view().economy.gold_per_turn.total)
@@ -270,20 +336,24 @@ impl Planner<'_> {
                         if self.gold_left - cost < upkeep_floor {
                             continue;
                         }
-                        if !self.military_purchase_viable(c, unit, cost) {
+                        if !urgent && !self.military_purchase_viable(c, unit, cost) {
                             continue;
                         }
                         let gain = self.door_power(unit, sparta_level, data::UNIT_HP, c.pos);
                         consider(
                             gain,
                             cost,
-                            (self.decisions.hard_purchase_scorer > 0
-                                && self.difficulty == legatum_core::AiDifficulty::Hard)
-                                .then(|| {
-                                    i64::from(self.military_purchase_score(unit, cost, c.pos))
-                                        * i64::from(gain.min(gap))
-                                        / i64::from(gain.max(1))
-                                }),
+                            if urgent {
+                                Some(i64::from(gain.min(gap)) * 1_000_000 - i64::from(cost))
+                            } else {
+                                (self.decisions.hard_purchase_scorer > 0
+                                    && self.difficulty == legatum_core::AiDifficulty::Hard)
+                                    .then(|| {
+                                        i64::from(self.military_purchase_score(unit, cost, c.pos))
+                                            * i64::from(gain.min(gap))
+                                            / i64::from(gain.max(1))
+                                    })
+                            },
                             Order::BuyItem {
                                 city: c.id,
                                 item: o.item,
@@ -422,12 +492,89 @@ impl Planner<'_> {
         if fronts.is_empty() {
             return;
         }
+        if self.decisions.invasion_defense > 0 && self.view().turn >= 120 {
+            self.invasion_sorties(army, &fronts);
+        }
         self.rotate_exposed_garrisons(army, &fronts);
         if self.door_part(DOOR_STRIKE) {
             self.door_strikes(army);
         }
         if self.door_part(DOOR_REINFORCE) {
             self.door_reinforce(army, &fronts);
+        }
+        if self.decisions.invasion_defense > 0 && self.view().turn >= 120 {
+            self.invasion_field_support(army, &fronts);
+        }
+    }
+
+    /// A field defender gets a favorable attack on an exposed shooter before the
+    /// later garrison and campaign passes reserve it elsewhere.
+    fn invasion_sorties(&mut self, army: &[&UnitView], fronts: &[DoorFront]) {
+        for u in self.free(army) {
+            if !composition::charges(u.kind)
+                || u.hp < self.decisions.recover_hp
+                || self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+            {
+                continue;
+            }
+            let Some(to) = self.counterattack_target(u, None) else {
+                continue;
+            };
+            if self.ctx.enemy_units.iter().any(|e| {
+                e.pos == to
+                    && e.ranged > 0
+                    && fronts
+                        .iter()
+                        .any(|f| f.gap() > 0 && e.pos.distance(f.pos) <= 2)
+            }) {
+                self.unit_order(u.id, Order::MoveUnit { unit: u.id, to });
+            }
+        }
+    }
+
+    /// A free field unit within one move of a short front takes cover beside it,
+    /// including when the city already has a garrison.
+    fn invasion_field_support(&mut self, army: &[&UnitView], fronts: &[DoorFront]) {
+        for f in fronts.iter().filter(|f| f.gap() > 0 && f.arrival <= 2) {
+            let mut candidates: Vec<&UnitView> = self
+                .free(army)
+                .into_iter()
+                .filter(|u| {
+                    composition::is_combat(u.kind)
+                        && (2..=4).contains(&u.pos.distance(f.pos))
+                        && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+                })
+                .collect();
+            candidates.sort_by_key(|u| {
+                (
+                    std::cmp::Reverse(unit_value(u)),
+                    u.pos.distance(f.pos),
+                    u.id,
+                )
+            });
+            let support = candidates.into_iter().find_map(|u| {
+                let spot = std::iter::once(f.pos)
+                    .chain(f.pos.neighbors())
+                    .filter(|h| {
+                        self.free_tile_for(u, *h)
+                            && self.reaches_this_turn(u, *h)
+                            && self.can_defend_at(u, *h)
+                    })
+                    .min_by_key(|h| {
+                        let cover = self.view().tile(*h).and_then(|t| t.terrain).map_or(0, |t| {
+                            data::terrain_defense_rules(
+                                self.view().rule_experiments.faction_rules_off,
+                                self.faction,
+                                t,
+                            )
+                        });
+                        (i32::from(*h != f.pos), -cover, h.distance(u.pos), *h)
+                    })?;
+                Some((u, spot))
+            });
+            if let Some((u, spot)) = support {
+                self.go_to(u, spot);
+            }
         }
     }
 

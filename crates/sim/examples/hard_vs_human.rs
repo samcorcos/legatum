@@ -1974,6 +1974,7 @@ mod tests {
         // Breakable Walls (rules 62), with Hard's siege forecast playing longer while a Walls bar stands, give the seat an elimination win at T162.
         // Hard finishing a combat unit under way (keep_unit_build 2, 2026-11-26) leaves two cities at T30, four at T62 and no win.
         // Army modernization leaves the early checkpoints intact and wins by elimination at T157.
+        // The visible late-front defense keeps those checkpoints but delays the elimination to T179.
         assert_eq!(
             first_map_game(false),
             json!({
@@ -1983,7 +1984,7 @@ mod tests {
                 "vp_t100": 0,
                 "vp_t60": 0,
                 "win": true,
-                "win_turn": 157,
+                "win_turn": 179,
                 "win_type": "elimination",
             })
         );

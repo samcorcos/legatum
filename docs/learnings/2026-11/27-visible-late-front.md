@@ -1,0 +1,5 @@
+# A visible late front is worth defending before war starts
+
+The existing city defense waited for War even when two non-allied military units were already within a short legal declaration and strike path. A late Hard AI can buy a strong defender before that declaration, move one free field unit beside the threatened city, and take a favorable sortie against an exposed shooter. The decision uses visible units and own city options; it adds no resources or combat rule.
+
+In a 300-pair six-seat duel on public base `82a0e544` (seed 7101), the candidate won 52 games versus 42 at baseline: +3.33 percentage points, paired 95% bootstrap CI [0.00, 6.67]. VP share rose from 0.1633 to 0.1704 (+0.0071). The late front therefore becomes the Hard default. In 32 paired stand-in branches from T150, the leader bloc captured or razed 3.25 rival cities on average versus 3.75 at baseline, while rival cities remaining at T170 rose from 14.34 to 14.59. The T130 branch showed no capture improvement, so the observed benefit is position dependent.
