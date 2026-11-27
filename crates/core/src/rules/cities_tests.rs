@@ -2978,17 +2978,17 @@ fn india_revenue_office_upkeep_and_remittance_have_separate_ablations() {
     assert_eq!(economy::added_city_upkeep(&s, P0), 2);
     let with_office = economy::player_income(&s, P0);
     assert!(
-        with_office.gold.parts.iter().any(|(label, amount)| label
-            .contains("no upkeep (Revenue Office)")
-            && *amount == 0)
+        with_office
+            .gold
+            .parts
+            .iter()
+            .any(|(label, amount)| label.contains("no upkeep (Revenue Office)") && *amount == 0)
     );
     assert!(
         economy::upkeep_breakdown(&s, P0)
             .parts
             .iter()
-            .any(
-                |(label, amount)| label.contains("no upkeep (Revenue Office)") && *amount == 0
-            )
+            .any(|(label, amount)| label.contains("no upkeep (Revenue Office)") && *amount == 0)
     );
 
     s.setup
