@@ -256,6 +256,16 @@ it('treats a blocked-only queue as a pending city decision until a valid build i
   expect(pendingDecisions(view, [])).toContainEqual({ ...decision, label: `Choose what ${city.name} builds` });
 });
 
+it('names why a picked build was refused, so the Choose production prompt does not ignore the pick', () => {
+  const city = view.cities.find((c) => c.owner === view.me && c.detail && !c.detail.producing)!;
+  // Orders are checked in list order: another city's Musketman took the last spare Niter.
+  const orders: Order[] = [{ type: 'SetProductionQueue', city: city.id, queue: [{ kind: 'Unit', unit: 'Musketman' }] }];
+  const message = `${city.name} cannot start Musketman: No Niter to spare: all 4 of your Niter are in use. Bring another Niter deposit inside your borders.`;
+  expect(pendingDecisions(view, orders, [{ index: 0, message }])).toContainEqual(
+    { kind: 'city', id: city.id, label: `${city.name}: Musketman can't start: No Niter to spare`, refused: "Musketman can't start: No Niter to spare" });
+  expect(pendingDecisions(view, orders).some((d) => d.kind === 'city' && d.id === city.id)).toBe(false);
+});
+
 it('invalid production, research and unit orders cannot hide decisions; a cleared queue needs attention', () => {
   const orders: Order[] = [
     { type: 'SleepUnit', unit: 0 },
