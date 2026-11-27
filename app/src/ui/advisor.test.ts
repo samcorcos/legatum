@@ -267,10 +267,10 @@ describe('research queue advice', () => {
     const rival = view.players.find((p) => p.team !== view.team)!;
     view.players = view.players.map((p) => p.id === rival.id ? { ...p, army: 100 } : p);
     view.units.push({ ...unit, id: 9001, owner: rival.id, pos: city.pos, military: true });
-    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A rival unit is near one of your cities: Masonry unlocks Walls.');
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A foreign military unit is near one of your cities: Masonry unlocks Walls.');
     expect(advisorWhy({ type: 'SetResearch', tech: 'IronWorking' }, view)).toBe('Iron Working shows Iron on the map.');
     view.units = view.units.filter((u) => u.id !== 9001);
-    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^A rival unit is near one of your cities/);
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^A foreign military unit is near one of your cities/);
     view.players = view.players.map((p) => p.id === rival.id ? { ...p, era: view.research.era + 2 } : p);
     view.cities.push({ ...city, id: 9002, owner: rival.id });
     expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A rival is ahead in research: Masonry unlocks Walls.');
