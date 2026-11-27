@@ -14,6 +14,7 @@
 //!   victim: the opening aims only at its cities, nearest open one first and a walled one
 //!   when nothing else is left, searches its land when none is in sight, refuses Peace with
 //!   it, never razes what it took from it, and runs until the victim is gone or turn 50.
+//!   Sparta can chain the opening to another open capital after an elimination.
 //! * **The strike.** Units stage two hexes out where the land is open to them, so the
 //!   declaration turn itself lands hits. Every fit melee unit that can hit the open city this
 //!   turn does, every turn. A fallen city's garrison heals 20 a turn, so it is fought only
@@ -69,7 +70,12 @@ impl Planner<'_> {
     pub(crate) fn rome_victim(&self) -> Option<PlayerId> {
         let v = self.view();
         let victim = self.campaigns.rome_victim.filter(|_| self.rome_finish())?;
-        (v.turn <= FINISH_LAST_TURN
+        let last = if self.faction == Faction::Sparta && self.decisions.sparta_finish_60 > 0 {
+            60
+        } else {
+            FINISH_LAST_TURN
+        };
+        (v.turn <= last
             && v.players.iter().any(|p| p.id == victim && p.alive)
             && !(self.campaigns.rome_walled_peace_window && !v.at_war(v.me, victim)))
         .then_some(victim)
@@ -78,9 +84,26 @@ impl Planner<'_> {
     /// The last turn the opening runs.
     pub(crate) fn rome_opening_last_turn(&self) -> u32 {
         if self.rome_victim().is_some() {
-            FINISH_LAST_TURN
+            if self.faction == Faction::Sparta && self.decisions.sparta_finish_60 > 0 {
+                60
+            } else {
+                FINISH_LAST_TURN
+            }
         } else {
-            OPENING_LAST_TURN
+            if self.faction == Faction::Sparta
+                && self.decisions.sparta_chain_opening > 0
+                && self.campaigns.rome_victim.is_some_and(|victim| {
+                    !self
+                        .view()
+                        .players
+                        .iter()
+                        .any(|p| p.id == victim && p.alive)
+                })
+            {
+                FINISH_LAST_TURN
+            } else {
+                OPENING_LAST_TURN
+            }
         }
     }
 
@@ -141,10 +164,22 @@ impl Planner<'_> {
 
     /// Remember the victim: the owner of the opening's city once Rome is at war with it.
     pub(crate) fn note_rome_victim(&mut self) {
-        if !self.rome_finish() || self.campaigns.rome_victim.is_some() {
+        if !self.rome_finish() {
             return;
         }
         let v = self.view();
+        if self.campaigns.rome_victim.is_some()
+            && (self.faction != Faction::Sparta || self.decisions.sparta_chain_opening == 0)
+        {
+            return;
+        }
+        if self
+            .campaigns
+            .rome_victim
+            .is_some_and(|victim| v.players.iter().any(|p| p.id == victim && p.alive))
+        {
+            return;
+        }
         let owner = self
             .campaigns
             .rome_opening_target
@@ -195,8 +230,24 @@ impl Planner<'_> {
         if self.campaigns.rome_victim.is_some() {
             // The victim's cities only: the nearest open one, a walled one when it is all
             // that is left. With none in sight the march searches for them
-            // (`rome_finish_search`); with the victim gone the opening is over.
-            let victim = self.rome_victim()?;
+            // (`rome_finish_search`); Sparta may chain to another open capital after
+            // eliminating the victim.
+            let Some(victim) = self.rome_victim() else {
+                if self.faction == Faction::Sparta
+                    && self.decisions.sparta_chain_opening > 0
+                    && self
+                        .campaigns
+                        .rome_victim
+                        .is_some_and(|victim| !v.players.iter().any(|p| p.id == victim && p.alive))
+                {
+                    return candidates
+                        .iter()
+                        .filter(|(c, _)| c.is_capital && !c.walls)
+                        .min_by_key(|(c, d)| (*d, c.id))
+                        .map(|(c, _)| *c);
+                }
+                return None;
+            };
             return candidates
                 .iter()
                 .filter(|(c, _)| c.owner == victim)
