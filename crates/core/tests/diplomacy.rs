@@ -1920,3 +1920,38 @@ fn a_heal_order_is_refused_in_closed_foreign_land_where_nothing_heals() {
         errs[0].message
     );
 }
+
+#[test]
+fn an_alliance_offer_made_impossible_by_a_same_turn_peace_is_withdrawn() {
+    // 2 attacked 0, and 1 fights 2 too. On one turn 1 accepts 2's Peace and offers 0 an
+    // Alliance; allies defend each other at once, so that Alliance would drag 1 back into war on
+    // 2 through a guaranteed Peace. The offer is withdrawn instead of waiting in 0's inbox.
+    let s = rich(game(&[0, 1, 2]));
+    let (s, _) = step(&s, &[(2, vec![war(0)]), (1, vec![war(2)])]);
+    let (s, _) = step(&s, &[(2, vec![offer(1)])]);
+    let peace = s
+        .diplomacy
+        .as_ref()
+        .unwrap()
+        .proposals
+        .iter()
+        .find(|p| p.from == TeamId(2) && p.to == TeamId(1))
+        .unwrap()
+        .id
+        .0;
+    assert!(
+        validate_orders(&s, PlayerId(1), &[response(peace, true), ally_offer(0)]).is_empty(),
+        "each order is legal on its own"
+    );
+    let (s, events) = step(&s, &[(1, vec![response(peace, true), ally_offer(0)])]);
+    let d = s.diplomacy.as_ref().unwrap();
+    assert_eq!(
+        d.relation(TeamId(1), TeamId(2)).unwrap().state,
+        RelationState::Peace
+    );
+    assert!(d.proposals.is_empty(), "{:?}", d.proposals);
+    assert!(events.iter().any(|e| matches!(
+        e,
+        Event::ProposalInvalidated { reason, .. } if reason.contains("guaranteed")
+    )));
+}
