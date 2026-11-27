@@ -17,6 +17,8 @@ By changed path:
   every branch            hygiene.py           secrets, personal data, saves, large binaries, dead code markers
   every branch            public-claims.py     README counts against the code: peoples and their names, eras,
                                                technologies (the docs reviewer checks the other public claims)
+  app/src                 e2e-strings.py       browser specs (app/e2e) that still expect a string the branch removes
+                                               from the app (pull requests run only the smoke specs)
   crates/core, crates/ai  engine-invariants.py floats, hash-order iteration, unseeded RNG, clocks, render deps,
                                                saved-state changes without a RULES_VERSION bump, stale fixtures
   art assets              art.py               tools/art/distinctness.py --render --check (cached per art tree)
@@ -154,6 +156,8 @@ def run_checks(repo, base, tip, kinds, skip=()):
     """[(check name, seconds, [finding lines])] for the deterministic checks the changed paths call for."""
     plan = [("hygiene", lambda: load("hygiene").check(repo, base, tip)[0]),
             ("public-claims", lambda: load("public-claims").check(repo, tip))]
+    if any(f.startswith("app/src/") for f in kinds["code"]):
+        plan.append(("e2e-strings", lambda: load("e2e-strings").check(repo, base, tip)))
     if kinds["engine"]:
         plan.append(("engine-invariants", lambda: load("engine-invariants").check(repo, base, tip)[0]))
     if kinds["art"]:
