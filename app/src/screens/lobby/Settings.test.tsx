@@ -23,3 +23,19 @@ it('the lobby offers no rule experiment, and setups and room configs carry no sw
   expect('rule_experiments' in buildSetup(lobby)).toBe(false);
   expect('rule_experiments' in configFromLobby(newLobby('host', '42'))).toBe(false);
 });
+
+it('offers a multiplayer timer to the host and shows it read-only to guests', () => {
+  const onChange = vi.fn();
+  const lobby = newLobby('host', '42');
+  act(() => root.render(<Settings lobby={lobby} onChange={onChange} />));
+  const select = host.querySelector<HTMLSelectElement>('#turn-timer')!;
+  expect(select.value).toBe('0');
+  act(() => { select.value = '120'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+  const changed = onChange.mock.calls[0][0];
+  expect(configFromLobby(changed).turn_timer_seconds).toBe(120);
+  act(() => root.render(<Settings lobby={changed} />));
+  expect(host.querySelector<HTMLSelectElement>('#turn-timer')!.disabled).toBe(true);
+  expect(host.querySelector<HTMLSelectElement>('#turn-timer')!.value).toBe('120');
+  act(() => root.render(<Settings lobby={newLobby('solo', '42')} onChange={onChange} />));
+  expect(host.querySelector('#turn-timer')).toBeNull();
+});
