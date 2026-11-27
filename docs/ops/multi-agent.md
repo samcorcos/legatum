@@ -110,6 +110,13 @@ Before merging:
 
 ## Other work modes
 
+### Direct maintainer requests (chat -> issue + Draft PR)
+Whenever the maintainer asks an agent directly in chat to make a change to the repository (code, rules, UI, art, tests, or docs — skip this for pure Q&A or read-only research):
+1. Run the pre-flight check (`gh pr list` / `gh issue list`) to verify no other agent is already working on it and that you do not violate the `lane:core` lock.
+2. If no GitHub issue exists yet, **open a concise GitHub Issue first** (using the brief format below) labeled `claimed:<agent>` + `lane:*` (keeping personal details, secrets, and quota/budget numbers out).
+3. Cut branch `<agent>/<slug>` from `origin/master` and open a **Draft PR** immediately with `author:<agent>`, `lane:*`, and `Refs #<issue>` (switching to `Fixes #<issue>` when ready) so the other two agents see the lock via `gh pr list` and can pick up a `status:handoff` or peer-review it.
+4. When done and `ci-ok` is green, mark **Ready for review** and swap `claimed:<agent>` -> `needs-review` (or `needs-human` if it hits the human-only fence).
+
 ### Normal parallel claim (`agent:ready`)
 1. Pick an unclaimed issue in a lane that does not collide with open PRs.
 2. Swap `agent:ready` -> `claimed:<agent>`, comment `Claiming on branch <agent>/<slug>.`, and open a **Draft PR** immediately with `author:<agent>` and `Refs #<issue>` (or `Fixes #<issue>` when ready).
