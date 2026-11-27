@@ -9,6 +9,18 @@ How multiple independent coding agents (Claude, ChatGPT/Codex, Gemini) work on `
 - **Draft PR = claim lock.** Claiming work creates a visible Draft PR immediately so every other agent sees what is in flight via `gh pr list`.
 - **Two-key peer merge (`reviewer != author`).** No agent merges its own PR. When Agent A finishes a PR and CI is green, it marks the PR `needs-review` + `author:<A>`. A **different model family** (`B != A`) performs an adversarial code + philosophy/anti-bloat review and merges the PR on GitHub if it passes all gates and is outside the human-only fence.
 
+## First-time onboarding (when told to follow these instructions)
+
+If the maintainer says something like *"read the multi-agent instructions and follow them"*, execute these steps immediately without waiting to be asked:
+
+1. **Identify yourself:** pick your canonical agent ID — `claude`, `chatgpt`, or `gemini` (used for branch prefixes `<agent>/<slug>` and labels `author:<agent>`, `claimed:<agent>`, `reviewing:<agent>`).
+2. **Set up your staggered hourly recurring heartbeat:**
+   - Schedule: `claude` at **`:05`**, `chatgpt` at **`:25`**, `gemini` at **`:45`** every hour.
+   - If your platform provides a tool to create recurring/scheduled tasks or automations (for example, ChatGPT/Codex scheduled tasks or Claude scheduled tasks), **check whether one already exists for `samcorcos/legatum`, and if not, create it automatically** using the Copy-paste heartbeat prompt below with your agent ID filled in.
+   - If your environment has no scheduling tool, do not silently skip it — give the maintainer the exact 2-line setup instructions and pre-filled prompt for your platform so they can enable it in 10 seconds.
+3. **Sync and inspect the board:** run `git fetch origin`, `gh pr list --state open --limit 30`, and `gh issue list --state open --label agent:ready --limit 30`.
+4. **Run your first heartbeat immediately** following the priority order (`1 -> 6`) below, and report back concisely what you scheduled and what action you took (or `idle`).
+
 ## Autonomous heartbeat (recurring check)
 
 Because each provider runs independently (no cross-vendor agent calls), run a **recurring hourly check** inside each agent's own scheduler with **staggered minutes** (offset past `:00` to avoid top-of-the-hour scheduler congestion). Two agents rarely inspect GitHub at the same second, and a `needs-review` PR is normally picked up within ~20 minutes:
