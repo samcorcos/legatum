@@ -326,7 +326,7 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   }
   if (decisions.length || learned(practice, 'endTurn')) return null;
   const solo = ctx.humans <= 1 && !ctx.remote; // Matches the turn button's label (SeatBar).
-  return { id: 'endTurn', title: solo ? 'End the turn' : 'Ready for the turn', why: 'Your orders are set. Every empire’s orders happen together.',
+  return { id: 'endTurn', title: solo ? 'End the turn' : 'Ready for the turn', why: ctx.remote ? 'Your orders are set. The turn ends when everyone is ready or the timer runs out.' : 'Your orders are set. Every empire’s orders happen together.',
     steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${solo ? 'End turn' : 'Ready'}.`, key: ctx.touch ? undefined : 'Return', target: control('turn', 'end') }], current: 0 };
 }
 

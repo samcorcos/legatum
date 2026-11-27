@@ -187,7 +187,7 @@ describe('one decision at a time', () => {
   it('online, it says Ready, as the turn button does', async () => {
     const { view, plan, ctx } = await opening();
     const orders: Order[] = [plan[0], plan[2], ...view.units.filter((u) => u.owner === view.me).map((u) => ({ type: 'SkipUnit' as const, unit: u.id }))];
-    expect(advisorSuggestion({ ...ctx(orders), remote: true }, ['welcome'], [])).toMatchObject({ id: 'endTurn', steps: [{ instruction: 'Click Ready.' }] });
+    expect(advisorSuggestion({ ...ctx(orders), remote: true }, ['welcome'], [])).toMatchObject({ id: 'endTurn', why: 'Your orders are set. The turn ends when everyone is ready or the timer runs out.', steps: [{ instruction: 'Click Ready.' }] });
     expect(advisorSuggestion(ctx(orders), ['welcome'], [])).toMatchObject({ steps: [{ instruction: 'Click End turn.' }] });
   });
 
