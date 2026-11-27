@@ -543,7 +543,7 @@ function OfferCard({ p, view, forecastView, orders, current, ending }: {
           onCancel={() => useGame.getState().editOrders((o) => o.filter((x) => !sameDiplomaticAction(x, (queuedAccept ? accept : decline)!.order)))}>
           {queuedAccept ? 'you accept' : 'you decline'} when you end the turn.{scope
             ? queuedAccept ? ` When both teams agree, it ${scope.ending}.` : ' Your wars continue.'
-            : queuedAccept ? ` It ${p.kind === 'OpenBorders' ? 'start' : 'starts'} turn ${accept!.effective_turn}.` : ''}
+            : queuedAccept ? ` It starts turn ${accept!.effective_turn}.` : ''}
         </QueuedDiplomacyLine>
         {queuedAccept ? decline && <OfferResponse p={p} action={decline} view={forecastView} demoted />
           : accept && !blocked && <OfferResponse p={p} action={accept} view={forecastView} demoted />}
