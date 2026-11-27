@@ -91,6 +91,15 @@ export function tileCardTops(target: DOMRect, cardHeight: number, windowHeight: 
   return target.top + target.height / 2 >= windowHeight / 2 ? [above, below] : [below, above];
 }
 
+/** Find an edge that leaves the target and other important map tiles visible at the usual height. */
+export function cardEdgePosition(rects: DOMRect[], cardWidth: number, cardHeight: number, windowWidth: number, top: number): number | null {
+  for (const left of [16, windowWidth - cardWidth - 16]) {
+    const free = rects.every((r) => left + cardWidth + 8 <= r.left || left >= r.right + 8 || top + cardHeight + 8 <= r.top || top >= r.bottom + 8);
+    if (free) return left + cardWidth / 2;
+  }
+  return null;
+}
+
 export function garrisonCardCity(suggestionId: string, view: PlayerView | undefined) {
   if (suggestionId !== 'garrisonLock' || !view) return null;
   const unit = view.units.find((u) => u.owner === view.me && u.occupation_lock != null);
@@ -260,7 +269,7 @@ export function Advisor() {
         const cities = blockers.filter((r) => r !== tools);
         const best = options.find(clearOf(blockers)) ?? options.find(clearOf(cities)) ?? options.find(clearOf(must));
         let next = best === undefined || best === home ? null : Math.round(best);
-        // No height clears every banner: slide to the map's left edge at the usual height when that does.
+        // No height clears every banner: try either map edge at the usual height.
         let nextLeft: number | null = null;
         // Judged for the CSS slot (the centre), not the card's current place, so it cannot flip back and forth.
         const every = [target, selectedTile, heldTile, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0);
@@ -268,9 +277,8 @@ export function Advisor() {
         const atSlot = every.filter((r) => r.right > slot && r.left < slot + box.width);
         const slotOptions = [home, ...atSlot.map((r) => r.bottom + 12), ...atSlot.map((r) => r.top - 12 - box.height)].filter((top) => top >= 64 && top <= floor);
         if (atSlot.length && !slotOptions.find(clearOf(atSlot))) {
-          const left = 16;
-          const free = every.every((r) => left + box.width + 8 <= r.left || left >= r.right + 8 || home + box.height + 8 <= r.top || home >= r.bottom + 8);
-          if (free) { nextLeft = left + box.width / 2; next = null; }
+          nextLeft = cardEdgePosition(every, box.width, box.height, innerWidth, home);
+          if (nextLeft !== null) next = null;
         }
         if (next !== cardTop) setCardTop(next);
         if (nextLeft !== cardLeft) setCardLeft(nextLeft);

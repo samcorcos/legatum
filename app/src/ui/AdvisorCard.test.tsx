@@ -6,7 +6,7 @@ import { FixtureClient } from '../test/fixtureEngine';
 import { itemKey } from '../data';
 import { useGame } from '../store';
 import type { PlayerView, UnitView } from '../types';
-import { Advisor, garrisonCardCity, targetElement, tileCardBlocker, tileCardTops } from './Advisor';
+import { Advisor, cardEdgePosition, garrisonCardCity, targetElement, tileCardBlocker, tileCardTops } from './Advisor';
 import { useAdvisor } from './advisorModel';
 import { CityPanel } from './CityPanel';
 import { UnitPanel } from './UnitPanel';
@@ -37,6 +37,16 @@ it('places a tile card beyond one hex radius on the side away from the tile', ()
   expect(tileCardTops(lower, 140, 600)).toEqual([218, 542]);
   const upper = tileCardBlocker(500, 150, 40);
   expect(tileCardTops(upper, 140, 600)).toEqual([242, -82]);
+});
+
+it('uses the clear edge when a tile left of centre leaves no vertical slot at 1000x600', () => {
+  const leftTile = tileCardBlocker(400, 300, 40);
+  const cardWidth = 480, cardHeight = 300, home = 76;
+  expect([home, ...tileCardTops(leftTile, cardHeight, 600)].filter((top) => top >= 64 && top <= 600 - cardHeight - 8)
+    .every((top) => top + cardHeight + 8 > leftTile.top && top < leftTile.bottom + 8)).toBe(true);
+  expect(cardEdgePosition([leftTile], cardWidth, cardHeight, 1000, home)).toBe(744);
+  const rightTile = tileCardBlocker(600, 300, 40);
+  expect(cardEdgePosition([rightTile], cardWidth, cardHeight, 1000, home)).toBe(256);
 });
 
 it('protects a held city while the garrison card points at Diplomacy', () => {
