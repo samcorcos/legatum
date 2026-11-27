@@ -254,6 +254,22 @@ ordinary runs allocate no decision records.
   changes here. `crates/ai/src/modernization.rs`, `production.rs`, `military.rs`;
   evidence and gate decisions: `docs/sim-results/ai-quality/army-modernization-1026.md`.
 
+  `modern_army` (2026-11-27, levels 0–2) addresses the gap between research and the
+  army fielded. At level 1, a combat unit at least two eras behind can draw on Gold
+  reserved for a faction goal to refit, while ordinary solvency and a live scored
+  hoard remain protected. Walled-city defense, emergency production, and quick
+  defender choices exclude units more than one era behind the newest eligible
+  unit, after their existing deadline and affordability filters. Walled-city
+  scoring uses combat value, including class matchups, when enabled. Level 2 also
+  retires one unrefittable unit at least three eras behind per turn on Hard when
+  more than one such unit per city remains. Level 0 restores the prior decisions. This is
+  an AI preference only; production, upgrade, and combat rules are unchanged.
+  The default is level 2 after a 300-seed paired Hard duel: wins 9.0% at level 0,
+  10.7% at level 1, and 13.3% at level 2. Level 2 minus level 0 was +4.33
+  percentage points [0.61, 8.06] for wins and +0.44 [−0.88, 1.76] for VP
+  share. The all-seat census found 895 Ancient units at T200 with level 2,
+  against 3,124 at level 0, among games still active at that checkpoint.
+
 - **Athens war audit decision (2026-10-25; AI only, default 1 after the gate).**
   `capture_vp_accounting` 1 makes `hold.rs::science_loss_on_capture` leave the VP-v2 Most Advanced
   metric unchanged by a capture (era/known techs cannot be unlearned); the old scoring model retained its
