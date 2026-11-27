@@ -33,6 +33,7 @@ struct Args {
     faction: Option<Faction>,
     out: Option<String>,
     tape: Option<GameSetup>,
+    rules: Vec<String>,
 }
 
 fn arm(spec: &str) -> (String, AiParams) {
@@ -68,6 +69,7 @@ fn parse_args() -> Args {
         faction: None,
         out: None,
         tape: None,
+        rules: Vec::new(),
     };
     while let Some(flag) = it.next() {
         let mut v = || it.next().unwrap_or_else(|| panic!("{flag} needs a value"));
@@ -87,6 +89,7 @@ fn parse_args() -> Args {
                 );
             }
             "--out" => a.out = Some(v()),
+            "--rules" => a.rules.push(v()),
             "--tape" => {
                 let text = std::fs::read_to_string(v()).expect("read --tape");
                 let tape = legatum_wasm::tape::Tape::from_json(&text).expect("tape");
@@ -103,6 +106,17 @@ fn parse_args() -> Args {
 }
 
 fn setup(args: &Args, game_seed: u64) -> (GameSetup, usize) {
+    let (mut setup, seat) = setup_inner(args, game_seed);
+    for flag in &args.rules {
+        setup
+            .rule_experiments
+            .apply(flag)
+            .unwrap_or_else(|e| panic!("--rules {flag}: {e}"));
+    }
+    (setup, seat)
+}
+
+fn setup_inner(args: &Args, game_seed: u64) -> (GameSetup, usize) {
     if let Some(recorded) = &args.tape {
         let mut setup = recorded.clone();
         let seat = setup.players.iter().position(|p| p.is_human).unwrap_or(0);
