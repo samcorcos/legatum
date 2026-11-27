@@ -55,7 +55,7 @@ describe('a running offer', () => {
     expect(offerLines(view(0), { ...offer, price_now: 700 }).detail).toContain('the offer fails at the end of this turn and you lose 60 Gold');
     // An overbid: the seller is told what it takes to stop it.
     expect(offerLines(view(1), { ...offer, escrow: 900, guards_to_stop: 3, walls_to_stop: 2 }).detail)
-      .toBe('You get the 900 Gold Byzantium offered. If its price rises above 900 Gold (now 600), the offer fails. 3 more military units or 2 Walls levels in or next to it would do that.');
+      .toBe('You get the 900 Gold Byzantium offered. If its price rises above 900 Gold (now 600), the offer fails. It fails if 3 more military units come in or next to it, or 2 Walls levels are built.');
   });
   it('lists the bid choices with what stops each, and queues the chosen bid', () => {
     expect(stopLine({ guards_to_stop: 1, walls_to_stop: 1 })).toBe('Stopped by 1 more military unit or 1 Walls level');

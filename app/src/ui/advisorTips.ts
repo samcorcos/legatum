@@ -9,7 +9,8 @@ import { itemName } from '../data';
 import { empireOfPlayer } from '../empires';
 import type { CityView, Hex, Order, PlayerView, Resource } from '../types';
 import type { AdvisorStep, Suggestion } from './advisorModel';
-import { OFFER_TURNS, myOffer, queuedBuy } from '../buyCity';
+import { OFFER_TURNS, myOffer, queuedBuy, withoutBuy } from '../buyCity';
+import { freeGold } from '../deals';
 
 /**
  * Turns before a tip of the same kind may show again (and only if its situation still holds). Each repeat of a kind
@@ -105,20 +106,20 @@ function goldTip(v: PlayerView, touch: boolean, selection: { kind: string; id: n
 /** Byzantium: a rival city it can buy now with the Gold it has (core `buy_city`), cheapest first. */
 function buyTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null, orders: readonly Order[]): Tip | null {
   if (myOffer(v) || queuedBuy(orders)) return null;
-  const best = (v.city_buys ?? []).filter((b) => b.buyer === v.me && !b.blocker && b.price <= v.economy.gold)
+  const best = (v.city_buys ?? []).filter((b) => b.buyer === v.me && !b.blocker && b.price <= freeGold(v, withoutBuy([...orders])))
     .sort((a, b) => a.price - b.price || a.city - b.city)[0];
   const city = best && v.cities.find((c) => c.id === best.city);
   if (!best || !city) return null;
   const owner = empireOfPlayer(v, city.owner);
   const inCity = selection?.kind === 'city' && selection.id === city.id;
   return { key: 'buy', kind: 'buy', title: `You can buy ${city.name}`,
-    why: `${city.name} touches your land and costs ${best.price} Gold. ${owner} gets the Gold, and the city is yours in ${OFFER_TURNS} turns.`,
+    why: `${city.name} touches your land and costs ${best.price} Gold. ${owner} gets the Gold, and the city is yours in ${OFFER_TURNS} turns, unless its owner stops it.`,
     current: inCity ? 1 : 0,
     steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) },
       { instruction: `${click(touch)} Make an offer.`, target: { kind: 'control', name: 'buyCity' } }] };
 }
 
-/** A city of yours that Byzantium is buying: what stops it, while the offer still holds (one tip per offer). */
+/** A city of yours that Byzantium is buying: what stops it, while the offer still holds (shown every turn the offer holds, never held back by the tip gap). */
 function offerTip(v: PlayerView): Tip | null {
   const o = (v.city_offers ?? []).find((x) => x.seller === v.me && x.price_now <= x.escrow);
   const city = o && v.cities.find((c) => c.id === o.city);
@@ -145,7 +146,7 @@ export function strategyTip(view: PlayerView, saved: TipLog, touch = false, sele
   const lastOther = (key: string) => Math.max(-Infinity, ...shown.filter(([k]) => k !== key).map(([, t]) => t));
   const lastOfKind = (kind: TipKind) => Math.max(-Infinity, ...shown.filter(([k]) => tipKind(k) === kind).map(([, t]) => t));
   const ready = (tip: Tip) => {
-    if (shownThisTurn(tip.key)) return true;
+    if (shownThisTurn(tip.key) || tip.kind === 'offer') return true;
     const wait = TIP_COOLDOWN[tip.kind] * 2 ** Math.max(0, (log[`#${tip.kind}`] ?? 0) - 1);
     if (view.turn - lastOfKind(tip.kind) < wait) return false;
     return view.turn - lastOther(tip.key) >= TIP_GAP;

@@ -114,7 +114,9 @@ function offerText(view: Pick<PlayerView, 'me' | 'team' | 'players' | 'cities'>,
   const when = `at the end of turn ${o.ends_turn}`;
   const breaking = o.price_now > o.escrow;
   // What stops it, when the view says (core `guards_to_stop`, `walls_to_stop`).
-  const stop = o.guards_to_stop ? ` ${stopParts(o.guards_to_stop, o.walls_to_stop)} in or next to it would do that.` : '';
+  const stop = o.guards_to_stop
+    ? ` It fails if ${o.guards_to_stop} more military unit${o.guards_to_stop === 1 ? '' : 's'} come${o.guards_to_stop === 1 ? 's' : ''} in or next to it${o.walls_to_stop ? `, or ${o.walls_to_stop} Walls level${o.walls_to_stop === 1 ? ' is' : 's are'} built` : ''}.`
+    : '';
   if (o.buyer === view.me) {
     return {
       bar: `Buying ${city}: yours ${when}`,

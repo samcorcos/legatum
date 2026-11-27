@@ -36,7 +36,7 @@ export function buyChoice(view: PlayerView, city: CityView, orders: readonly Ord
   const free = freeGold(view, withoutBuy(orders));
   let reason = buy.blocker ? renameSeats(view, buy.blocker) : null;
   if (!reason && !queued) {
-    if (mine) reason = `You are already making an offer for ${view.cities.find((c) => c.id === mine.city)?.name ?? 'another city'}: one offer at a time`;
+    if (mine) reason = `You are already buying ${view.cities.find((c) => c.id === mine.city)?.name ?? 'another city'}: one offer at a time`;
     else if (free < bid) reason = `Needs ${bid} Gold: you have ${Math.max(0, free)} after this turn's other orders`;
   }
   return { price: buy.price, gold: bid, free, reason, queued, never };
@@ -86,7 +86,7 @@ export function CityBuy({ view, city }: { view: PlayerView; city: CityView }) {
     return <section className="city-buy" data-testid="city-buy">
       <div className="city-buy-title"><Icon name="yield-gold" size={16} /> Buy for <Amount n={choice.price} unit="Gold" /></div>
       <BreakdownTable b={{ total: buy.price, parts: priceLines(buy.breakdown) }} unit="Gold" />
-      <p className="city-buy-rule">The owner gets all the Gold you offer and {OFFER_TURNS} turns' warning. War calls it off. If the owner raises the price above your offer, it fails and you lose {FAIL_FEE_PERCENT}% of it. Offer more and it takes more to stop.</p>
+      <p className="city-buy-rule">The owner gets all the Gold you offer, and {OFFER_TURNS} turns' warning. If they raise the price above your offer, it fails and you lose {FAIL_FEE_PERCENT}%.</p>
       {bids.length > 1 && !closed && <div className="city-buy-bids" role="radiogroup" aria-label="Your offer" data-testid="buy-city-bids">
         {bids.map((b) => {
           const on = b.gold === choice.gold;

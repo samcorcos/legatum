@@ -158,7 +158,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
       { strength: BYZANTIUM_BUY_CITY, strengthDetail: byzantiumBuyCityDetail(), price: BYZANTIUM_COLLAPSE, priceDetail: BYZANTIUM_COLLAPSE_DETAIL, strengthIcon: 'yield-gold', priceIcon: 'capital' },
       specialRow('Byzantium', 'unit-tagmatic'),
     ],
-    counteredBy: 'Defend the cities next to Byzantium to raise their price, or go to War. Take Constantinople and you take everything.',
+    counteredBy: 'Defend the cities next to Byzantium to raise their price, or go to War. Take Constantinople and you take every Byzantine city.',
   },
   Germany: {
     identity: 'Industry shapes the land',

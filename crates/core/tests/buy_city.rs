@@ -248,7 +248,7 @@ fn eligibility_refusals() {
     assert!(buy_city::blocker(&s3, BYZ, other).is_none());
     let errs = errors(&s3, BYZ, &[buy(w.target), buy(other)]);
     assert_eq!(errs.len(), 1);
-    assert!(errs[0].contains("one city offer at a time"), "{errs:?}");
+    assert!(errs[0].contains("one offer at a time"), "{errs:?}");
 }
 
 #[test]

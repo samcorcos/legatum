@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FixtureClient } from '../test/fixtureEngine';
 import { hexAt, neighbors, distance, tileIndex } from '../hex';
-import type { PlayerView, SupplyView } from '../types';
+import type { Order, PlayerView, SupplyView } from '../types';
 import { advisorSuggestion } from './advisorModel';
 import { strategyTip, TIP_COOLDOWN, TIP_GAP } from './advisorTips';
 
@@ -48,6 +48,25 @@ describe('situational tips', () => {
     expect(strategyTip(v, {})!.steps[0].instruction).toContain('Move 2 more military units in or next to it, or build 1 Walls level');
     v.city_offers = [{ ...v.city_offers[0], price_now: 600 }];
     expect(strategyTip(v, {})?.id ?? '').not.toMatch(/^tip:offer/);
+  });
+
+  it('suggests a buy only when the Gold is free after the other queued orders', async () => {
+    const v = await game();
+    const city = mine(v);
+    v.cities.push({ ...city, id: 7002, owner: rival(v).id, name: 'Pylos', is_capital: false, pos: neighbors(neighbors(city.pos)[0])[0] });
+    v.city_buys = [{ city: 7002, buyer: v.me, price: 400, breakdown: { total: 400, parts: [['Starting price', 400]] } }];
+    v.economy.gold = 450;
+    expect(strategyTip(v, {})?.id).toBe('tip:buy');
+    const gift: Order = { type: 'GiveGold', to: rival(v).id, amount: 100 } as unknown as Order;
+    expect(strategyTip(v, {}, false, null, [gift])?.id).not.toBe('tip:buy');
+  });
+
+  it('shows the seller notice even right after another tip', async () => {
+    const v = await game();
+    const r = rival(v);
+    const city = mine(v);
+    v.city_offers = [{ city: city.id, buyer: r.id, seller: v.me, escrow: 500, ends_turn: 22, turns_left: 3, price_now: 450 }];
+    expect(strategyTip(v, { gold: v.turn - 1, '#gold': 1 })?.id).toBe(`tip:offer:${city.id}:22`);
   });
 
   it('stays quiet when nothing calls for advice, and in the first turns', async () => {

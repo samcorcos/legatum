@@ -625,7 +625,8 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
             continue;
         };
         let refusal = if made {
-            Some("You can make one city offer at a time".into())
+            let name = state.cities.get(city).map_or("another city", |c| c.name.as_str());
+            Some(format!("You are already buying {name}: one offer at a time"))
         } else {
             bid_blocker(state, player, *city, *gold)
         };

@@ -7,10 +7,10 @@
   worth twice its price. The buyer would then lock its whole treasury for three turns on offers
   that almost always fail. The AI never makes an offer at 60% risk or more (`LIKELY_FAIL`), on top
   of the expected-gain test.
-- One more armed unit in or next to the city raises the price by 25% of the offer's base, so a
+- One more armed unit in or next to the city raises the price by 20% of the offer's base (`GUARD_PERCENT`; each Walls level adds `WALLS_PERCENT`, 25%), so a
   seller who adds any guard the buyer did not see when it made the offer breaks the offer. The
   seller's needed guard count comes from the public `price_now` alone: base = price_now x 100 /
-  (100 + 50 x Walls level + 25 x guards). The goal doubling cancels out of the step.
+  (100 + 25 x Walls level + 20 x guards). The goal doubling cancels out of the step.
 - Every treasury is public, so the buyer can read whether the owner can afford a defender in the
   city (a near-certain break) without cheating; rival unit prices are private, so it uses its own
   cheapest armed unit's price as the stand-in.
