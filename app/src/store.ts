@@ -1684,7 +1684,7 @@ export const useGame = create<State>((set, get) => {
           }
           throw new Error(olderRulesMessage(save.playtest));
         }
-        if (needsOnlineHost(save)) throw new Error('This game has other players. Open it from Multiplayer with Host from a save, and they rejoin online.');
+        if (needsOnlineHost(save)) throw new Error('This game has other players. Open Multiplayer and choose Host a saved game; they can then rejoin online.');
         if (save.client !== 'wasm') throw new Error('This save used the retired TypeScript engine and cannot be loaded by the Rust engine.');
         const client = await createClient(save.client);
         measureTurn('loadClient', () => client.load(save.game));

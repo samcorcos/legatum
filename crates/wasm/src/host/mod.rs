@@ -661,7 +661,7 @@ impl Host {
                         self.close_connection(
                             connection,
                             "too_many_codes",
-                            "Too many wrong private codes.",
+                            "Too many wrong private codes. Check the code with the host, then join again.",
                         );
                     }
                     return Ok(());
@@ -1159,7 +1159,7 @@ impl Host {
                             self.close_connection(
                                 connection,
                                 "too_many_codes",
-                                "Too many wrong private codes.",
+                                "Too many wrong private codes. Check the code with the host, then join again.",
                             );
                         }
                         return;

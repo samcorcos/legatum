@@ -1,7 +1,8 @@
 # Online play: lobby, relay and the in-tab host
 
-Sam, 2026-11-21: two players should click **Multiplayer**, see hosted games in a lobby, click one and play. No
-addresses, no links, no Terminal, and no dependence on the LAN or a firewall. 2026-11-22: the game is a web app
+2026-11-21: two players should click **Multiplayer**, see hosted games in a lobby, click one and play. The game
+list is the main way to join; a host can also share an invite link (2026-11-27). Players need no Terminal, LAN setup
+or firewall changes. 2026-11-22: the game is a web app
 (the desktop app was dropped), so the host's game runs **in the host's browser tab**, in the WASM engine; the
 cloud only lists games and passes messages. There is no game server program anymore.
 
@@ -180,7 +181,7 @@ already). The host's own in-tab connection never sees chunks.
   like a local game's. Resumed seats get fresh credentials: the host reclaims its seat, guests take theirs again.
 - Save to file and host from a save: the host's game menu offers Save to file, which writes the engine's current
   save (`BrowserHost.save_game`) in the normal `legatum-save` envelope with `online: true`. The engine save is the
-  same format as a solo save, so Load from file opens it as a solo game too. Title > Multiplayer > Host a saved
+  same format as a solo save; Load Game routes a save with more than one human seat to online hosting. Title > Multiplayer > Host a saved
   game picks a file and calls `hostOnlineFromSave`, which starts a new room with `new BrowserHost(save)`
   (`startHosting`'s `fromSave`; an unreadable chosen save is an error, never a fresh game). Seat names carry
   over. Seat credentials are not saved. `open_guest_seats` opens every seat but seat 0 (the host's, which
