@@ -16,6 +16,21 @@ const GLINT_PERIOD = 5200;
 const GLINT_MS = 700;
 const WATER = new Set(['Ocean', 'Coast']);
 
+type WaterTile = { index: number; x: number; y: number };
+const waterTileCache = new WeakMap<PlayerView, WaterTile[]>();
+function waterTilesOf(view: PlayerView): WaterTile[] {
+  let list = waterTileCache.get(view);
+  if (list) return list;
+  list = [];
+  for (let i = 0; i < view.tiles.length; i++) {
+    const tile = view.tiles[i];
+    if (!tile.visible || !tile.terrain || !WATER.has(tile.terrain)) continue;
+    list.push({ index: i, x: centerX(i, view.width), y: centerY(i, view.width) });
+  }
+  waterTileCache.set(view, list);
+  return list;
+}
+
 export interface IdleView { toScreen(p: Pt): Pt; hexPx: number; far: boolean; w: number; h: number; dpr: number }
 
 /** How far through its glint a water tile is at `t` (0 to 1), or null when it isn't glinting. */
@@ -37,11 +52,9 @@ export function idleBoxes(view: PlayerView, t: number, v: IdleView, skip?: (tile
   if (v.far) return [];
   const R = v.hexPx;
   const out: Box[] = [];
-  for (let i = 0; i < view.tiles.length; i++) {
-    const tile = view.tiles[i];
-    if (!tile.visible || !tile.terrain || !WATER.has(tile.terrain)) continue;
-    const c = v.toScreen({ x: centerX(i, view.width), y: centerY(i, view.width) });
-    if (c.x < -R || c.x > v.w + R || c.y < -R || c.y > v.h + R || glintAt(i, t) === null) continue;
+  for (const wt of waterTilesOf(view)) {
+    const c = v.toScreen(wt);
+    if (c.x < -R || c.x > v.w + R || c.y < -R || c.y > v.h + R || glintAt(wt.index, t) === null) continue;
     // The strokes sit within 0.45 R of the centre across and 0.35 R down, plus up to 0.28 R of stroke and its width.
     out.push({ x: c.x - R * 0.85, y: c.y - R * 0.5, w: R * 1.7, h: R * 1.0 });
   }
@@ -77,14 +90,13 @@ export function drawWaterGlints(ctx: CanvasRenderingContext2D, view: PlayerView,
   ctx.strokeStyle = '#fbf6ea';
   ctx.lineCap = 'round';
   ctx.lineWidth = Math.max(0.8, R * 0.045);
-  for (let i = 0; i < view.tiles.length; i++) {
-    const tile = view.tiles[i];
-    if (!tile.visible || !tile.terrain || !WATER.has(tile.terrain)) continue;
-    const cc = v.toScreen({ x: centerX(i, view.width), y: centerY(i, view.width) });
+  for (const wt of waterTilesOf(view)) {
+    const cc = v.toScreen(wt);
     if (cc.x < -R || cc.x > v.w + R || cc.y < -R || cc.y > v.h + R) continue;
     candidates++;
-    const k = glintAt(i, t);
+    const k = glintAt(wt.index, t);
     if (k === null) continue;
+    const i = wt.index;
     const c = cc;
     ctx.globalAlpha = Math.sin(Math.PI * k) * 0.55;
     const x = c.x + (rnd(i, 11) - 0.5) * R * 0.9, y = c.y + (rnd(i, 13) - 0.5) * R * 0.7;
