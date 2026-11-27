@@ -176,7 +176,8 @@ impl Planner<'_> {
         old + (new - old) * self.decisions.modernization_value / 100
     }
 
-    /// An upgrade order reaches the newest researched form in one turn and pays every step.
+    /// An upgrade order reaches the most advanced researched form its supply allows in one turn
+    /// and pays every step.
     fn refit(&self, u: &UnitView) -> Option<(i32, i32, i32)> {
         if !composition::is_combat(u.kind)
             || u.contract_until.is_some()

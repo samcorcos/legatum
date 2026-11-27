@@ -481,6 +481,21 @@ it('keeps Found City available where the site looks legal from what the player k
   expect(useGame.getState().orders[0]).toEqual([{ type: 'FoundCity', unit: unit.id }]);
 });
 
+it('shows the city upkeep when founding would add a paid city', async () => {
+  const { view, unit, capital } = await settlerNearCapital({ q: 4, r: 0 });
+  view.tiles[tileIndex(unit.pos, view.width, view.height)] = {
+    ...view.tiles[tileIndex(unit.pos, view.width, view.height)], owner: null, terrain: 'Plains', explored: true,
+  };
+  view.cities.push(...Array.from({ length: 5 }, (_, i) => ({ ...capital, id: 100 + i })));
+  view.added_city_upkeep = 7;
+  act(() => root.render(<UnitPanel unit={unit} view={view} />));
+  expect(container.querySelector('[data-testid="found-city-upkeep"]')?.textContent)
+    .toBe('City upkeep: −7 Gold a turn (7th city)');
+  view.added_city_upkeep = 0;
+  act(() => root.render(<UnitPanel unit={unit} view={view} />));
+  expect(container.querySelector('[data-testid="found-city-upkeep"]')).toBeNull();
+});
+
 it('lets a full-health Roman veteran found with no Gold and explains the unit cost', async () => {
   const { view, unit } = await settlerNearCapital({ q: 4, r: 0 });
   view.players.find((p) => p.id === view.me)!.faction = 'Rome';
@@ -547,4 +562,15 @@ it('a unit outside any city has no Open city line', async () => {
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
   expect(container.querySelector('[data-testid="unit-open-city"]')).toBeNull();
+});
+
+it('says why the upgrade stops short of the newest researched unit', async () => {
+  const { view, unit, client } = await spearman({ tech: true, owned: true, gold: 200 });
+  unit.upgrade_held_back = { to: 'Pikeman', need: 'Niter', reason: 'Needs 1 Niter: you have none yet.' };
+  useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
+  act(() => root.render(<UnitPanel unit={unit} view={view} />));
+  const button = [...container.querySelectorAll<HTMLButtonElement>('button.act')].find((b) => b.textContent?.startsWith('Upgrade to Phalangite'))!;
+  expect(button.disabled).toBe(false);
+  // One quiet line under the upgrade row names the newer unit and the resource it needs.
+  expect(container.querySelector('.upgrade-held-back')?.textContent).toBe('Pikeman needs Niter');
 });

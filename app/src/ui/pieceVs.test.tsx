@@ -16,7 +16,7 @@ it('every faction’s sheet shows its piece against what it replaces, in its own
     Mongols: ['Cataphract: 150', 'Cataphract: 0', 'Shoots or charges each turn, never both.'],
     Athens: ['Library: 80', 'Library: +3'],
     Sparta: ['+5 strength next to another Hoplite (the phalanx).', 'It is lost on upgrade.'],
-    India: ['Revenue Office', 'replaces Market', 'half the Gold the city makes'],
+    India: ['Revenue Office', 'replaces Market', 'sends all its Gold to your treasury'],
   };
   for (const f of FACTIONS) {
     const sheet = text(renderToStaticMarkup(<FactionSheetView faction={f} sheetId={`s-${f}`} />));

@@ -1,4 +1,5 @@
 use super::*;
+use crate::experiments::FactionRule;
 use crate::game::{blank_game, spawn_unit};
 use crate::state::{GameSetup, Map, PlayerSetup};
 
@@ -2958,6 +2959,68 @@ fn city_upkeep_is_paid_and_forecast_and_no_tech_discounts_it() {
     s.player_mut(P0).gold = 0;
     let v = crate::view::player_view(&s, P0);
     assert_eq!(v.economy.bankruptcy.clone().unwrap().gold.total, -8);
+}
+
+#[test]
+fn india_revenue_office_upkeep_and_remittance_have_separate_ablations() {
+    let mut s = test_game(&[(Faction::India, 0)]);
+    let capital = found(&mut s, P0, at(5, 5));
+    let office = found(&mut s, P0, at(12, 5));
+    found(&mut s, P0, at(5, 12));
+    s.setup.rule_experiments.city_upkeep_free = Some(1);
+    s.setup.rule_experiments.city_upkeep_percent = Some(50);
+    city_mut(&mut s, office)
+        .buildings
+        .insert(BuildingKind::Market);
+
+    // Three cities determine the rate; only two pay it. Round the whole bill once.
+    assert_eq!(economy::city_upkeep(&s, P0), 2);
+    assert_eq!(economy::added_city_upkeep(&s, P0), 2);
+    let with_office = economy::player_income(&s, P0);
+    assert!(
+        with_office
+            .gold
+            .parts
+            .iter()
+            .any(|(label, amount)| label.contains("no upkeep (Revenue Office)") && *amount == 0)
+    );
+    assert!(
+        economy::upkeep_breakdown(&s, P0)
+            .parts
+            .iter()
+            .any(|(label, amount)| label.contains("no upkeep (Revenue Office)") && *amount == 0)
+    );
+
+    s.setup
+        .rule_experiments
+        .faction_rules_off
+        .insert(FactionRule::IndiaOfficeUpkeep);
+    assert_eq!(economy::city_upkeep(&s, P0), 3);
+    assert_eq!(economy::added_city_upkeep(&s, P0), 3);
+    assert!(
+        !economy::player_income(&s, P0)
+            .gold
+            .parts
+            .iter()
+            .any(|(label, _)| label.contains("no upkeep (Revenue Office)"))
+    );
+    s.setup
+        .rule_experiments
+        .faction_rules_off
+        .remove(FactionRule::IndiaOfficeUpkeep);
+
+    let office_gold = economy::city_totals(&s, city(&s, office)).gold;
+    assert!(office_gold > 0);
+    let full_income = economy::player_income(&s, P0).gold.total;
+    s.setup
+        .rule_experiments
+        .faction_rules_off
+        .insert(FactionRule::IndiaOfficeFull);
+    assert_eq!(
+        full_income - economy::player_income(&s, P0).gold.total,
+        office_gold - office_gold / 2
+    );
+    assert!(city(&s, capital).is_capital);
 }
 
 #[test]

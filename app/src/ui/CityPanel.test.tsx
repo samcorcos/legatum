@@ -27,13 +27,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function renderCity(faction: Faction = 'Switzerland', gold?: number) {
+async function renderCity(faction: Faction = 'Switzerland', gold?: number, population = 1) {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', faction, 'India', 'Ada', 'Bo'));
   client.endTurn({});
   const state = client.debugState();
   const city = state.cities.find((c) => c.owner === 0)!;
-  city.population = 1;
+  city.population = population;
   for (const h of neighbors(city.pos)) state.terrain[tileIndex(h, state.width, state.height)] = 'Grassland';
   state.terrain[tileIndex(neighbors(city.pos)[0], state.width, state.height)] = 'Hills';
   if (gold !== undefined) state.players[0].gold = gold;
@@ -169,6 +169,18 @@ it('previews build-derived yields and explains the Settler population gate', asy
   act(() => useGame.setState({ orders: [[]] }));
   expect(claimRuleText()).toContain('(Balanced, no active build)');
   expect(claimRuleText()).not.toContain('Preview after Ready');
+});
+
+it('shows the next city upkeep on the Settler build card only when it costs Gold', async () => {
+  const { city, view } = await renderCity('Switzerland', undefined, 2);
+  view.added_city_upkeep = 7;
+  view.cities.push(...Array.from({ length: 5 }, (_, i) => ({ ...city, id: 100 + i })));
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('[data-testid="settler-city-upkeep"]')?.textContent)
+    .toBe('City upkeep: −7 Gold a turn (7th city)');
+  view.added_city_upkeep = 0;
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('[data-testid="settler-city-upkeep"]')).toBeNull();
 });
 
 it('drops the claim from the territory bar when there is no free tile', async () => {

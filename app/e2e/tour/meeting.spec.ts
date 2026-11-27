@@ -1,5 +1,5 @@
 // First contact (celebrate/MeetingTakeover.tsx): the full-screen meeting with another empire, at both desktop sizes,
-// for the peoples with the longest and shortest text, and what Return, Show on map and Diplomacy do.
+// for the peoples with the longest and shortest text, and what Return (the map goes to where you met them), Esc and Diplomacy do.
 import { test, expect } from '../fixtures';
 import { coreFixture } from '../../src/test/coreFixture';
 import { wallsFixture } from '../../src/test/wallsFixture';
@@ -55,8 +55,11 @@ for (const size of SIZES) test.describe(`first contact ${size.name}`, () => {
       expect(box.y + box.height, 'bottom inside the window').toBeLessThanOrEqual(size.height);
       if (await part.evaluate((el) => el.classList.contains('et-col'))) expect(await part.evaluate((el) => el.scrollHeight - el.clientHeight), 'nothing is cut inside it').toBeLessThanOrEqual(1);
     }
+    const where = await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().report!.moments![0]![0]!.meeting!.where!.at);
     await page.keyboard.press('Enter');
     await expect(plate).toHaveCount(0);
+    // Closing it takes the map to where they were met.
+    expect(await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().focus?.hex)).toEqual(where);
     await expect.poll(() => page.evaluate(() => (window as unknown as GameWindow).legatum.getState().meetingPeople)).toBeNull();
   });
 
@@ -101,6 +104,26 @@ for (const size of SIZES) test.describe(`first contact ${size.name}`, () => {
       await page.screenshot({ path: test.info().outputPath(`unwrap-${at}ms.png`) });
       await test.info().attach(`unwrap-${at}ms`, { path: test.info().outputPath(`unwrap-${at}ms.png`), contentType: 'image/png' });
     }
+  });
+
+  test('Continue goes to where they were met; Esc leaves the map where it was', async ({ page }) => {
+    const { game, turn } = save('Athens');
+    await loadFixture(page, game, turn);
+    const focusOf = () => page.evaluate(() => (window as unknown as GameWindow).legatum.getState().focus?.seq ?? 0);
+    let plate = await meet(page);
+    await expect(plate).toBeVisible();
+    const before = await focusOf();
+    await page.keyboard.press('Escape');
+    await expect(plate).toHaveCount(0);
+    expect(await focusOf()).toBe(before);
+    plate = await meet(page);
+    await expect(plate).toBeVisible();
+    const where = await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().report!.moments![0]![0]!.meeting!.where!.at);
+    await plate.getByRole('button', { name: /^Continue/ }).click();
+    await expect(plate).toHaveCount(0);
+    expect(await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().focus?.hex)).toEqual(where);
+    await page.waitForTimeout(600);
+    await shot(page, size, '04-after-meeting-map');
   });
 
   test('Diplomacy opens on the empire just met', async ({ page }) => {

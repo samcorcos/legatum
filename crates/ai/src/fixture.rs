@@ -182,6 +182,7 @@ impl ViewBuilder {
             .collect();
         let mut b = Self {
             view: PlayerView {
+                added_city_upkeep: 0,
                 army_breakdown: Vec::new(),
                 rule_experiments: legatum_core::experiments::RuleExperiments::default(),
                 ai_alliances: false,
@@ -423,6 +424,7 @@ impl ViewBuilder {
             unsupplied: None,
             unsupplied_loss: None,
             upgrade_supply_blocker: None,
+            upgrade_held_back: None,
             siege: false,
             siege_offer: None,
             sight: None,

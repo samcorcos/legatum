@@ -59,7 +59,9 @@ pub mod rules;
 /// 60: The tech tree's research goal: `Order::SetResearchGoal` and `Player::research_goal` (fills an empty research queue toward a later technology). No existing order resolves differently.
 /// 61: Deals (Sam, 2026-11-25), behind GameSetup::deals: Gold in Peace, Alliance and Open Borders offers either way, Gold gifts to any met empire not at War, and Open Borders as a third treaty. The save shape gains optional fields; off, nothing changes.
 /// 63: City upkeep: an empire with up to six cities pays nothing; past that every city it owns (the first six too) costs (cities - 6) Gold a turn, shown as "City upkeep (free up to 6 cities)" in the Gold breakdown. The save shape is unchanged.
-pub const RULES_VERSION: u32 = 63;
+/// 64: A unit's upgrade goes to the most advanced researched unit of its line whose strategic supply is spare (`rules::units::supplied_upgrade_plan`), not only the newest researched one: with Iron but no Niter a Phalangite becomes a Pikeman. Save shape unchanged; the view adds `UnitView::upgrade_held_back`.
+/// 65: India's Revenue Offices waive their city's upkeep while it still counts toward the empire's city count. A non-capital Office remits all Gold. Save shape unchanged.
+pub const RULES_VERSION: u32 = 65;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;
