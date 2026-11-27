@@ -255,9 +255,9 @@ fn eligibility_refusals() {
 fn the_price_adds_population_buildings_walls_guards_and_doubles_for_a_goal() {
     let mut w = world();
     let rules = w.s.setup.rule_experiments;
-    // Population 4: 150 + 4 x 60.
-    assert_eq!(buy_city::price(&w.s, w.target), 150 + 4 * 60);
-    // A Granary adds half its Gold price.
+    // Population 4: 75 + 4 x 25.
+    assert_eq!(buy_city::price(&w.s, w.target), 75 + 4 * 25);
+    // A Granary adds a fifth of its Gold price.
     let granary = rules.base_production_cost(
         Faction::Switzerland,
         ProductionItem::Building {
@@ -270,12 +270,12 @@ fn the_price_adds_population_buildings_walls_guards_and_doubles_for_a_goal() {
         .unwrap()
         .buildings
         .insert(BuildingKind::Granary);
-    let base = 150 + 4 * 60 + granary * 50 / 100;
+    let base = 75 + 4 * 25 + granary * 20 / 100;
     assert_eq!(buy_city::price(&w.s, w.target), base);
-    // Walls level 2 (+100%) and one armed unit next to it (+25%), added together.
+    // Walls level 2 (+50%) and one armed unit next to it (+20%), added together.
     w.s.cities.get_mut(&w.target).unwrap().walls_level = 2;
     spawn_unit(&mut w.s, SELLER, UnitKind::Spearman, h(7, 5));
-    let defended = base * (100 + 2 * 50 + 25) / 100;
+    let defended = base * (100 + 2 * 25 + 20) / 100;
     assert_eq!(buy_city::price(&w.s, w.target), defended);
     // Byzantium's own units and civilians do not count.
     spawn_unit(&mut w.s, BYZ, UnitKind::Spearman, h(5, 4));
@@ -330,7 +330,7 @@ fn a_price_rise_above_the_escrow_fails_the_offer_for_a_ten_percent_fee() {
     let w = world();
     let (s, _) = step(&w.s, &[(BYZ, vec![buy(w.target)])]);
     let escrow = s.player(BYZ).city_offer.as_ref().unwrap().escrow;
-    // The seller moves a Spearman next to the city: +25%.
+    // The seller moves a Spearman next to the city: +20%.
     let mut s = s;
     spawn_unit(&mut s, SELLER, UnitKind::Spearman, h(7, 5));
     let (control, _) = {
@@ -503,7 +503,7 @@ fn views_show_prices_to_byzantium_and_to_the_owner_of_a_touching_city() {
 fn an_overbid_is_held_in_full_takes_more_guards_to_break_and_all_goes_to_the_seller() {
     let w = world();
     let price = buy_city::price(&w.s, w.target);
-    assert_eq!(price, 390);
+    assert_eq!(price, 175);
     let gold = price * 150 / 100;
     assert!(errors(&w.s, BYZ, &[bid(w.target, gold)]).is_empty());
     let (control, _) = step(&w.s, &[]);
@@ -514,7 +514,7 @@ fn an_overbid_is_held_in_full_takes_more_guards_to_break_and_all_goes_to_the_sel
         e,
         Event::CityOfferMade { escrow, price: p, guards_to_stop: 3, .. } if *escrow == gold && *p == price
     )));
-    // +50%: two armed units (+25% each) only reach it; a third breaks it.
+    // +50%: two armed units (+20% each) stay under it (245 of 262); a third breaks it.
     let o = player_view(&s, SELLER)
         .city_offers
         .into_iter()
@@ -522,7 +522,7 @@ fn an_overbid_is_held_in_full_takes_more_guards_to_break_and_all_goes_to_the_sel
         .unwrap();
     assert_eq!(
         (o.escrow, o.guards_to_stop, o.walls_to_stop),
-        (gold, 3, Some(2))
+        (gold, 3, Some(3))
     );
     let mut s = s;
     spawn_unit(&mut s, SELLER, UnitKind::Spearman, h(7, 5));
@@ -532,7 +532,7 @@ fn an_overbid_is_held_in_full_takes_more_guards_to_break_and_all_goes_to_the_sel
         .into_iter()
         .find(|o| o.city == w.target)
         .unwrap();
-    assert_eq!((o.price_now, o.guards_to_stop), (gold, 1));
+    assert_eq!((o.price_now, o.guards_to_stop), (price * 140 / 100, 1));
     let seller_gold = s.player(SELLER).gold;
     let (after, events) = run_out(s.clone());
     let (outcome, paid, ..) = ended(&events).unwrap();

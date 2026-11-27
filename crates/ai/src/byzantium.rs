@@ -13,7 +13,7 @@
 //! (`offer_threat`) is the armed units it can add in or next to the city before the sale, from
 //! what we see: its visible units that can get there within the offer's turns, one bought unit a
 //! turn its public treasury pays for, and Walls under way (a level counts as
-//! `WALLS_PERCENT / GUARD_PERCENT` units). Each candidate bid covers the price with 0, 1, 2, ...
+//! `WALLS_GUARDS` units). Each candidate bid covers the price with 0, 1, 2, ...
 //! more units (`buy_city::defended_price`); the risk (`offer_risk`) grows with the threat the bid
 //! leaves uncovered, plus gene `buy_city_overbid` percent of a unit for what we cannot see. The
 //! candidate with the best expected gain is the bid; an offer likely lost (`LIKELY_FAIL`) is
@@ -66,6 +66,13 @@ const UNCOVERED_RISK: i32 = 45;
 const MAX_COVER: i32 = 8;
 /// Seller: a city at least this big is worth a war (with the army to win it).
 const WAR_CITY_POPULATION: i32 = 8;
+/// The armed units one Walls level stands for in the price (`WALLS_PERCENT / GUARD_PERCENT`,
+/// rounded down, at least one).
+const WALLS_GUARDS: i32 = if WALLS_PERCENT / GUARD_PERCENT > 1 {
+    WALLS_PERCENT / GUARD_PERCENT
+} else {
+    1
+};
 
 /// One appraised buyable city at one bid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -115,7 +122,7 @@ impl Planner<'_> {
     /// Armed units the owner can add in or next to `city` before a sale, from what we see: its
     /// visible units that can get there within the offer's turns, one bought unit a turn its
     /// public treasury pays for, and Walls under way (a level counts as
-    /// `WALLS_PERCENT / GUARD_PERCENT` units).
+    /// `WALLS_GUARDS` units).
     pub(crate) fn offer_threat(&self, city: &CityView) -> i32 {
         let v = self.view();
         let reach = v
@@ -137,11 +144,7 @@ impl Planner<'_> {
             .map_or(0, |p| {
                 (p.gold.max(0) / defender_gold).min(OFFER_TURNS as i32)
             });
-        let walls = if city.walls_building {
-            WALLS_PERCENT / GUARD_PERCENT
-        } else {
-            0
-        };
+        let walls = if city.walls_building { WALLS_GUARDS } else { 0 };
         reach + buys + walls
     }
 
@@ -397,9 +400,9 @@ impl Planner<'_> {
             let turns = offer.turns_left.max(1) as i32;
             let mut need = offer.guards_to_stop;
             need -= self.send_guards(city, need, turns);
-            // Gold only when a purchase now and one each later turn (Walls worth two) can
-            // still close the gap; otherwise keep it.
-            if need > 0 && need <= turns * WALLS_PERCENT / GUARD_PERCENT {
+            // Gold only when a purchase now and one each later turn (a Walls level is worth
+            // `WALLS_GUARDS`) can still close the gap; otherwise keep it.
+            if need > 0 && need <= turns * WALLS_GUARDS {
                 need -= self.buy_guard(city, need);
             }
             if need > 0 {
@@ -476,7 +479,7 @@ impl Planner<'_> {
         sent
     }
 
-    /// Buy Walls (worth two guards) or the cheapest armed unit in `city`, whichever covers
+    /// Buy Walls (worth `WALLS_GUARDS` guards) or the cheapest armed unit in `city`, whichever covers
     /// `need` for less. Returns the guards it adds.
     fn buy_guard(&mut self, city: &CityView, need: i32) -> i32 {
         if self
@@ -502,7 +505,7 @@ impl Planner<'_> {
                     if data::building_family(building) == BuildingKind::Walls
                         || building == BuildingKind::UpgradeWalls)
             })
-            .map(|o| (o.buy_cost.unwrap_or(i32::MAX), o.item, 2))
+            .map(|o| (o.buy_cost.unwrap_or(i32::MAX), o.item, WALLS_GUARDS))
             .min();
         let unit = d
             .options
@@ -515,7 +518,9 @@ impl Planner<'_> {
             .map(|o| (o.buy_cost.unwrap_or(i32::MAX), o.item, 1))
             .min();
         let pick = match (walls, unit) {
-            (Some(w), Some(u)) if need >= 2 || w.0 <= u.0 => Some(w),
+            (Some(w), Some(u)) if (WALLS_GUARDS > 1 && need >= WALLS_GUARDS) || w.0 <= u.0 => {
+                Some(w)
+            }
             (Some(w), None) => Some(w),
             (_, Some(u)) => Some(u),
             (None, None) => None,

@@ -81,7 +81,7 @@ export function priceLines(b: Breakdown): [string, number][] {
   return b.parts.filter(([, v], i) => i === 0 || v !== 0).map(([label, v]) => [label.replace(/ x (\d)/, ' × $1').replace(/: x(\d)/, ': ×$1'), v]);
 }
 
-/** One line for a hover: "540 Gold (Base price 150, Population 4 × 60 +240, …)". */
+/** One line for a hover: "275 Gold (Starting price 75, Population 4 × 25 +100, …)". */
 export function priceText(b: Breakdown): string {
   const parts = priceLines(b).map(([l, v], i) => (i === 0 ? `${l} ${v}` : `${l} +${v}`));
   return `${b.total} Gold${parts.length > 1 ? ` (${parts.join(', ')})` : ''}`;

@@ -175,7 +175,7 @@ fn byzantium_overbids_to_cover_the_units_the_owner_can_bring() {
     assert!(a[0].risk >= 50, "{a:?}");
     let covering = a
         .iter()
-        .find(|x| x.bid == 585)
+        .find(|x| x.bid == buy_city::defended_price(390, 0, 2, false))
         .expect("a bid covering two units");
     assert!(covering.risk < a[0].risk, "{a:?}");
     let mut p = planner(&v);

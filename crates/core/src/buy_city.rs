@@ -94,15 +94,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Gold every city costs before anything else.
-pub const BASE: i32 = 150;
+pub const BASE: i32 = 75;
 /// Gold per population.
-pub const PER_POP: i32 = 60;
+pub const PER_POP: i32 = 25;
 /// Share of the Gold price (`data::BUY_COST_PERCENT` of Production cost) of each building.
-pub const BUILDING_PERCENT: i32 = 50;
+pub const BUILDING_PERCENT: i32 = 20;
 /// Added per Walls level, in percent of the base price.
-pub const WALLS_PERCENT: i32 = 50;
+pub const WALLS_PERCENT: i32 = 25;
 /// Added per armed unit of the owner's team in the city or next to it, in percent.
-pub const GUARD_PERCENT: i32 = 25;
+pub const GUARD_PERCENT: i32 = 20;
 /// The price is multiplied by this when the city holds a goal's held VP.
 pub const GOAL_MULTIPLIER: i32 = 2;
 /// The city changes hands at the end of turn `order turn + OFFER_TURNS`.
