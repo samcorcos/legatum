@@ -181,7 +181,7 @@ already). The host's own in-tab connection never sees chunks.
   like a local game's. Resumed seats get fresh credentials: the host reclaims its seat, guests take theirs again.
 - Save to file and host from a save: the host's game menu offers Save to file, which writes the engine's current
   save (`BrowserHost.save_game`) in the normal `legatum-save` envelope with `online: true`. The engine save is the
-  same format as a solo save; Load Game routes a save with more than one human seat to online hosting. Title > Multiplayer > Host a saved
+  same format as a solo save; When online play is available, Load Game opens Multiplayer with a save containing more than one human seat selected; the player then chooses Host this save. Title > Multiplayer > Host a saved
   game picks a file and calls `hostOnlineFromSave`, which starts a new room with `new BrowserHost(save)`
   (`startHosting`'s `fromSave`; an unreadable chosen save is an error, never a fresh game). Seat names carry
   over. Seat credentials are not saved. `open_guest_seats` opens every seat but seat 0 (the host's, which
