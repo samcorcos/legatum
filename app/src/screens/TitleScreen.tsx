@@ -19,6 +19,7 @@ import { PRIVACY_URL, uploadsGames } from '../platform/gameUpload';
 import { isOlderVersionMessage, loadErrorMessage, olderAutosaveMessage, parseSaveFile, saveHasCurrentRules, saveRulesVersion } from '../saveErrors';
 import { buildForSave, isBehind, navigate, newestUrl, pageLaunch, takeHandedOffSave } from '../platform/versions';
 import { useSiteBuilds } from '../ui/useSiteBuilds';
+import { OpenGamesList } from '../ui/OpenGamesList';
 import { MIN_SEATS } from '../lobby';
 import { MAX_PLAYERS } from '../gameSetup';
 
@@ -256,6 +257,8 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
   // An optional code that locks the game: guests type it once to take a seat. It stays in this tab.
   const [code, setCode] = useState('');
   const codeNote = joinCodeProblem(code);
+  // How many games the Join door's list found, so its button can say how many more there are.
+  const [openGames, setOpenGames] = useState<number | null>(null);
   // After a refusal that pressing Host Game again cannot fix, Host Game is not the next action: Join Game is.
   const hostCannotRetry = hosting === 'failed' && !!refusal && retryWouldFail(refusal.kind);
   const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;
@@ -304,8 +307,8 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
         <ResumeButton />
         {online?.relay ? (
           <>
-            <label className="host-name mp-name">
-              <span>Your name</span>
+            <label className="mp-name">
+              <span className="mp-label">Your name</span>
               <input
                 className="lobby-input"
                 aria-label="Your name"
@@ -315,17 +318,17 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
                 onChange={(e) => { setName(e.target.value); rememberPlayerName(e.target.value); }}
               />
             </label>
-            {/* Two doors, side by side: one player hosts, the others join. */}
+            {/* Two doors of the same size, side by side: one player hosts, the others join. */}
             <div className="mp-doors">
               <section className="mp-door" aria-labelledby="mp-host-head">
-                <h3 id="mp-host-head" className="mp-door-head">Host</h3>
-                <p className="mp-door-lede">Set up the game. Others join you.</p>
-                <label className="host-name host-code">
-                  <span>Lock with a code</span>
+                <DoorHead id="mp-host-head" kind="host" title="Host" lede="Set up a game. Friends join you." />
+                <label className={`mp-field ${codeNote ? 'wrong' : ''}`}>
+                  <span className="mp-label">Private code · optional</span>
                   <input
                     className="lobby-input"
-                    aria-label="Join code (optional)"
-                    placeholder="Optional"
+                    aria-label="Private code (optional)"
+                    aria-invalid={codeNote ? true : undefined}
+                    placeholder="Leave empty for an open game"
                     value={code}
                     maxLength={JOIN_CODE_MAX}
                     autoComplete="off"
@@ -335,32 +338,55 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
                     onChange={(e) => setCode(typedJoinCode(e.target.value))}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
                   />
+                  <span className="mp-hint">{codeNote ?? 'Friends type this code to take a seat.'}</span>
                 </label>
-                <button className={`btn big mp-door-main ${hostPrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostOnline}>
-                  Host Game
-                  <span className="btn-sub">
+                <div className="mp-field mp-once">
+                  <span className="mp-label">Once you host</span>
+                  <span className="mp-hint">Your game gets a name, like <i>Golden Harbour 42</i>, and an invite link to send.</span>
+                </div>
+                <div className="mp-door-fill" />
+                {hostSave ? (
+                  <button className={`btn big mp-door-main ${savePrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostFromSave}>
+                    Host this save
+                    <span className="btn-sub">
+                      {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                        : resuming === 'failed' ? 'Try again'
+                        : `${peoplesLabel(undefined, hostSave.names)} · Turn ${hostSave.turn}`}
+                    </span>
+                  </button>
+                ) : (
+                  <button className={`btn big mp-door-main ${hostPrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostOnline}>
+                    Host Game
+                    <span className="btn-sub">
+                      {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                        : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try again') : 'Start a new game'}
+                    </span>
+                  </button>
+                )}
+                {hostSave ? (
+                  <button className="mp-door-link" disabled={busy || !!codeNote} onClick={hostOnline}>
                     {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
-                      : codeNote ? codeNote
-                      : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try again') : 'Start a new game'}
-                  </span>
-                </button>
-                <button className={`btn big ${savePrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostFromSave}>
-                  {hostSave ? 'Host this save' : 'Host from a save…'}
-                  <span className="btn-sub">
-                    {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
-                      : codeNote ? codeNote
-                      : resuming === 'failed' ? 'Try again'
-                      : hostSave ? `${peoplesLabel(undefined, hostSave.names)} · Turn ${hostSave.turn}` : 'Carry on a saved game'}
-                  </span>
-                </button>
+                      : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try hosting a new game again') : 'Host a new game instead'}
+                  </button>
+                ) : (
+                  <button className="mp-door-link" disabled={busy || !!codeNote} onClick={hostFromSave}>
+                    {resuming === 'starting' ? <><span className="spinner" /> Opening your saved game…</>
+                      : resuming === 'failed' ? 'Try the saved game again…' : 'Host a saved game…'}
+                  </button>
+                )}
               </section>
               <section className="mp-door" aria-labelledby="mp-join-head">
-                <h3 id="mp-join-head" className="mp-door-head">Join</h3>
-                <p className="mp-door-lede">Take a seat in a game someone is hosting.</p>
+                <DoorHead id="mp-join-head" kind="join" title="Join" lede="Take a seat in a friend's game." />
+                <div className="mp-field">
+                  <span className="mp-label">Open games</span>
+                  <OpenGamesList limit={JOIN_DOOR_GAMES} onCount={setOpenGames} />
+                </div>
+                <div className="mp-door-fill" />
                 <button className={`btn big mp-door-main ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
                   Join Game
-                  <span className="btn-sub">See the open games</span>
+                  <span className="btn-sub">{openGames !== null && openGames > JOIN_DOOR_GAMES ? `See all ${openGames} open games` : 'See the open games'}</span>
                 </button>
+                <p className="mp-door-foot">Got an invite link? Just open it.</p>
               </section>
             </div>
           </>
@@ -372,6 +398,26 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
         </button>
       </div>
     </>
+  );
+}
+
+/** The games the Join door lists before its Join Game button opens the full list. */
+const JOIN_DOOR_GAMES = 3;
+
+/** A door's heading: a ringed mark (a banner to host, an arrow to join), the name and one line on what it does. */
+function DoorHead({ id, kind, title, lede }: { id: string; kind: 'host' | 'join'; title: string; lede: string }) {
+  return (
+    <header className="mp-door-top">
+      <svg className="mp-seal" viewBox="0 0 40 40" aria-hidden focusable="false">
+        <circle cx="20" cy="20" r="18.5" fill="none" stroke="var(--ink)" />
+        <circle cx="20" cy="20" r="15.5" fill="none" stroke="var(--rule-2)" />
+        <path d={kind === 'host' ? 'M14.5 29V12.5l11.5 4-11.5 4' : 'M12 20h15M22 15l5 5-5 5'} fill="none" stroke="var(--ink)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <div>
+        <h3 id={id} className="mp-door-head">{title}</h3>
+        <p className="mp-door-lede">{lede}</p>
+      </div>
+    </header>
   );
 }
 

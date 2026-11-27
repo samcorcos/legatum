@@ -287,7 +287,7 @@ it.each([
   expect(container.querySelector('[aria-label="Seat 4 AI level"]')).toBeNull();
   expect(container.textContent).toContain('Alice');
   // The host is told the name the public list shows, never a typed one.
-  expect(container.querySelector('.lobby-listed')?.textContent).toBe(`In the game list, this game is “${listedRoomName('r')}”.`);
+  expect(container.querySelector('.invite-name')?.textContent).toBe(listedRoomName('r'));
   const start = container.querySelector<HTMLButtonElement>('.lobby-go')!;
   expect(start.textContent).toContain('Start game');
   expect(start.disabled).toBe(false);

@@ -240,7 +240,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await host.getByRole('button', { name: /^Host Game/ }).click();
     const listedName = ((await (await created).json()) as { name: string }).name;
     await expect(host.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
-    await expect(host.locator('.lobby-listed')).toHaveText(`In the game list, this game is “${listedName}”.`);
+    await expect(host.locator('.invite-name')).toHaveText(listedName);
     await expect(host.getByText('Waiting for every online seat to be taken and Ready.', { exact: true })).toBeVisible();
     await host.mouse.move(5, 5);
     await shot(host, size, '40-host-room-waiting');
@@ -405,13 +405,13 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     const junkPath = testWithFailingRequests.info().outputPath('junk.json');
     writeFileSync(junkPath, '{"hello":1}');
     let chooser = host2.waitForEvent('filechooser');
-    await host2.getByRole('button', { name: /^Host from a save/ }).click();
+    await host2.getByRole('button', { name: /^Host a saved game/ }).click();
     await (await chooser).setFiles(junkPath);
     await host2.waitForTimeout(800);
     await host2.mouse.move(5, 5);
     await shot(host2, size, '60-host-from-save-bad-file');
     chooser = host2.waitForEvent('filechooser');
-    await host2.getByRole('button', { name: /^Host from a save/ }).click();
+    await host2.getByRole('button', { name: /^Host a saved game/ }).click();
     await (await chooser).setFiles(savePath);
     await expect(host2.getByTestId('turn-number')).toHaveText(String(savedTurn), { timeout: 90_000 });
     await host2.waitForTimeout(1500);

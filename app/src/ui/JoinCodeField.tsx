@@ -18,7 +18,7 @@ export function JoinCodeField() {
   }, [wrong]);
   return (
     <div className={`join-code ${wrong ? 'wrong' : ''}`}>
-      <label className="join-code-label" htmlFor="join-code-input">Join code</label>
+      <label className="join-code-label" htmlFor="join-code-input">Private code</label>
       <input
         ref={input}
         id="join-code-input"
