@@ -1,5 +1,5 @@
 // Screen tour, India's Revenue Office (rules 65): the faction sheet, the Guide, the Office's build card against
-// the Market, and the Gold breakdown with each "<city>: no upkeep (Revenue Office)" line in an 8-city India game.
+// the Market, and the Gold breakdown's single Revenue Offices offset in an 8-city India game.
 // Run alone with `npx playwright test e2e/tour/india-office`. Shots land in test-results/screen-tour/<size>/india-office/.
 import { test, expect } from '../fixtures';
 import { fromOffset } from '../../src/hex';
@@ -91,7 +91,7 @@ for (const size of SIZES) test.describe(`india office ${size.name}`, () => {
     const setup = eightCities();
     await loadFixture(page, coreFixture(setup.fixture), 2);
     await page.locator('.gold-stat').click();
-    const tip = page.locator('.tip-bubble').filter({ hasText: 'no upkeep (Revenue Office)' }).first();
+    const tip = page.locator('.tip-bubble').filter({ hasText: 'Revenue Offices (' }).first();
     await expect(tip).toBeVisible();
     await page.waitForTimeout(450);
     await shot(page, size, '08-gold-breakdown');
@@ -102,6 +102,7 @@ for (const size of SIZES) test.describe(`india office ${size.name}`, () => {
     const card = page.locator('.city-panel .production-choice[data-item="b:Market"]');
     await card.scrollIntoViewIfNeeded();
     await expect(card).toBeVisible();
+    await expect(card.getByTestId('office-city-upkeep')).toHaveText('City upkeep: saves 2 Gold a turn');
     await parkMouse(page);
     await shot(page, size, '09-office-build-card');
     await card.locator('.tip-trigger, .prod-name, button').first().hover();

@@ -9,6 +9,7 @@ import { moveSelected, promptWar, rangedSelected, warDeclaration } from '../comm
 import { feel } from '../feel';
 import { TreatyEmblem } from './ringMedallion';
 import { cityFireStatus } from '../format';
+import { CityBuy } from './CityBuy';
 
 /** Where you stand with a rival city's empire and whether the selected unit can attack it; null for other cities. */
 export function foreignCityChoice(view: PlayerView, city: CityView, attackerId: UnitId | null, orders: Order[]) {
@@ -86,6 +87,8 @@ export function ForeignCityActions({ city, view, compact = false }: { city: City
     <p className="foreign-city-relation">{badge} {standing}</p>
     {city.greece_captive_tech && <p className="foreign-city-prize">Capture it: +1 free technology</p>}
     {unit && !inRange && !compact && <p className="muted foreign-city-why">Your {unitName} is {tiles} tiles away ({ranged ? `range ${reach}` : `${reach} moves`}): move it closer to attack.</p>}
+    {/* Byzantium's Buy a city, and any offer running on this city (core `buy_city`). */}
+    <CityBuy view={view} city={city} />
     <div className="foreign-city-buttons">
       {canAttack && <button className="btn primary" onClick={attack}>{attackLabel}</button>}
       {canShoot && <button className="btn" onClick={shoot}>{shootLabel}</button>}

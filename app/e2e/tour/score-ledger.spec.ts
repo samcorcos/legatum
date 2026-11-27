@@ -158,7 +158,7 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     const sheet = await openLedger(page);
     const goal = sheet.locator('.sl-row.k-heldGoal');
     await expect(goal.locator('.sl-token-of')).toHaveCount(1);
-    await expect(goal.locator('.sl-token[title*="The Heir to the Throne"]')).toHaveCount(1);
+    await expect(goal.locator('.sl-token[aria-label*="The Heir to the Throne"]')).toHaveCount(1);
     await fitLedger(page, size.height);
     await goal.locator('button').click();
     await expect(sheet.locator('#sl-detail-held-goal')).toContainText('Held by');

@@ -69,7 +69,6 @@ fn is_city_order(order: &Order) -> bool {
             | Order::Raze { .. }
             | Order::SetProductionQueue { .. }
             | Order::BuyItem { .. }
-            | Order::HireCompany { .. }
             | Order::BuyTile { .. }
             | Order::SetResearch { .. }
             | Order::SetResearchQueue { .. }
@@ -85,7 +84,6 @@ fn city_of_order(order: &Order) -> Option<CityId> {
         | Order::SetCityAutomation { city, .. }
         | Order::SetProductionQueue { city, .. }
         | Order::BuyItem { city, .. }
-        | Order::HireCompany { city, .. }
         | Order::BuyTile { city, .. } => Some(city),
         _ => None,
     }
@@ -259,15 +257,6 @@ fn check_order(
                 return Err(format!("{} already bought something this turn", c.name));
             }
             if let Some(reason) = economy::buy_blocker(state, c, item) {
-                return Err(reason);
-            }
-        }
-        Order::HireCompany { city, unit, seller } => {
-            let c = owned_city(state, player, city)?;
-            if bought.contains(&city) {
-                return Err(format!("{} already bought something this turn", c.name));
-            }
-            if let Some(reason) = crate::company::blocker(state, c, unit, seller) {
                 return Err(reason);
             }
         }
@@ -478,14 +467,6 @@ fn apply_order(
                     .production_queue
                     .retain(|queued| *queued != item);
             }
-        }
-        Order::HireCompany { city, unit, seller } => {
-            let hired = crate::company::hire(state, city, unit, seller, events);
-            debug_assert!(
-                hired,
-                "hire was checked immediately before it was carried out"
-            );
-            bought.insert(city);
         }
         Order::BuyTile { city, tile } => {
             let gold = tile_price(&state.cities[&city], tile);
@@ -1573,10 +1554,6 @@ fn pay_gold(state: &mut GameState, p: PlayerId, net: i64, events: &mut Vec<Event
     let debt = total;
     player.gold = 0;
     if let Some(unit) = bankruptcy_victim(state, p) {
-        if crate::company::is_company(&state.units[&unit]) {
-            crate::company::turn_barbarian(state, unit, events);
-            return;
-        }
         state.units.remove(&unit);
         events.push(Event::UnitDisbanded {
             unit,
@@ -1588,17 +1565,11 @@ fn pay_gold(state: &mut GameState, p: PlayerId, net: i64, events: &mut Vec<Event
 
 /// The same cost and id ordering is used by the forecast and by resolution.
 pub(crate) fn bankruptcy_victim(state: &GameState, p: PlayerId) -> Option<UnitId> {
-    // An unpaid Company goes first (the Catalan Grand Company): the dearest, then the highest id.
+    // The dearest unit goes first, then the highest id.
     state
         .units_of(p)
         .filter(|u| data::pays_upkeep(u.kind))
-        .max_by_key(|u| {
-            (
-                crate::company::is_company(u),
-                state.unit_stats_of(u).cost,
-                u.id,
-            )
-        })
+        .max_by_key(|u| (state.unit_stats_of(u).cost, u.id))
         .map(|u| u.id)
 }
 
@@ -1967,7 +1938,7 @@ pub fn buy_tile_slot_check<R: crate::economy::Reason>(state: &GameState, city: &
 }
 
 /// Why this city can't buy `tile` now, or None. Shares the one-purchase-per-turn slot with
-/// BuyItem and HireCompany; the tile must be explored by the buyer.
+/// BuyItem; the tile must be explored by the buyer.
 pub fn buy_tile_blocker(state: &GameState, city: &City, tile: Hex) -> Option<String> {
     buy_tile_check(state, city, tile)
 }

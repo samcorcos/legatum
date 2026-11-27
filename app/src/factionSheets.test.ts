@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FACTIONS, FACTION_GOAL, FACTION_INFO, THIN_LEVIES, companyRule } from './data';
+import { FACTIONS, FACTION_GOAL, FACTION_INFO } from './data';
 import { FACTION_SHEETS, sheetCards } from './factionSheets';
 import { iconUrl } from './icons';
 import { leaderPortraitUrl } from './brand/ornaments';
@@ -28,9 +28,6 @@ describe('faction sheets', () => {
     for (const line of copy) {
       expect(line).not.toMatch(/free lunch|forever|bleed yields|nothing is cheap/i);
     }
-    expect(FACTION_SHEETS.Byzantium.pairs[0].strengthDetail).toBe(companyRule());
-    expect(FACTION_SHEETS.Byzantium.pairs[0].price).toBe(THIN_LEVIES);
-    expect(FACTION_SHEETS.Byzantium.pairs[0].price).not.toContain('120%');
     const swiss = FACTION_SHEETS.Switzerland.pairs[0].strength;
     expect(swiss).toBe('Each city earns +1 Gold for every 2 population. Every 100 Gold in your treasury earns +1 Gold a turn in interest.');
     expect(swiss).toBe(FACTION_INFO.Switzerland.ability.split(' You buy buildings and units')[0]);
@@ -67,11 +64,9 @@ describe('faction sheets', () => {
     expect(FACTION_SHEETS.Rome).not.toHaveProperty('lose');
   });
 
-  it('says what a Mercenary Company costs and buys', () => {
+  it('no longer mentions the retired Mercenary Companies and thin levies', () => {
     const sheet = FACTION_SHEETS.Byzantium;
-    const text = [sheet.identity, sheet.lore, sheet.lose, sheet.counteredBy, ...sheet.pairs.flatMap((p) => [p.strength, p.price ?? ""])].join(' ');
-    expect(text).toMatch(/Company/);
-    expect(text).toMatch(/countdown/i);
-    expect(text).not.toMatch(/tribute|bought peace/i);
+    const text = [sheet.identity, sheet.lore, sheet.lose, sheet.counteredBy, ...sheet.pairs.flatMap((p) => [p.strength, p.price ?? ''])].join(' ');
+    expect(text).not.toMatch(/Company|Companies|levies|tribute|bought peace/i);
   });
 });

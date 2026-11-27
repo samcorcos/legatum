@@ -55,7 +55,7 @@ describe.skipIf(!available)('diplomacy controls on the Rust engine', () => {
     const client = await start();
     expect(container.textContent).toContain('Takes effect this turn');
     click('Declare War');
-    expect(container.textContent).toContain('Declare War is ready: it happens when you end the turn.');
+    expect(container.textContent).toContain('Declare War: happens when you end the turn.');
     expect(client.view(0).diplomacy.relations[0].state).toBe('Peace');
     expect(client.validate(0, useGame.getState().orders[0])).toEqual([]);
     const result = client.endTurn({ 0: useGame.getState().orders[0] });

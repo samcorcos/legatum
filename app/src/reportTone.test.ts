@@ -61,14 +61,25 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['your Heir', ev({ type: 'HeirBorn', city: 1, owner: 0, city_name: 'Constantinople', at: { q: 3, r: 3 } }), 'good'],
     ['a rival\'s Heir', ev({ type: 'HeirBorn', city: 1, owner: 2, city_name: 'Pella', at: { q: 3, r: 3 } }), 'neutral'],
   ],
-  CompanyHired: [
-    ['you hired', ev({ type: 'CompanyHired', city: 1, owner: 0, seller: 2, unit: 'Spearman', gold: 80, until: 41 }), 'neutral'],
-    ['you sold', ev({ type: 'CompanyHired', city: 1, owner: 2, seller: 0, unit: 'Spearman', gold: 80, until: 41 }), 'good'],
+  CityOfferMade: [
+    ['you are buying', ev({ type: 'CityOfferMade', city: 1, buyer: 0, seller: 2, escrow: 400, ends_turn: 15 }), 'good'],
+    ['a rival buys your city', ev({ type: 'CityOfferMade', city: 1, buyer: 2, seller: 0, escrow: 400, ends_turn: 15 }), 'bad'],
+    ['others', ev({ type: 'CityOfferMade', city: 1, buyer: 2, seller: 3, escrow: 400, ends_turn: 15 }), 'neutral'],
   ],
-  CompanyDeparted: [['a contract ended', ev({ type: 'CompanyDeparted', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'neutral']],
-  CompanyTurned: [
-    ['yours turned', ev({ type: 'CompanyTurned', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'bad'],
-    ['a rival\'s turned', ev({ type: 'CompanyTurned', unit: 'Spearman', owner: 2, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'neutral'],
+  CityOfferEnded: [
+    ['you bought', ev({ type: 'CityOfferEnded', city: 1, buyer: 0, seller: 2, outcome: 'Sold', paid: 400, reason: 'P0 bought Beacon from P2 for 400 Gold.' }), 'good'],
+    ['your city was bought', ev({ type: 'CityOfferEnded', city: 1, buyer: 2, seller: 0, outcome: 'Sold', paid: 400, reason: 'P2 bought Beacon from P0 for 400 Gold.' }), 'bad'],
+    ['your offer failed', ev({ type: 'CityOfferEnded', city: 1, buyer: 0, seller: 2, outcome: 'Failed', refund: 360, fee: 40, reason: 'Offer for Beacon failed: the price rose to 500 Gold. 40 Gold was lost.' }), 'bad'],
+    ['you broke the offer', ev({ type: 'CityOfferEnded', city: 1, buyer: 2, seller: 0, outcome: 'Failed', refund: 360, fee: 40, reason: 'Offer for Beacon failed: the price rose to 500 Gold. 40 Gold was lost.' }), 'good'],
+    ['called off', ev({ type: 'CityOfferEnded', city: 1, buyer: 0, seller: 2, outcome: 'Cancelled', refund: 400, reason: 'Offer for Beacon called off: War between P0 and P2. The Gold went back.' }), 'neutral'],
+  ],
+  CapitalFell: [
+    ['you took it all', ev({ type: 'CapitalFell', player: 2, captor: 0, capital: 1, cities: [4, 5] }), 'good'],
+    ['you lost it all', ev({ type: 'CapitalFell', player: 0, captor: 2, capital: 1, cities: [4] }), 'bad'],
+  ],
+  HeirRefuge: [
+    ['your Heir saved the empire', ev({ type: 'HeirRefuge', player: 0, captor: 2, capital: 1, refuge: 4 }), 'good'],
+    ['a rival\'s Heir saved it', ev({ type: 'HeirRefuge', player: 2, captor: 0, capital: 1, refuge: 4 }), 'neutral'],
   ],
   TreatyActivated: [['alliance', ev({ type: 'TreatyActivated', relation: relation({ state: 'Alliance', guarantee_until: 0, security: { id: 3, started_turn: 12, protected_until: 22 } }) }), 'neutral']],
   BordersOpened: [['open borders', ev({ type: 'BordersOpened', a: 0, b: 2, effective_turn: 12 }), 'neutral']],

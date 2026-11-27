@@ -479,8 +479,7 @@ pub fn current_users(state: &GameState, p: PlayerId) -> Vec<(SupplyUser, Resourc
             }
         }
     }
-    // A hired Company brings its seller's supply: it uses none of its employer's.
-    for u in state.units_of(p).filter(|u| !crate::company::is_company(u)) {
+    for u in state.units_of(p) {
         if let Some(r) = unit_need(u.kind) {
             out.push((SupplyUser::Unit { unit: u.id }, r));
         }
@@ -516,10 +515,9 @@ pub fn in_use(state: &GameState, p: PlayerId, resource: Resource) -> i32 {
                 .count() as i32
         })
         .sum();
-    // A Company uses its seller's supply. Siege is an additional user of the same unit.
+    // Siege is an additional user of the same unit.
     let units: i32 = state
         .units_of(p)
-        .filter(|u| !crate::company::is_company(u))
         .map(|u| {
             i32::from(unit_need(u.kind) == Some(resource))
                 + i32::from(u.siege && siege_need() == Some(resource))

@@ -23,9 +23,12 @@ test('an 8.9.11 Hard profile starts a game with every AI on Hard', async ({ page
     return s.views[s.seat].players.filter((player) => !player.is_human).map((player) => player.difficulty);
   });
   expect(difficulties).toEqual(['Hard', 'Hard', 'Hard']);
-  // Each rival's row in the rivals table names its level (a met rival's row is a button whose title says it).
+  // Each rival's row in the rivals table names its level (a met rival's name carries it in a hover tooltip).
   await expect(page.locator('.rivals .rv-row:not(.mine)')).toHaveCount(3);
-  for (const row of await page.locator('.rivals button.rv-row').all()) await expect(row).toHaveAttribute('title', /^AI · Hard\. Open Diplomacy$/);
+  for (const name of await page.locator('.rivals button.rv-row .rv-name').all()) {
+    const id = await name.locator('xpath=ancestor::*[contains(@class, "tip-trigger")][1]').getAttribute('aria-describedby');
+    await expect(page.locator(`[id="${id}"]`)).toHaveText(/^AI · Hard\. Click to open Diplomacy\.$/);
+  }
   await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
   // On turn 1 nobody is met: Diplomacy hides them as the rivals table does, and counts them on one line.
   await expect(page.locator('.empire-pick-level')).toHaveCount(0);

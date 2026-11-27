@@ -7,9 +7,9 @@
 
 pub mod army;
 pub mod bitset;
+pub mod buy_city;
 pub mod calendar;
 pub mod combat;
-pub mod company;
 pub mod data;
 pub mod diplomacy;
 pub mod economy;
@@ -61,7 +61,8 @@ pub mod rules;
 /// 63: City upkeep: an empire with up to six cities pays nothing; past that every city it owns (the first six too) costs (cities - 6) Gold a turn, shown as "City upkeep (free up to 6 cities)" in the Gold breakdown. The save shape is unchanged.
 /// 64: A unit's upgrade goes to the most advanced researched unit of its line whose strategic supply is spare (`rules::units::supplied_upgrade_plan`), not only the newest researched one: with Iron but no Niter a Phalangite becomes a Pikeman. Save shape unchanged; the view adds `UnitView::upgrade_held_back`.
 /// 65: India's Revenue Offices waive their city's upkeep while it still counts toward the empire's city count. A non-capital Office remits all Gold. Save shape unchanged.
-pub const RULES_VERSION: u32 = 65;
+/// 66: Byzantium's Buy a city (`Order::BuyCity`, `buy_city`): an offer on a rival's city with the price in escrow, sold after three turns unless War or a price rise stops it; and the fall of Constantinople: taking Byzantium's capital takes every Byzantine city unless its Heir shelters in another. `Player` gains `city_offer`.
+pub const RULES_VERSION: u32 = 66;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;

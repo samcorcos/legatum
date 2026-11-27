@@ -183,6 +183,30 @@ it('shows the next city upkeep on the Settler build card only when it costs Gold
   expect(container.querySelector('[data-testid="settler-city-upkeep"]')).toBeNull();
 });
 
+it('shows an Indian Revenue Office upkeep saving inside its build card only when positive', async () => {
+  const { client } = await renderCity('India', undefined, 2);
+  client.debugState().players[0].techs.push('Currency');
+  const view = client.view(0);
+  const city = view.cities.find((candidate) => candidate.owner === view.me)!;
+  city.revenue_office_upkeep_savings = 2;
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  const card = container.querySelector('.production-choice[data-item="b:Market"]')!;
+  expect(card.querySelector('[data-testid="office-city-upkeep"]')?.textContent)
+    .toBe('City upkeep: saves 2 Gold a turn');
+  expect(card.querySelector('.prod-upkeep.gain')).not.toBeNull();
+  expect(card.querySelector('.production-more')?.textContent).not.toContain('saves');
+  expect(card.querySelector('[data-testid="office-remittance"]')).toBeNull();
+  city.revenue_office_remittance_gain = 4;
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('.production-choice[data-item="b:Market"] [data-testid="office-remittance"]')?.textContent)
+    .toBe('Sends 4 more Gold a turn to your treasury');
+  city.revenue_office_upkeep_savings = 0;
+  city.revenue_office_remittance_gain = undefined;
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('[data-testid="office-city-upkeep"]')).toBeNull();
+  expect(container.querySelector('[data-testid="office-remittance"]')).toBeNull();
+});
+
 it('drops the claim from the territory bar when there is no free tile', async () => {
   const { city, view } = await renderCity();
   city.detail!.next_claim = null;

@@ -1340,7 +1340,6 @@ mod tests {
         assert!(!crate::rules::is_military(UnitKind::Fighter));
         assert!(!crate::data::pays_upkeep(UnitKind::Bomber));
         assert_eq!(crate::economy::upkeep_unit_count(&s, P0), 2);
-        assert_eq!(crate::economy::levy_count(&s, P0), 3);
         assert_eq!(
             crate::economy::upkeep(&s, P0),
             0,
