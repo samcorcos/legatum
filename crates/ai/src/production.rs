@@ -1657,6 +1657,7 @@ impl Planner<'_> {
         self.tag_buys("door");
         self.pass("modernization");
         self.plan_modernization();
+        self.retire_obsolete();
         self.tag_buys("modernization");
         self.pass("emergency_production");
         self.plan_emergency_production();
@@ -3519,7 +3520,8 @@ impl Planner<'_> {
     /// training that this city can start now; with `ranged` false, the cheapest melee unit.
     fn quick_defender(&self, c: &CityView, ranged: bool) -> Option<ProductionItem> {
         let rules = self.view().rule_experiments;
-        c.detail
+        let candidates: Vec<_> = c
+            .detail
             .as_ref()?
             .options
             .iter()
@@ -3533,6 +3535,11 @@ impl Planner<'_> {
                 }
                 _ => None,
             })
+            .collect();
+        let floor = self.modern_floor(candidates.iter().map(|(_, unit)| *unit));
+        candidates
+            .into_iter()
+            .filter(|(_, unit)| data::unit_era_tier(*unit) >= floor)
             .max_by_key(|(o, unit)| {
                 let stats = rules.unit_stats_for(self.faction, *unit);
                 if ranged {
@@ -3569,7 +3576,7 @@ impl Planner<'_> {
             if c.walls {
                 let stake =
                     city_keep_value(c) * self.decisions.walled_defense_percent.max(alarm) / 100;
-                let chosen = c
+                let candidates: Vec<_> = c
                     .detail
                     .as_ref()?
                     .options
@@ -3581,6 +3588,11 @@ impl Planner<'_> {
                         (composition::is_melee_line(unit) || composition::is_ranged_line(unit))
                             .then_some((o, unit))
                     })
+                    .collect();
+                let floor = self.modern_floor(candidates.iter().map(|(_, unit)| *unit));
+                let chosen = candidates
+                    .into_iter()
+                    .filter(|(_, unit)| data::unit_era_tier(*unit) >= floor)
                     .max_by_key(|(o, unit)| {
                         let after = self.defense_risk(
                             c,
@@ -3590,13 +3602,16 @@ impl Planner<'_> {
                                 *unit,
                             )),
                         );
-                        let stats = self
-                            .view()
-                            .rule_experiments
-                            .unit_stats_for(self.faction, *unit);
-                        ((if after.falls { 0 } else { stake })
-                            + 2 * stats.strength.max(stats.ranged))
-                            * 100
+                        let strength = if self.decisions.modern_army > 0 {
+                            self.modernization_power(*unit, 0, data::UNIT_HP, false, c.pos)
+                        } else {
+                            let stats = self
+                                .view()
+                                .rule_experiments
+                                .unit_stats_for(self.faction, *unit);
+                            stats.strength.max(stats.ranged)
+                        };
+                        ((if after.falls { 0 } else { stake }) + 2 * strength) * 100
                             / o.turns.max(1)
                             - o.cost
                     })
@@ -5664,7 +5679,7 @@ impl Planner<'_> {
             {
                 continue;
             }
-            let best = d
+            let candidates: Vec<_> = d
                 .options
                 .iter()
                 .filter(|o| {
@@ -5696,6 +5711,17 @@ impl Planner<'_> {
                         - d.yields.total.gold;
                     let reserve = (added_upkeep - income).max(0) * 10;
                     self.gold_left + income * o.turns >= reserve
+                })
+                .collect();
+            let floor = self.modern_floor(candidates.iter().filter_map(|o| match o.item {
+                ProductionItem::Unit { unit } => Some(unit),
+                _ => None,
+            }));
+            let best = candidates
+                .into_iter()
+                .filter(|o| match o.item {
+                    ProductionItem::Unit { unit } => data::unit_era_tier(unit) >= floor,
+                    _ => true,
                 })
                 .max_by_key(|o| {
                     let ProductionItem::Unit { unit } = o.item else {
