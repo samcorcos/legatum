@@ -230,6 +230,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
     cta = {
       label: 'Choose production',
       sub: automationNeedsChoice ? `${nextCity.name} · ${AUTOMATION_NO_CHOICE}`
+        : next?.kind === 'city' && next.refused ? `${nextCity.name} · ${next.refused}`
         : nextCity.detail?.wonder_lost ? `${nextCity.name} · ${BUILDING_NAME[nextCity.detail.wonder_lost.building]} lost to ${empireOfPlayer(view, nextCity.detail.wonder_lost.winner)}`
         : `${nextCity.name}${idleProductionWarning(nextCity.detail) ? ` · ${nextCity.detail!.idle_production_waste} Production wasted next turn` : ''}`,
       onClick: goToPending,
