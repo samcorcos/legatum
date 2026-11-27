@@ -92,7 +92,7 @@ export function configFromLobby(l: Lobby): StagingConfig {
     height: size.height,
     // Every new game ends at the default last turn with barbarians on (omitted: the server's default).
     turn_limit: null,
-    turn_timer_seconds: l.turnTimerSeconds ?? 0,
+    ...(l.turnTimerSeconds ? { turn_timer_seconds: l.turnTimerSeconds } : {}),
     // Deals are on in every new game, online too (the host's WASM passes it to the setup).
     deals: true,
     seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: s.kind === 'ai' ? l.difficulty : s.difficulty, ...(s.kind === 'ai' && levelOf(l) === 'Training' ? { search: true } : {}) })),
@@ -151,7 +151,7 @@ export function settingsAcknowledged(config: StagingConfig, acknowledged: Stagin
   // The turn limit is left out: new lobbies always send none, and a room saved with a custom last
   // turn keeps it until the host's next edit rather than blocking Start.
   const canon = (c: Omit<StagingConfig, 'seed'> | undefined) => c && JSON.stringify({
-    width: c.width, height: c.height, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
+    width: c.width, height: c.height, turn_timer_seconds: c.turn_timer_seconds ?? 0, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
   });
   const { seed, ...settings } = config;
   return config === acknowledged && !!host?.connected &&

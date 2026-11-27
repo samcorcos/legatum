@@ -197,6 +197,28 @@ impl Game {
         })
     }
 
+    fn saved_timer(save: &str) -> Result<u32, String> {
+        let value: serde_json::Value = serde_json::from_str(save).map_err(|e| e.to_string())?;
+        match value.get("online_turn_timer_seconds") {
+            None => Ok(0),
+            Some(v) => v
+                .as_u64()
+                .filter(|s| *s == 0 || (30..=600).contains(s))
+                .map(|s| s as u32)
+                .ok_or_else(|| "Invalid saved turn timer".into()),
+        }
+    }
+
+    fn save_json(&self) -> String {
+        let save = self.session.save_json();
+        if self.turn_timer_seconds == 0 {
+            return save;
+        }
+        let mut value: serde_json::Value = serde_json::from_str(&save).expect("session save JSON");
+        value["online_turn_timer_seconds"] = self.turn_timer_seconds.into();
+        value.to_string()
+    }
+
     fn view(&self, player: PlayerId) -> legatum_core::PlayerView {
         let mut view = player_view(&self.session.state, player);
         legatum_core::diplomacy::with_pending(
@@ -268,6 +290,10 @@ impl Host {
             .map(|save| {
                 check_state(&crate::json::parse_state(save)?)?;
                 Game::from_session(Session::from_save_json(save, |_| BrainKind::Scripted)?)
+                    .and_then(|mut game| {
+                        game.turn_timer_seconds = Game::saved_timer(save)?;
+                        Ok(game)
+                    })
             })
             .transpose()
             .map_err(|e| format!("cannot resume the saved online game: {e}"))?;
@@ -372,11 +398,16 @@ impl Host {
 
     pub(crate) fn load_game(&mut self, save: &str) -> Result<(), String> {
         check_state(&crate::json::parse_state(save)?)?;
+        let timer = Game::saved_timer(save)?;
         let mut session = Session::from_save_json(save, |_| BrainKind::Scripted)?;
         if let Some(h) = &mut session.history {
             h.fork();
         }
-        self.replace_game(session)
+        self.replace_game(session)?;
+        let game = self.game.as_mut().expect("replaced game");
+        game.turn_timer_seconds = timer;
+        self.save = Some(game.save_json());
+        Ok(())
     }
 
     fn replace_game(&mut self, session: Session) -> Result<(), String> {
@@ -399,7 +430,7 @@ impl Host {
                 room.detach(connection);
             }
         }
-        self.save = Some(game.session.save_json());
+        self.save = Some(game.save_json());
         self.game = Some(game);
         self.finish_replaced_history(previous);
         self.checkpoint();
@@ -408,7 +439,7 @@ impl Host {
 
     pub(crate) fn save_game(&self) -> Result<String, String> {
         let game = self.game.as_ref().ok_or("No game in progress")?;
-        Ok(game.session.save_json())
+        Ok(game.save_json())
     }
 
     /// Opens every seat but the first for guests to take, as in a game just hosted from a save file
@@ -786,7 +817,7 @@ impl Host {
             };
             // The joined name is part of the saved history; save only when it changed.
             if renamed {
-                self.save = Some(game.session.save_json());
+                self.save = Some(game.save_json());
             }
             self.send_batch(connection, &[welcome, view]);
             // A game takeover may also displace a staging watcher/occupant.
@@ -928,22 +959,34 @@ impl Host {
     /// The transport supplies the clock. Never advance more than one turn per tick,
     /// including after a suspended browser wakes up. Wait for initial seat joins.
     pub(crate) fn tick_turn_timer(&mut self, now: f64) {
-        if !now.is_finite() { return; }
-        let Some(game) = &mut self.game else { return; };
-        if game.turn_timer_seconds == 0 || game.session.state.finished { return; }
+        if !now.is_finite() {
+            return;
+        }
+        let Some(game) = &mut self.game else {
+            return;
+        };
+        if game.turn_timer_seconds == 0 || game.session.state.finished {
+            return;
+        }
         let active = game.seats.iter().any(|s| s.connection.is_some())
             && game.seats.iter().all(|s| s.joined);
         if !active {
             game.turn_deadline = None;
-            if game.turn_seconds_left.take().is_some() { self.broadcast_seats(); }
+            if game.turn_seconds_left.take().is_some() {
+                self.broadcast_seats();
+            }
             return;
         }
-        let deadline = *game.turn_deadline.get_or_insert(now + f64::from(game.turn_timer_seconds) * 1000.0);
+        let deadline = *game
+            .turn_deadline
+            .get_or_insert(now + f64::from(game.turn_timer_seconds) * 1000.0);
         let left = ((deadline - now).max(0.0) / 1000.0).ceil() as u32;
         let changed = game.turn_seconds_left != Some(left);
         game.turn_seconds_left = Some(left);
         if left == 0 {
-            for seat in &mut game.seats { seat.ready = true; }
+            for seat in &mut game.seats {
+                seat.ready = true;
+            }
             self.resolve_if_ready();
             self.broadcast_seats();
         } else if changed {
@@ -970,7 +1013,7 @@ impl Host {
         game.turn_seconds_left = None;
         let events = game.session.step(&orders);
         let state = &game.session.state;
-        self.save = Some(game.session.save_json());
+        self.save = Some(game.save_json());
         if let Some(history) = game.session.history.as_ref().filter(|h| {
             state.finished || h.metadata.turn_count.is_multiple_of(self.checkpoint_turns)
         }) {
@@ -1098,7 +1141,7 @@ impl Host {
             });
         }
         let previous = self.preserve_current_history();
-        self.save = Some(game.session.save_json());
+        self.save = Some(game.save_json());
         let room = self.room.take().expect("room exists");
         let started: Vec<_> = room
             .player_slots()
@@ -1757,6 +1800,107 @@ mod tests {
         host.disconnect(1);
         let (sender, _receiver) = outbox::channel();
         assert!(host.connect(sender, true).is_ok());
+    }
+
+    #[test]
+    fn turn_timer_waits_for_joins_then_expires_once_and_keeps_orders() {
+        let mut host = two_seat_host();
+        host.game.as_mut().unwrap().turn_timer_seconds = 30;
+        let (a, _a) = peer(&mut host);
+        let (b, _b) = peer(&mut host);
+        join(&mut host, a, 0);
+        host.tick_turn_timer(0.0);
+        host.tick_turn_timer(60_000.0);
+        assert_eq!(host.status(true).turn, 1);
+        assert!(host.game.as_ref().unwrap().turn_deadline.is_none());
+        join(&mut host, b, 1);
+        host.tick_turn_timer(60_000.0);
+        assert_eq!(host.game.as_ref().unwrap().turn_seconds_left, Some(30));
+        host.tick_turn_timer(89_999.0);
+        assert_eq!(host.status(true).turn, 1);
+        // An expired turn follows the same resolution path as both players pressing Ready.
+        let queued = vec![Order::SetResearch {
+            tech: legatum_core::TechId::Masonry,
+        }];
+        host.game.as_mut().unwrap().seats[0].orders = queued.clone();
+        let stale_ready = ready(&host, true);
+        let save = host.save_game().unwrap();
+        let mut expected = Host::new(Some(&save), 5).unwrap();
+        let (ea, _ea) = peer(&mut expected);
+        let (eb, _eb) = peer(&mut expected);
+        join(&mut expected, ea, 0);
+        join(&mut expected, eb, 1);
+        expected.game.as_mut().unwrap().seats[0].orders = queued;
+        expected.message(ea, ready(&expected, true)).unwrap();
+        expected.message(eb, ready(&expected, true)).unwrap();
+        host.tick_turn_timer(900_000.0);
+        assert_eq!(host.status(true).turn, 2);
+        assert!(host.message(a, stale_ready).is_err());
+        assert_eq!(
+            host.game.as_ref().unwrap().session.state.hash(),
+            expected.game.as_ref().unwrap().session.state.hash()
+        );
+        host.tick_turn_timer(900_000.0);
+        assert_eq!(
+            host.status(true).turn,
+            2,
+            "no catch-up burst after suspension"
+        );
+        assert_eq!(host.game.as_ref().unwrap().turn_seconds_left, Some(30));
+        assert_eq!(
+            Host::new(Some(&host.save_game().unwrap()), 5)
+                .unwrap()
+                .game
+                .unwrap()
+                .turn_timer_seconds,
+            30
+        );
+    }
+
+    #[test]
+    fn turn_timer_unlimited_early_ready_and_offline_lifecycle() {
+        let mut host = two_seat_host();
+        let (a, _a) = peer(&mut host);
+        let (b, _b) = peer(&mut host);
+        join(&mut host, a, 0);
+        join(&mut host, b, 1);
+        host.tick_turn_timer(0.0);
+        host.tick_turn_timer(900_000.0);
+        assert_eq!(host.status(true).turn, 1);
+        host.game.as_mut().unwrap().turn_timer_seconds = 30;
+        host.tick_turn_timer(900_000.0);
+        host.message(a, ready(&host, true)).unwrap();
+        host.message(b, ready(&host, true)).unwrap();
+        assert_eq!(host.status(true).turn, 2);
+        assert!(host.game.as_ref().unwrap().turn_deadline.is_none());
+        host.tick_turn_timer(901_000.0);
+        host.disconnect(a);
+        host.disconnect(b);
+        host.tick_turn_timer(999_000.0);
+        assert_eq!(host.status(true).turn, 2);
+        assert!(host.game.as_ref().unwrap().turn_seconds_left.is_none());
+    }
+
+    #[test]
+    fn staging_timer_validates_and_reaches_the_started_game() {
+        let mut config = room_config();
+        config.turn_timer_seconds = 29;
+        assert!(config.validate().is_err());
+        config.turn_timer_seconds = 601;
+        assert!(config.validate().is_err());
+        config.turn_timer_seconds = 60;
+        config.seats[1].kind = staging::SeatKind::Ai;
+        let mut host = Host::new(None, 5).unwrap();
+        host.configure_staging(config).unwrap();
+        assert_eq!(
+            host.status(true).staging.unwrap().config.turn_timer_seconds,
+            60
+        );
+        host.start_staging().unwrap();
+        assert_eq!(host.game.as_ref().unwrap().turn_timer_seconds, 60);
+        let save = host.save_game().unwrap();
+        host.load_game(&save).unwrap();
+        assert_eq!(host.game.as_ref().unwrap().turn_timer_seconds, 60);
     }
 
     fn two_seat_host() -> Host {

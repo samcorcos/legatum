@@ -65,7 +65,7 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
         onChange={onChange && ((mapSize: MapSizeId | 'Custom') => { if (mapSize !== 'Custom') onChange(setMapSize(lobby, mapSize)); })} />
       {lobby.mode === 'host' && <div className="lobby-field">
         <label className="lbl" htmlFor="turn-timer">Turn timer</label>
-        <select id="turn-timer" value={lobby.turnTimerSeconds ?? 0} disabled={!onChange}
+        <select className="lobby-select" id="turn-timer" value={lobby.turnTimerSeconds ?? 0} disabled={!onChange}
           onChange={(e) => change?.({ turnTimerSeconds: Number(e.target.value) })}>
           {[0, 30, 60, 120, 180, 300, 600].map((seconds) => <option key={seconds} value={seconds}>
             {seconds === 0 ? 'Unlimited' : seconds < 60 ? `${seconds} seconds` : `${seconds / 60} minute${seconds === 60 ? '' : 's'}`}

@@ -133,6 +133,7 @@ pub(crate) enum ServerMessage {
     },
     Seats {
         seats: Vec<SeatStatus>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         turn_seconds_left: Option<u32>,
     },
     Validation {

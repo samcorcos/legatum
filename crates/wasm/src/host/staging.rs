@@ -91,7 +91,7 @@ pub struct StagingConfig {
     pub height: i32,
     #[serde(default)]
     pub turn_limit: Option<u32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "timer_off")]
     pub turn_timer_seconds: u32,
     /// Barbarian camps; on unless the host turns them off.
     #[serde(default = "barbarians_on")]
@@ -107,6 +107,10 @@ pub struct StagingConfig {
     #[serde(default, skip_serializing_if = "StagingRules::is_default")]
     pub rule_experiments: StagingRules,
     pub seats: Vec<StagingSeat>,
+}
+
+fn timer_off(seconds: &u32) -> bool {
+    *seconds == 0
 }
 
 fn barbarians_on() -> bool {
@@ -144,7 +148,7 @@ pub struct StagingSettings {
     pub width: i32,
     pub height: i32,
     pub turn_limit: Option<u32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "timer_off")]
     pub turn_timer_seconds: u32,
     pub barbarians: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]

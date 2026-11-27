@@ -92,6 +92,7 @@ impl NetHost {
             return;
         };
         link.last_seen = now;
+        self.host.tick_turn_timer(now);
         let result = if text.len() > MAX_GUEST_MESSAGE {
             Err("Message too large".to_owned())
         } else {

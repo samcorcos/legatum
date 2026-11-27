@@ -648,3 +648,5 @@ div.seat {
 }
 
 .turn-countdown { text-align: center; font-variant-numeric: tabular-nums; padding: 4px 8px; }
+
+.phone-turn-dock > .turn-countdown { grid-column: 1 / -1; }
