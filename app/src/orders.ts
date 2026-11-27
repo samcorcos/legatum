@@ -206,7 +206,6 @@ export function nextUnitNeedingOrders(
   return list.find((u) => u.id > current) ?? list[0];
 }
 
-/** Errors that belong to orders matching `pred`, with the order they refer to. */
 /** A city's own production order (Build or a queue edit). */
 export const isProductionOrder = (o: Order, city: CityId) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city;
 
@@ -218,12 +217,19 @@ export function productionRefusal(orders: Order[], errors: OrderError[], city: C
   return errorsWhere(orders, errors, (o) => isProductionOrder(o, city))[0] ?? null;
 }
 
+/** A refusal as the city panel shows it: no "Queue item 1:" prefix, and a closing full stop before what follows. */
+export function refusalLine(message: string): string {
+  const line = message.replace(/^Queue item \d+: /, '').trim();
+  return /[.!?]$/.test(line) ? line : `${line}.`;
+}
+
 /** "Hamburg cannot start Musketman: No Niter to spare: all 4 …" → "Musketman can't start: No Niter to spare". */
 export function shortRefusal(message: string): string | null {
   const m = /cannot (?:start|produce) ([^:]+): ([^:.]+)/.exec(message);
   return m ? `${m[1]} can't start: ${m[2].trim()}` : null;
 }
 
+/** Errors that belong to orders matching `pred`, with the order they refer to. */
 export function errorsWhere(orders: Order[], errors: OrderError[], pred: (o: Order) => boolean): string[] {
   return errors.filter((e) => orders[e.index] && pred(orders[e.index])).map((e) => e.message);
 }

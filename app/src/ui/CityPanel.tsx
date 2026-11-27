@@ -11,7 +11,7 @@ import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompa
 import { PieceVsLine } from './PieceVs';
 import { razeLossLines, razeLosses, razeWorkText } from '../razeLosses';
 import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED, wallsUpgradeName, wallsRepairing } from '../data';
-import { effectiveProduction, errorsWhere, isProductionOrder, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
+import { effectiveProduction, errorsWhere, isProductionOrder, refusalLine, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
 import { distance, hexEq, tileIndex } from '../hex';
 import { WONDER_INFO, WONDER_PERCENT, cityWonders, wonderArt, wonderBonusSentence, wonderYieldWord } from '../wonders';
 import { improvementGain, improvementName, improvementShortTitle, improvementTitle, improvementUpgradeYields, improvementWhere, isDormant } from '../improvements';
@@ -988,7 +988,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           </span>}
           value={storedProduction} max={waitingCap !== null ? Math.max(1, waitingCap) : pendingQueue ? producing ? option?.cost ?? d.production_cost ?? 1 : d.idle_production_cap : d.production_cost ?? d.idle_production_cap} />
 
-        {productionErrs.map((m, i) => <div key={i} className="order-error production-refused" role="alert" data-testid="production-refused"><Amounts text={`${m} Choose another build.`} /></div>)}
+        {productionErrs.map((m, i) => <div key={i} className="order-error production-refused" role="alert" data-testid="production-refused"><Amounts text={`${refusalLine(m)} Choose another build.`} /></div>)}
         {switchNote && <div className="production-switch" data-testid="production-switch" role="status"><Amounts text={`${switchNote}.`} /></div>}
         {pendingBuy && <div className="production-switch" data-testid="pending-purchase" role="status"><Amounts text={pendingBuyText!} />{' '}<button className="btn quiet" disabled={view.finished} onClick={() => editOrders((ord) => toggleBuy(ord, city.id, pendingBuy.item))}>Cancel</button></div>}
         {egyptBuilding && !tombStopped && <div className="production-switch" data-testid="egypt-construction" role="status">{`${city.name}'s ${nileSurplus} surplus Food goes into the ${producing ? itemName(producing, owner?.faction) : 'build'} this turn, so ${city.name} doesn't grow.`}{growOption && <>{' '}<button className="btn quiet" data-testid="egypt-grow-instead" disabled={view.finished} onClick={() => buildNow(growOption.item)}>Grow instead →</button></>}</div>}

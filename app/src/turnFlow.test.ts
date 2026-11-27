@@ -3,7 +3,7 @@ import { cancelWarPrompt, sleepSelected } from './commands';
 import { pendingDecisions, nextDecision } from './turnFlow';
 import { FixtureClient } from './test/fixtureEngine';
 import { turnFlowFixture } from './test/turnFlowFixture';
-import { describeOrder, unitsNeedingOrders } from './orders';
+import { describeOrder, refusalLine, unitsNeedingOrders } from './orders';
 import type { Event, Order, PlayerView } from './types';
 import { useGame } from './store';
 import { queueDiplomacy } from './diplomacy';
@@ -264,6 +264,9 @@ it('names why a picked build was refused, so the Choose production prompt does n
   expect(pendingDecisions(view, orders, [{ index: 0, message }])).toContainEqual(
     { kind: 'city', id: city.id, label: `${city.name}: Musketman can't start: No Niter to spare`, refused: "Musketman can't start: No Niter to spare" });
   expect(pendingDecisions(view, orders).some((d) => d.kind === 'city' && d.id === city.id)).toBe(false);
+  // The panel line drops the queue prefix and always ends its sentence before "Choose another build."
+  expect(refusalLine('Queue item 1: Thun cannot produce Musketman: Requires Gunpowder')).toBe('Thun cannot produce Musketman: Requires Gunpowder.');
+  expect(refusalLine(message)).toBe(message);
 });
 
 it('invalid production, research and unit orders cannot hide decisions; a cleared queue needs attention', () => {
