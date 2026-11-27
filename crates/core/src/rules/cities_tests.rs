@@ -2744,7 +2744,11 @@ fn player_facing_messages_never_contain_camel_case_identifiers() {
             ] {
                 let message = validate_city_order(&s, P0, &order).unwrap_err();
                 assert!(message.contains(name));
-                assert!(message.contains("finish the Ancient era first"));
+                let gate = match order {
+                    Order::SetResearchQueue { .. } => "queue the rest of the Ancient era before it",
+                    _ => "finish the Ancient era first",
+                };
+                assert!(message.contains(gate), "{message}");
                 messages.push(message);
             }
         }

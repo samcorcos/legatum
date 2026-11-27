@@ -17,3 +17,5 @@ Gotchas:
 - The AI queues only its current era, so its queue is still empty after an era-up and no AI decision changes.
 - The tree's research goal (rules 60) became redundant with a cross-era queue; the interface stopped setting it
   but still shows (and can clear) a goal from an older game.
+
+- A rules bump must update the analysis upgrader’s accepted previous version as well as the gameplay version. The rules-67 round-trip test now checks that gameplay rejects rules 66 while tooling can upgrade it; the first CI run exposed that missing migration case.
