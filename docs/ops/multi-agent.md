@@ -72,6 +72,8 @@ Anyone running Claude, ChatGPT/Codex, and Gemini on a GitHub repo can replicate 
 
 ### Copy-paste heartbeat prompt (for each agent's recurring schedule)
 
+When adopting this policy, update the prompt of each existing scheduled heartbeat to the template below; do not create a duplicate or change its cadence. A saved one-task prompt can otherwise keep imposing the old limit. Each provider updates its own scheduler, or the maintainer updates it; agents do not call another provider’s agent.
+
 ```text
 Run one autonomous heartbeat on samcorcos/legatum as <claude|chatgpt|gemini>:
 1. Fetch origin and read current instructions on origin/master; preserve existing work and use isolated worktrees.
