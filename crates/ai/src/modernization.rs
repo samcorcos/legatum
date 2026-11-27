@@ -176,11 +176,49 @@ impl Planner<'_> {
         old + (new - old) * self.decisions.modernization_value / 100
     }
 
+    /// Eras between the empire and this unit's era (0 for a unit of the current era).
+    pub(crate) fn era_lag(&self, kind: UnitKind) -> u8 {
+        self.view()
+            .era_of(self.view().me)
+            .saturating_sub(data::unit_era_tier(kind))
+    }
+
+    /// Gene `modern_army`: a unit two or more eras behind the empire.
+    pub(crate) fn obsolete(&self, kind: UnitKind) -> bool {
+        self.decisions.modern_army > 0 && self.era_lag(kind) >= 2
+    }
+
+    /// Gene `modern_army`: the lowest era a defender or emergency build may come from when
+    /// the newest of `units` is from `newest`: one era older still serves, two do not.
+    pub(crate) fn modern_floor(&self, units: impl Iterator<Item = UnitKind>) -> u8 {
+        if self.decisions.modern_army == 0 {
+            return 0;
+        }
+        units
+            .map(data::unit_era_tier)
+            .max()
+            .unwrap_or(0)
+            .saturating_sub(1)
+    }
+
+    /// Gold a refit of `kind` leaves in the treasury. Gene `modern_army`: an obsolete unit's
+    /// refit is defence, so a faction goal's saving (the Swiss hoard) does not hold it back;
+    /// the ordinary reserve, campaign funds and a held hoard's live VP still do.
+    pub(crate) fn refit_reserve(&self, kind: UnitKind) -> i32 {
+        if !self.obsolete(kind) {
+            return self.gold_reserve();
+        }
+        (self.ordinary_gold_reserve_with(false)
+            + self.modernization_savings
+            + self.operation_reserve())
+        .max(self.live_goal_floor())
+        .min(self.gold_reserve())
+    }
+
     /// An upgrade order reaches the most advanced researched form its supply allows in one turn
     /// and pays every step.
     fn refit(&self, u: &UnitView) -> Option<(i32, i32, i32)> {
         if !composition::is_combat(u.kind)
-            || u.contract_until.is_some()
             || u.upgrade_supply_blocker.is_some()
             || self.view().actions.retire.as_ref().is_some_and(|r| {
                 r.veterans
@@ -227,7 +265,7 @@ impl Planner<'_> {
     pub(crate) fn modernization_upgrade_worth(&self, u: &UnitView) -> bool {
         self.decisions.modernization_upgrade == 0
             || self.refit(u).is_some_and(|(gain, cost, _)| {
-                self.gold_left - cost >= self.gold_reserve()
+                self.gold_left - cost >= self.refit_reserve(u.kind)
                     && i64::from(gain) * 1000 * i64::from(self.decisions.modernization_upgrade)
                         / (i64::from(cost.max(1)) * 100)
                         > self.modernization_alternative()
@@ -428,7 +466,7 @@ impl Planner<'_> {
             if self.has_acted(u.id)
                 || (wave.is_some() && self.gold_left < total)
                 || (wave.is_none()
-                    && (self.gold_left - total < self.gold_reserve()
+                    && (self.gold_left - total < self.refit_reserve(u.kind)
                         || !self.affordable_beyond_runway(total)))
                 || self.upgrade_waits_for_attack(u)
             {
@@ -447,12 +485,62 @@ impl Planner<'_> {
         }
     }
 
+    /// Gene `modern_army` level 2: disband one combat unit a turn that is three or more eras
+    /// behind the empire and cannot be refitted (no researched upgrade, or no supply for one),
+    /// while such units outnumber the empire's cities. It still pays upkeep and loses every
+    /// fight; the cities each keep one as a body. Never one in reach of an enemy at war.
+    pub(crate) fn retire_obsolete(&mut self) {
+        if self.decisions.modern_army < 2 || self.difficulty != legatum_core::AiDifficulty::Hard {
+            return;
+        }
+        let v = self.view();
+        let hopeless: Vec<&UnitView> = self
+            .ctx
+            .own_units
+            .iter()
+            .copied()
+            .filter(|u| {
+                composition::is_combat(u.kind)
+                    && data::pays_upkeep(u.kind)
+                    && self.era_lag(u.kind) >= 3
+                    && (u.upgrade_to.is_none() || u.upgrade_supply_blocker.is_some())
+            })
+            .collect();
+        if hopeless.len() <= self.ctx.own_cities.len() {
+            return;
+        }
+        let Some(u) = hopeless
+            .into_iter()
+            .filter(|u| {
+                !self.has_acted(u.id)
+                    && u.occupation_lock.is_none()
+                    && !self.in_strike(u)
+                    && !self.ctx.enemy_units.iter().any(|e| {
+                        e.military
+                            && !e.owner.is_barbarian()
+                            && v.at_war(v.me, e.owner)
+                            && e.pos.distance(u.pos) <= 4
+                    })
+            })
+            .min_by_key(|u| {
+                (
+                    self.modernization_power(u.kind, u.level, u.hp, u.unsupplied.is_some(), u.pos),
+                    u.id,
+                )
+            })
+        else {
+            return;
+        };
+        let id = u.id;
+        self.unit_order(id, Order::DisbandUnit { unit: id });
+    }
+
     /// After immediate attacks/defense, an obsolete staging unit can spend travel time on refit.
     pub(crate) fn return_for_modernization(&mut self, army: &[&UnitView]) {
         if self.decisions.modernization_return == 0 {
             return;
         }
-        let mut budget = self.gold_left - self.gold_reserve();
+        let mut spent = 0;
         for u in army
             .iter()
             .copied()
@@ -489,7 +577,9 @@ impl Planner<'_> {
             let Some((gain, cost, steps)) = self.refit(u) else {
                 continue;
             };
-            if budget < cost || !self.affordable_beyond_runway(cost) {
+            if self.gold_left - spent - self.refit_reserve(u.kind) < cost
+                || !self.affordable_beyond_runway(cost)
+            {
                 continue;
             }
             let before =
@@ -535,7 +625,7 @@ impl Planner<'_> {
                 })
                 .max();
             if let Some((_, _, to, path)) = target {
-                budget -= cost;
+                spent += cost;
                 self.release_modernization_hold(u.id);
                 self.mil_dest.insert(to);
                 self.unit_order(

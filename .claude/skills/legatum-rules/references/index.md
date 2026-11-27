@@ -4,7 +4,7 @@ Facts below are cited to file (and usually function), read 2026-10-02 and audite
 recommendations that assume Civ 6 defaults this game doesn't have. If a fact isn't in the cited
 file, say so rather than guessing.
 
-**Rules version: 64** (`crates/core/src/lib.rs::RULES_VERSION`, checked 2026-11-26). Every save carries `save_version = RULES_VERSION`; saves from any other version are refused (tooling can upgrade a 49 to 63 state with `upgrade_from_49`); tapes still require their matching rules version. The version log and old compatibility notes are in `history.md`.
+**Rules version: 66** (`crates/core/src/lib.rs::RULES_VERSION`, checked 2026-11-27). Every save carries `save_version = RULES_VERSION`; saves from any other version are refused (tooling can upgrade a 49 to 65 state with `upgrade_from_49`); tapes still require their matching rules version. The version log and old compatibility notes are in `history.md`.
 
 The reference was one file, `game-rules.md`, until 2026-11-22. It is now one file per system, each holding its original text verbatim and in its original order. Open only the files your question needs, plus `not-in-game.md` before proposing anything.
 
@@ -25,7 +25,7 @@ The reference was one file, `game-rules.md`, until 2026-11-22. It is now one fil
 | `victory-and-scoring.md` | VP and the VP target, winning by holding the target, winning by capitals, World Ages (the only era scoring since rules 50), the near-victory warning, decadence (off), the game history record |
 | `map-and-exploration.md` | Balanced founding sites, ruins, vision and sight sharing, revealing attackers |
 | `barbarians.md` | Barbarian camps and raids, Wild camps, barbarians and the Celts, yield denial |
-| `factions.md` | Every faction's rules and goals, special units, Mercenary Companies |
+| `factions.md` | Every faction's rules and goals, special units, Byzantium's Buy a city and the fall of Constantinople |
 | `experiments.md` | Simulator-only rule experiments (research cost, faction-rule ablation); World Ages and decadence experiments are in `victory-and-scoring.md`, `walls-cost` is in `units.md` |
 | `ai-hard-genes.md` | AI-only genes and decision rules with their defaults (Hard defence, purchases, campaigns, Settlers, Peace, coalitions, faction playbooks) |
 | `ai-architecture.md` | How the AI is built: views, ScriptedBrain, difficulty, openings, threat response, conquest, proxies, victory goals |

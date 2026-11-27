@@ -163,6 +163,12 @@ export function removeFromQueue(r: Pick<ResearchView, 'catalog' | 'known'>, queu
   return legalQueue(r, queue.filter((t) => t !== tech));
 }
 
+export function queueRemovalHint(r: Pick<ResearchView, 'catalog' | 'known'>, queue: readonly TechId[], tech: TechId): string {
+  return queue.length - removeFromQueue(r, queue, tech).length > 1
+    ? 'Remove from the queue, including later-era technologies that need it.'
+    : 'Remove from the queue';
+}
+
 /** The auto-order: every researchable tech, cheapest first (discounted ones lead), ties in the era's order. */
 export function cheapestFirst(r: ResearchView): TechId[] {
   return currentEraTechs(r).filter((t) => t.researchable)

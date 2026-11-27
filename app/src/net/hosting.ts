@@ -153,6 +153,11 @@ export function hostedRoomId(): string | null {
   return active?.room?.room ?? hostingRecord()?.room.room ?? null;
 }
 
+/** The private code this tab's hosted game is locked with, or null when it is open to anyone. It stays in this tab. */
+export function hostedJoinCode(): string | null {
+  return hostedRoomId() && hostingRecord()?.announce.locked ? savedJoinCode() : null;
+}
+
 /** The hosted game's save right now (what "Save to file" writes), or null when this tab hosts no game. */
 export function hostedGameSave(): string | null {
   return active?.saveGame() ?? null;

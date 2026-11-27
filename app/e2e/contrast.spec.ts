@@ -141,7 +141,10 @@ test(`${look}: title, Settings and lobby controls keep AA label contrast in ever
   readings.push(...await auditContrast(page, 'settings'));
   await page.keyboard.press('Escape');
   readings.push(...await auditContrast(page, 'title'));
+  // The Join door lists open games: answer the list here, as no relay runs for this test.
+  await page.route('**/lobby', (r) => r.fulfill({ json: { rooms: [] }, headers: { 'access-control-allow-origin': '*' } }));
   await page.getByRole('button', { name: /^Multiplayer/ }).click();
+  await expect(page.locator('.open-games .online-empty')).toBeVisible();
   readings.push(...await auditContrast(page, 'multiplayer'));
   await page.getByRole('button', { name: /Back/ }).click();
   await page.getByRole('button', { name: /^Single Player/ }).click();

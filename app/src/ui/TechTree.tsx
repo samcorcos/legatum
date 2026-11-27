@@ -7,7 +7,7 @@
 import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { BUILDING_STATS, TECH_NAME, UNIT_STATS, effectiveTurnLimit, unitClass } from '../data';
 import type { BuildingKind, Faction, PlayerView, TechId, TechOption, UnitKind } from '../types';
-import { eraName, eraNumeral, missingBefore, turnsText, type QueueSlot } from './eraResearch';
+import { eraName, eraNumeral, missingBefore, queueRemovalHint, turnsText, type QueueSlot } from './eraResearch';
 import { techCardUnlocks, type TechCardUnlock } from './techCardUnlocks';
 import { unitCardUrl } from '../unitArt';
 import { itemArtUrl, unlockEntryArt } from '../unlockArt';
@@ -233,7 +233,7 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, open = 
         </svg>
         {columns.flatMap((col) => col).map((t) => <TreeNode key={t} t={t} view={view} faction={faction} pos={pos.get(t)!} w={W} h={H} compact={compact}
           queueIndex={queue.indexOf(t)} slot={schedule[queue.indexOf(t)]} goal={goal === t} onPath={onPath(t) && goal !== t} skipped={skipped.has(t)} locked={locked} touch={touch}
-          needed={needed.has(t)} asked={asking === t}
+          needed={needed.has(t)} asked={asking === t} removeHint={queueRemovalHint(r, queue, t)}
           fresh={fresh === t || (fresh === 'path' && queue.includes(t) && !known.has(t))}
           onResearchNow={(x) => { setAsk(null); setFresh(x); onResearchNow(x); }} onQueue={queueTech} onRemove={(x) => { setAsk(null); onRemove(x); }}
           onPeek={(rect) => setPeek(rect ? { t, rect } : null)} />)}
@@ -245,10 +245,10 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, open = 
   </div>;
 }
 
-function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal, onPath, skipped, locked, touch, needed, asked, fresh, onResearchNow, onQueue, onRemove, onPeek }: {
+function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal, onPath, skipped, locked, touch, needed, asked, removeHint, fresh, onResearchNow, onQueue, onRemove, onPeek }: {
   t: TechId; view: PlayerView; faction: Faction; pos: { x: number; y: number; era: number }; w: number; h: number; compact: boolean;
   queueIndex: number; slot: QueueSlot | undefined; goal: boolean; onPath: boolean; skipped: boolean; locked: boolean; touch: boolean;
-  needed: boolean; asked: boolean; fresh: boolean;
+  needed: boolean; asked: boolean; removeHint: string; fresh: boolean;
   onResearchNow(t: TechId): void; onQueue(t: TechId): void; onRemove(t: TechId): void; onPeek(rect: DOMRect | null): void;
 }) {
   const r = view.research;
@@ -294,11 +294,12 @@ function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal
     </span>
     <span className="tn-foot">{isKnown ? (skipped ? 'Not needed' : '')
       : researching ? <><span className="tn-bar" role="progressbar" aria-label={`${TECH_NAME[t]} research progress`} aria-valuemin={0} aria-valuemax={cost} aria-valuenow={progress}><i style={{ width: `${cost ? progress * 100 / cost : 0}%` }} /></span>{turns === null ? 'Needs Science' : turnsText(turns)}</>
-      : current ? `${cost} Science · ${turns === null ? 'needs Science' : slot?.arrivalTurn ? `turn ${slot.arrivalTurn}` : turnsText(turns)}`
+      : current ? slot?.arrivalTurn ? `Turn ${slot.arrivalTurn}` : `${cost} Science · ${turns === null ? 'needs Science' : turnsText(turns)}`
       : `${cost} Science`}</span>
   </button>
   {!isKnown && <button type="button" className={`tn-queue${queued ? ' on' : ''}`} data-testid="tree-queue" data-tech={t} disabled={locked}
     style={{ left: qx, top: qy }}
+    title={queued ? removeHint : undefined}
     aria-label={queued ? `Remove ${TECH_NAME[t]} from the queue` : `Queue ${TECH_NAME[t]}`}
     onClick={() => (queued ? onRemove(t) : onQueue(t))}>
     {queued ? <><Icon name="ui-cross" size={10} />Remove</> : '+ Queue'}</button>}

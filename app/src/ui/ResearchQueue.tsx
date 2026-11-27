@@ -4,7 +4,7 @@ import { firstScienceForecast } from '../research';
 import { useGame } from '../store';
 import type { Order, PlayerView, TechId } from '../types';
 import { Icon } from './bits';
-import { arrivalText, cheapestFirst, legalQueue, moveInQueue, queueSchedule, removeFromQueue } from './eraResearch';
+import { arrivalText, cheapestFirst, legalQueue, moveInQueue, queueRemovalHint, queueSchedule, removeFromQueue } from './eraResearch';
 
 /** Replace the research queue with `techs` (the one place the panel edits it). */
 export function editQueue(view: PlayerView, techs: TechId[]) {
@@ -57,7 +57,7 @@ export function ResearchQueue({ view, orders, slotCount, landed }: { view: Playe
     <ol role="list">{slots.map((slot, i) => <li role="listitem" key={slot.tech} className={`${i === 0 ? 'first' : ''}${landed === slot.tech ? ' landed' : ''}`} data-tech={slot.tech}>
       <span className="rq-number">{i + 1}</span>
       <b className="rq-name" title={TECH_NAME[slot.tech]}>{TECH_NAME[slot.tech]}</b>
-      <button className="icon-btn rq-remove" title="Remove from the queue" disabled={disabled} aria-label={`Remove ${TECH_NAME[slot.tech]} from the queue`} onClick={() => editQueue(view, removeFromQueue(r, queue, slot.tech))}><Icon name="ui-cross" size={12} className="ui-mark" /></button>
+      <button className="icon-btn rq-remove" title={queueRemovalHint(r, queue, slot.tech)} disabled={disabled} aria-label={`Remove ${TECH_NAME[slot.tech]} from the queue`} onClick={() => editQueue(view, removeFromQueue(r, queue, slot.tech))}><Icon name="ui-cross" size={12} className="ui-mark" /></button>
       <small className="rq-arrival" data-testid="queue-arrival">{arrivalText(slot, noScience)}</small>
       <span className="research-queue-controls">
         <button className="icon-btn" title="Research earlier" disabled={disabled || i === 0 || !movable(i, -1)} aria-label={`Move ${TECH_NAME[slot.tech]} earlier`} onClick={() => editQueue(view, moveInQueue(queue, i, -1))}><span aria-hidden="true">◀</span></button>

@@ -108,6 +108,7 @@ for (const size of SIZES) {
     await shot(page, size, '03-queued-across-eras');
 
     // Removing a Medieval technology takes out the later ones that waited behind it.
+    await expect(tree.locator('[data-testid="tree-queue"][data-tech="Machinery"]')).toHaveAttribute('title', /including later-era technologies/);
     await tree.locator('[data-testid="tree-queue"][data-tech="Machinery"]').click();
     expect((await plan(page)).queue).toEqual(['Chivalry']);
     // Two eras short: both are named, and Cancel leaves the queue alone.

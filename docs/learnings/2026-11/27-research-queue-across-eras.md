@@ -2,7 +2,7 @@
 
 The strict gate (research only your current era) had been enforced twice: on research itself and on the queue.
 The second was not needed. A queue is researched in order, so a later-era technology placed behind every unknown
-technology of the eras before it can only come up once its era is open. Rules 65 checks exactly that
+technology of the eras before it can only come up once its era is open. Rules 67 checks exactly that
 (`eras::queue_gap`: the era a queued technology would have to wait behind, given what is known plus what is
 ahead of it in the queue) and lets the queue survive an era-up. `SetResearch` keeps the old check.
 

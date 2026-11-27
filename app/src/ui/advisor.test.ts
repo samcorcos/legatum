@@ -4,6 +4,8 @@ import { advisor_orders } from '../wasm-pkg/legatum.js';
 import { neighbors } from '../hex';
 import type { Order, TechId } from '../types';
 import { TECH_NAME } from '../data';
+import { itemName } from '../data';
+import { ownerName } from '../barbarians';
 import { advisorSuggestion, advisorWhy, practiceKind, PRACTICE_TURNS, readAdvisorPreferences, useAdvisor, type AdvisorContext } from './advisorModel';
 
 async function opening() {
@@ -25,6 +27,34 @@ async function opening() {
 }
 
 describe('one decision at a time', () => {
+  it('teaches the first locked garrison once, using the rival and city names', async () => {
+    const { view, city, unit, ctx } = await opening();
+    view.turn = 5;
+    const seen = ['welcome', 'report', 'howToWin'];
+    expect(advisorSuggestion(ctx(), seen, [])?.id).not.toBe('garrisonLock');
+    const rival = view.players.find((p) => p.team !== view.team)!;
+    unit.pos = city.pos;
+    unit.occupation_lock = rival.id;
+    city.occupation_lock = rival.id;
+    const people = ownerName(view, rival.id);
+    const name = itemName({ kind: 'Unit', unit: unit.kind }, view.players.find((p) => p.id === view.me)!.faction);
+    expect(advisorSuggestion(ctx(), seen, [])).toEqual({
+      id: 'garrisonLock', title: `Your ${name} holds ${city.name}`,
+      why: `Your military units in ${city.name} stay as its garrison until Peace with ${people} or their elimination. ${city.name} builds nothing until then.`,
+      steps: [{ instruction: `Make Peace with ${people} in Diplomacy to free your garrison.`, target: { kind: 'control', name: 'diplomacy', value: undefined } }],
+      current: 0, acknowledge: true,
+    });
+    expect(advisorSuggestion(ctx(), [...seen, 'garrisonLock'], [])?.id).not.toBe('garrisonLock');
+    expect(advisorSuggestion({ ...ctx(), techOpen: true }, seen, [])?.id).not.toBe('garrisonLock');
+    expect(advisorSuggestion(ctx([], { kind: 'unit', id: unit.id }), seen, [])?.id).not.toBe('garrisonLock');
+    expect(advisorSuggestion(ctx([], { kind: 'city', id: city.id }), seen, [])?.id).not.toBe('garrisonLock');
+    expect(advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech: view.research.available[0].tech }]), techOpen: true }, [...seen, 'researchQueue'], [])?.id).toBe('closeResearch');
+    view.actions = { ...view.actions, free_techs: { pending: 1, from: null, choices: [] } };
+    expect(advisorSuggestion({ ...ctx(), turnLabel: 'Choose 1 free technology' }, seen, [])?.id).toBe('answer:freeTechs:');
+    view.actions.free_techs = { pending: 0, from: null, choices: [] };
+    unit.occupation_lock = null;
+    expect(advisorSuggestion(ctx(), seen, [])?.id).not.toBe('garrisonLock');
+  });
   it('welcomes once, then follows turn-one city, unit, research order', async () => {
     const { city, unit, plan, ctx } = await opening();
     expect(advisorSuggestion(ctx(), [], [])?.id).toBe('welcome');
@@ -49,7 +79,9 @@ describe('one decision at a time', () => {
     const { view, ctx } = await opening();
     const tech = view.research.available[0].tech;
     const s = advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech }]), techOpen: true }, ['welcome'], []);
-    expect(s).toMatchObject({ id: 'closeResearch', steps: [{ key: 'Esc', target: { kind: 'control', name: 'closeResearch' } }] });
+    expect(s).toMatchObject({ id: 'researchQueue', title: 'Queue your research' });
+    expect(advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech }]), techOpen: true }, ['welcome', 'researchQueue'], []))
+      .toMatchObject({ id: 'closeResearch', steps: [{ key: 'Esc', target: { kind: 'control', name: 'closeResearch' } }] });
     expect(advisorSuggestion(ctx([{ type: 'SetResearch', tech }]), ['welcome'], [])?.id).not.toBe('closeResearch');
     expect(advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech }]), techOpen: true }, ['welcome'], ['closeResearch'])?.id).not.toBe('closeResearch');
     expect(advisorSuggestion({ ...ctx([]), techOpen: true }, ['welcome'], [])?.id).not.toBe('closeResearch');
@@ -159,13 +191,17 @@ describe('one decision at a time', () => {
     expect(advisorSuggestion(ctx(orders), ['welcome'], [])).toMatchObject({ steps: [{ instruction: 'Click End turn.' }] });
   });
 
-  it('shows report once after turn one and the VP lesson around turn eight', async () => {
+  it('shows report once after turn one and how to win from turn three', async () => {
     const { view, ctx } = await opening();
     view.turn = 2;
     expect(advisorSuggestion(ctx(), ['welcome'], [])?.id).toBe('report');
-    view.turn = 8;
-    expect(advisorSuggestion(ctx(), ['welcome', 'report'], [])?.id).toBe('race');
-    expect(advisorSuggestion(ctx(), ['welcome', 'report', 'race'], [])?.id).not.toBe('race');
+    expect(advisorSuggestion(ctx(), ['welcome', 'report'], [])?.id).not.toBe('howToWin');
+    view.turn = 3;
+    const win = advisorSuggestion(ctx(), ['welcome', 'report'], []);
+    expect(win).toMatchObject({ id: 'howToWin', acknowledge: true, steps: [{ target: { kind: 'control', name: 'race' } }] });
+    expect(win?.why).toBe('Get 20 victory points (VP) with your team and keep them for 10 turns. If nobody does by turn 500, the most VP then wins.');
+    expect(win?.steps[0].instruction).toContain('Age cards, rival capitals, world wonders and your faction goal');
+    expect(advisorSuggestion(ctx(), ['welcome', 'report', 'howToWin'], [])?.id).not.toBe('howToWin');
   });
 
   it('never invents battle odds', async () => {
@@ -181,6 +217,95 @@ describe('one decision at a time', () => {
     await client.newGame(await client.standardSetup('424242', 'Athens', 'India', 'Ada', 'Bo'));
     const plan = JSON.parse(advisor_orders(JSON.stringify(client.view(0)))) as Order[];
     expect(plan.some((o) => o.type === 'MoveUnit' || o.type === 'MoveUnitPath')).toBe(true);
+  });
+});
+
+describe('research queue advice', () => {
+  it('recommends the first three available technologies and advances after each is queued', async () => {
+    const { view, ctx } = await opening();
+    const techs = view.research.available.slice(0, 3).map((option) => option.tech);
+    expect(techs).toHaveLength(3);
+    const plan: Order[] = [{ type: 'SetResearchQueue', techs: [...techs, 'AutonomousSystems'] }];
+    const names = techs.map((tech) => TECH_NAME[tech]);
+    const expectedTitle = `Queue research: ${names.join(', then ')}`;
+    const open = (orders: Order[] = []) => ({ ...ctx(orders, null, plan), techOpen: true });
+    const seen = ['welcome', 'researchQueue'];
+    const first = advisorSuggestion(open(), seen, []);
+    expect(first).toMatchObject({ id: 'research', title: expectedTitle, why: advisorWhy({ type: 'SetResearch', tech: techs[0] }, view), current: 1 });
+    expect(first?.steps).toEqual([
+      { instruction: 'Click Research at the top.', key: 'T', target: { kind: 'control', name: 'research', value: undefined } },
+      { instruction: `Click ${names[0]}.`, target: { kind: 'control', name: 'tech', value: techs[0] } },
+      { instruction: `Click + Queue on ${names[1]}, or Shift-click it in the tree.`, target: { kind: 'control', name: 'queueTech', value: techs[1] } },
+      { instruction: `Click + Queue on ${names[2]}, or Shift-click it in the tree.`, target: { kind: 'control', name: 'queueTech', value: techs[2] } },
+    ]);
+    expect(advisorSuggestion({ ...open(), touch: true }, seen, [])?.steps[2].instruction)
+      .toBe(`Tap + Queue on ${names[1]}.`);
+    const one = [{ type: 'SetResearchQueue' as const, techs: techs.slice(0, 1) }];
+    expect(advisorSuggestion(open(one), seen, [])).toMatchObject({ id: 'research', title: expectedTitle, current: 2 });
+    const two = [{ type: 'SetResearchQueue' as const, techs: techs.slice(0, 2) }];
+    expect(advisorSuggestion(open(two), seen, [])).toMatchObject({ id: 'research', current: 3 });
+    expect(advisorSuggestion(open([{ type: 'SetResearchQueue', techs }]), seen, [])?.id).toBe('closeResearch');
+    expect(advisorSuggestion(open(one), seen, ['research'])?.id).not.toBe('research');
+    expect(advisorSuggestion(open([{ type: 'SetResearchQueue', techs: [techs[1]] }]), seen, [])?.id).not.toBe('research');
+  });
+
+  it('keeps the single-technology title, skips unavailable picks, and stays quiet while a saved queue runs', async () => {
+    const { view, ctx } = await opening();
+    const tech = view.research.available[0].tech;
+    const plan: Order[] = [{ type: 'SetResearchQueue', techs: ['AutonomousSystems', tech] }];
+    const s = advisorSuggestion({ ...ctx([], null, plan), techOpen: true }, ['welcome', 'researchQueue'], []);
+    expect(s).toMatchObject({ id: 'research', title: `Research ${TECH_NAME[tech]}`, current: 1 });
+    expect(s?.steps[1]).toEqual({ instruction: `Click ${TECH_NAME[tech]}.`, target: { kind: 'control', name: 'tech', value: tech } });
+    view.research.queue = [tech];
+    view.research.current = tech;
+    expect(advisorSuggestion(ctx([], null, plan), ['welcome', 'researchQueue'], [])?.id).not.toBe('research');
+    expect(advisorSuggestion({ ...ctx([], null, plan), researchQueueDrained: true }, ['welcome'], [])?.id).not.toBe('researchQueue');
+  });
+
+  it('teaches the queue once after the first pick or when completed research drains it', async () => {
+    const { view, ctx } = await opening();
+    const tech = view.research.available[0].tech;
+    const nextTech = view.research.available[1].tech;
+    const nextName = TECH_NAME[nextTech];
+    const chosen: Order[] = [{ type: 'SetResearchQueue', techs: [tech] }];
+    const lesson = advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], []);
+    expect(lesson).toEqual({ id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: 1,
+      why: 'Queued technologies keep research moving. For a later era, review the earlier technologies before choosing Queue all in order.',
+      steps: [{ instruction: 'Click Research at the top.', target: { kind: 'control', name: 'research', value: undefined } },
+        { instruction: `Click + Queue on ${nextName}, or Shift-click it in the tree.`, target: { kind: 'control', name: 'queueTech', value: nextTech } }] });
+    expect(advisorSuggestion({ ...ctx(chosen), techOpen: true, touch: true }, ['welcome'], [])?.steps[1])
+      .toEqual({ instruction: `Tap + Queue on ${nextName}.`, target: { kind: 'control', name: 'queueTech', value: nextTech } });
+    expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome', 'researchQueue'], [])?.id).not.toBe('researchQueue');
+    expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], ['researchQueue'])?.id).not.toBe('researchQueue');
+    expect(advisorSuggestion(ctx(), ['welcome'], [])?.id).not.toBe('researchQueue');
+    view.turn = 2;
+    expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report'], [])).toEqual({
+      id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: 0,
+      why: 'Choose a technology to resume research.',
+      steps: [{ instruction: 'Click Research at the top.', target: { kind: 'control', name: 'research', value: undefined } },
+        { instruction: `Click + Queue on ${TECH_NAME[tech]}, or Shift-click it in the tree.`, target: { kind: 'control', name: 'queueTech', value: tech } }],
+    });
+    expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report', 'researchQueue'], [])?.id).not.toBe('researchQueue');
+    view.research.available = [view.research.available[0]];
+    expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], [])?.id).not.toBe('researchQueue');
+    view.research.available = [];
+    expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report'], [])?.id).not.toBe('researchQueue');
+  });
+
+  it('uses visible threat or a resource reveal only when the technology provides it', async () => {
+    const { view, city, unit } = await opening();
+    const rival = view.players.find((p) => p.team !== view.team)!;
+    view.players = view.players.map((p) => p.id === rival.id ? { ...p, army: 100 } : p);
+    view.units.push({ ...unit, id: 9001, owner: rival.id, pos: city.pos, military: true });
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A foreign military unit is near one of your cities: Masonry unlocks Walls.');
+    expect(advisorWhy({ type: 'SetResearch', tech: 'IronWorking' }, view)).toBe('Iron Working shows Iron on the map.');
+    view.units = view.units.filter((u) => u.id !== 9001);
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^A foreign military unit is near one of your cities/);
+    view.players = view.players.map((p) => p.id === rival.id ? { ...p, era: view.research.era + 2 } : p);
+    view.cities.push({ ...city, id: 9002, owner: rival.id });
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A rival is ahead in research: Masonry unlocks Walls.');
+    view.players = view.players.map((p) => p.id === rival.id ? { ...p, era: view.research.era + 1 } : p);
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^A rival is ahead in research/);
   });
 });
 
@@ -263,6 +388,31 @@ describe('practice counting', () => {
     expect(readAdvisorPreferences().practice).toEqual({});
     vi.unstubAllGlobals();
   });
+});
+
+it('remembers when each garrison was first seen and clears it on release', async () => {
+  const { view, unit, city } = await opening();
+  const store = new Map<string, string>();
+  vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) });
+  useAdvisor.setState({ locks: {} });
+  const rival = view.players.find((p) => p.team !== view.team)!;
+  unit.pos = city.pos;
+  unit.occupation_lock = rival.id;
+  view.turn = 10;
+  const key = `${unit.id}:${rival.id}`;
+  useAdvisor.getState().observeLocks(view);
+  expect(readAdvisorPreferences().locks).toEqual({ [key]: 10 });
+  view.turn = 19;
+  useAdvisor.getState().observeLocks(view);
+  expect(useAdvisor.getState().locks).toEqual({ [key]: 10 });
+  unit.occupation_lock = null;
+  useAdvisor.getState().observeLocks(view);
+  expect(readAdvisorPreferences().locks).toEqual({});
+  unit.occupation_lock = rival.id;
+  useAdvisor.getState().observeLocks(view);
+  expect(useAdvisor.getState().locks).toEqual({ [key]: 19 });
+  useAdvisor.setState({ locks: {} });
+  vi.unstubAllGlobals();
 });
 
 it('a Settler with no planned order still gets a card when moving is learned', async () => {

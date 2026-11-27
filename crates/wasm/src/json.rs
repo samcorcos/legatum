@@ -177,10 +177,10 @@ fn migrate_legacy_walls(value: &mut Value) {
 
 pub const UPGRADABLE_RULES_VERSION: u32 = 49;
 
-/// Read a rules-49 to rules-61 saved state as a current (rules-62) one, for analysis that starts from
+/// Read a rules-49 to rules-65 saved state as a current (rules-66) one, for analysis that starts from
 /// recorded positions which cannot be regenerated (hill-climb do-no-harm states). `json` is a save
-/// (`save_version` 49 to 61) or a bare state line with no `save_version` (`audit_states` output; a
-/// line carrying `capitals_taken` is read as rules 49, any other as rules 50 to 59). See
+/// (`save_version` 49 to 65) or a bare state line with no `save_version` (`audit_states` output; a
+/// line carrying `capitals_taken` is read as rules 49, any other as rules 50 or later). See
 /// `upgrade_value_from_49` and `upgrade_value_from_50` for what changes.
 pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     check_json_size(json)?;
@@ -188,9 +188,8 @@ pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     match v.get("save_version").and_then(Value::as_u64) {
         None if carries_rules_49_fields(&v) => upgrade_value_from_49(v),
         None | Some(50) | Some(51) | Some(52) | Some(53) | Some(54) | Some(55) | Some(56)
-        | Some(57) | Some(58) | Some(59) | Some(60) | Some(61) | Some(62) | Some(63) => {
-            upgrade_value_from_50(v)
-        }
+        | Some(57) | Some(58) | Some(59) | Some(60) | Some(61) | Some(62) | Some(63) | Some(64)
+        | Some(65) => upgrade_value_from_50(v),
         Some(49) => upgrade_value_from_49(v),
         Some(n) if n == u64::from(legatum_core::RULES_VERSION) => parse_state(json),
         Some(n) => Err(format!(
@@ -215,7 +214,8 @@ pub fn carries_rules_49_fields(v: &Value) -> bool {
 /// turns Egypt's Archers into Chariot Archers and its Medjay into plain Spearmen, by rule, with no
 /// field; rules 60 adds the optional research goal, rules 61 only adds the deals fields, which
 /// take their defaults: deals off, no Open Borders, and rules 62 adds `City::walls_damage`,
-/// absent meaning a full Walls bar; rules 63 adds city upkeep, a rule with no field). Rules 51
+/// absent meaning a full Walls bar; rules 63 adds city upkeep, a rule with no field; rules 65 changes India upkeep and Gold with no field, rules 66 adds `Player::city_offer`,
+/// absent meaning no offer running). Rules 51
 /// changes how peaceful units contest a tile, rules 52 renames identifiers (the old names still
 /// parse through serde aliases) and rules 53 changes who counts for Humble the mighty
 /// (`objectives::humbles`, judged each turn from the turn-start VP); rules 55 adds city
@@ -412,7 +412,7 @@ mod tests {
     }
 
     #[test]
-    fn rules_64_saves_round_trip_and_a_version_63_save_is_refused() {
+    fn rules_66_saves_round_trip_and_a_version_65_save_is_refused() {
         // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
         // shape only gains the project value, so a city growing on the Nile round-trips at 48,
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
@@ -430,8 +430,11 @@ mod tests {
         // Rules 61: deals, behind an optional switch; the app refuses a 60 save. Rules 62: breakable
         // Walls add the optional `City::walls_damage`; a 61 save is refused and upgrades. Rules 63:
         // city upkeep; the save shape is unchanged, and a 62 save is refused. Rules 64: an upgrade
-        // stops at the most advanced form its supply allows; the save shape is unchanged.
-        assert_eq!(legatum_core::RULES_VERSION, 65);
+        // stops at the most advanced form its supply allows; the save shape is unchanged. Rules 65:
+        // Revenue Offices waive India's city upkeep and remit full Gold; save shape unchanged.
+        // Rules 66: Byzantium's Buy a city adds the optional `Player::city_offer`.
+        // Rules 67: research queues may span eras; the research gate and save shape are unchanged.
+        assert_eq!(legatum_core::RULES_VERSION, 67);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -454,7 +457,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":64"));
+        assert!(save.contains("\"save_version\":66"));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
@@ -465,12 +468,12 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(63);
+        old["save_version"] = Value::from(65);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
                 .contains(&format!(
-                    "incompatible rules version: saved Some(63), current {}",
+                    "incompatible rules version: saved Some(65), current {}",
                     legatum_core::RULES_VERSION
                 ))
         );

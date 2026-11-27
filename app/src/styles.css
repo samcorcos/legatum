@@ -34,7 +34,22 @@ body,
   font-feature-settings: 'lnum' 1, 'tnum' 1;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  -webkit-user-select: none;
   user-select: none;
+}
+/* Game UI never highlights as text; typing fields stay selectable. Safari needs the prefix. */
+/* A modal dialog sits in the browser's top layer and Chrome resolves its user-select to text,
+   so the shell's none does not reach it: set it on every dialog and popover too. */
+dialog,
+[popover] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+[contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 button {
   font: inherit;
@@ -1023,9 +1038,8 @@ dialog.settings-modal {
   .topbar .research-chip b, .topbar .research-chip-plan { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .topbar .population-counter { padding: 0 12px; }
   /* Compaction steps set by TopBar (TOP_BAR_COMPACTION) when the bar is crowded. */
-  /* First step: the "Pop." and "Armed" words go; the figures stay (their tooltips name them). */
+  /* First step: the "Pop." word goes; the figures stay (their tooltips name them). */
   .topbar[data-compact~='counts'] .count-label { display: none; }
-  /* The levy keeps its soldier icon beside the figure (its tooltip names it), so "3 / 2" never stands alone. */
   /* The words give way to an icon, so a bare number never stands alone. */
   .topbar .count-icon { display: none; }
   .topbar[data-compact~='counts'] .count-icon { display: inline-block; vertical-align: -2px; margin-right: 1px; }
@@ -1696,13 +1710,6 @@ dialog.settings-modal {
 .up-heir-line + .up-heir-line { margin-top: 2px; font-weight: 500; }
 .up-heir-line.good { color: var(--good); }
 .up-heir-line.bad { color: var(--bad); }
-/* A hired Company: its seller, its countdown and what it costs in the panel head; its rule among the notes, in the stack beside the Heir note. */
-.up-company-tag { margin-top: 3px; font: 600 12px/1.3 var(--sans); color: var(--ink); }
-.up-company-tag.last { color: var(--bad); }
-.up-company-tag .ui-mark { vertical-align: -2px; }
-.up-company { align-self: center; margin-top: 6px; max-width: 100%; display: flex; gap: 8px; align-items: flex-start; padding: 6px 12px; background: var(--panel); border: 1px solid var(--frame); border-left: 3px solid var(--accent); box-shadow: 0 2px 8px rgba(40, 30, 10, 0.25); pointer-events: auto; }
-.up-company-mark { flex: none; margin-top: 1px; color: var(--ink); }
-.up-company-rule { margin: 0; font: 500 12px/1.35 var(--sans); color: var(--ink-2); }
 .up-heir-confirm { flex-direction: column; border-left-color: var(--bad); grid-column: 1 / -1; box-shadow: none; }
 .up-heir-confirm p { margin: 0; font: 500 13px/1.35 var(--sans); color: var(--ink); }
 .up-heir-confirm-row { display: flex; gap: 8px; }
@@ -4016,7 +4023,7 @@ dialog.gameover::backdrop {
 .toast-message {
   min-width: 0;
   overflow-wrap: anywhere;
-  user-select: text;
+  -webkit-user-select: text; user-select: text;
 }
 .toast-close {
   flex: none;
@@ -4309,6 +4316,7 @@ dialog.gameover::backdrop {
 .prod-vs-item.bad { color: var(--bad); }
 .prod-vs.same { font-weight: 500; color: var(--ink-2); }
 .prod-upkeep.paid { color: var(--accent); font-weight: 600; }
+.prod-upkeep.gain { color: var(--good); font-weight: 600; }
 .prod-upkeep.free, .prod-upkeep.none { color: var(--muted); }
 /* The empire's Gold/turn once this unit exists, when that is negative: red (--accent, as paid upkeep, for contrast) even where the unit's own upkeep is free. */
 .prod-upkeep-after { color: var(--accent); font-weight: 600; }

@@ -5,9 +5,8 @@ import { coreFixture } from '../test/coreFixture';
 import { hexAt, neighbors, tileIndex } from '../hex';
 import { buildLensTiles, LENSES, lensMetrics } from './lenses';
 import { settleTileNote, withProxySettler } from './settleAdvice';
-import { knownLegalSite, knownThreats, reservedSettlements, settlementScores, settlementSites } from '../settlement';
-import { drawLens, drawOwnerOverlay } from './drawLens';
-import { buildOverlayTiles, DEFAULT_OVERLAYS } from './overlays';
+import { knownLegalSite, reservedSettlements, settlementScores, settlementSites } from '../settlement';
+import { drawLens } from './drawLens';
 import { MAP_STYLES } from './style';
 import { BAND_FLOORS, SITE_BANDS, siteBandOf } from './siteBands';
 
@@ -29,53 +28,12 @@ const settler = (v: PlayerView): UnitView => ({ ...unitTemplate, id: 1, owner: 0
 const city = (id: number, pos: Hex): CityView => ({ id, owner: 0, name: 'Home', is_capital: true, pos,
   population: 2, hp: 200, max_hp: 200, strength: 20, walls: false, great_works: [], visible: true, detail: null });
 
-it('paints exactly one lens, omits unknown terrain and keeps the overlays out of every lens', () => {
+it('offers only Default and Settle, and leaves unknown terrain unmarked', () => {
   const v = fixture();
   v.tiles[0] = { explored: false, visible: false, terrain: null, ruin: false, owner: null };
-  v.tiles[1].owner = 1; v.tiles[1].visible = false; v.tiles[2].resource = 'Iron';
-  expect(LENSES).toEqual(['default', 'settle', 'movement', 'threat', 'discovery']);
-  for (const lens of LENSES) expect(buildLensTiles(v, lens).some((t) => t.index === 0)).toBe(false);
+  expect(LENSES).toEqual(['default', 'settle']);
   expect(buildLensTiles(v, 'default')).toEqual([]);
-  // Owned land, yields and resources belong to the overlays: no lens draws a tile for them.
-  for (const lens of LENSES) expect(buildLensTiles(v, lens).some((t) => t.yields || t.fill)).toBe(false);
-});
-it('marks only explored frontier edges and known ruins', () => {
-  const v = fixture(); v.tiles[0].explored = false; v.tiles[50].ruin = true;
-  const tiles = buildLensTiles(v, 'discovery');
-  expect(tiles.find((t) => t.index === 1)?.label).toBe('?');
-  expect(tiles.find((t) => t.index === 50)?.label).toBe('◇');
-  expect(tiles.some((t) => t.index === 90)).toBe(false);
-});
-it('shares threat reach with scoring and never extends ranged fire from move endpoints', () => {
-  const v = fixture(), u = settler(v);
-  const enemy = { ...u, id: 2, owner: 1, kind: 'Archer', military: true, ranged: 15, range: 2 } as UnitView;
-  v.units = [enemy];
-  const threats = knownThreats(v);
-  expect(buildLensTiles(v, 'threat').map((t) => t.index)).toEqual(threats.flatMap((n, i) => n ? [i] : []));
-  expect(threats[tileIndex({ q: enemy.pos.q + 3, r: enemy.pos.r }, v.width, v.height)]).toBe(0);
-  v.players[1].team = 0;
-  expect(buildLensTiles(v, 'threat')).toEqual([]);
-});
-it('Threat lens counts a visible barbarian raider (no listed player) instead of crashing, whatever borders it crosses', () => {
-  const v = fixture(), u = settler(v);
-  // Barbarians threaten everyone but the Celts, whom they never attack (the fixture's viewer is the Celts).
-  v.players[0].faction = 'Switzerland';
-  v.tiles.forEach((t, i) => { if (i % 12 < 5) (t as { owner: number | null }).owner = 1; });
-  const raider = { ...u, id: 3, owner: 255, kind: 'Spearman', military: true, ranged: 0, max_moves: 2 } as UnitView;
-  v.units = [raider];
-  const threats = knownThreats(v);
-  expect(threats[tileIndex(raider.pos, v.width, v.height)]).toBe(1);
-  // Peace and closed borders do not stop it: it reaches into owned land too.
-  expect(threats.some((n, i) => n && v.tiles[i].owner === 1)).toBe(true);
-  expect(buildLensTiles(v, 'threat').length).toBeGreaterThan(5);
-});
-it('Threat lens leaves a barbarian raider out for the Celts, who it never attacks', () => {
-  const v = fixture(), u = settler(v);
-  const raider = { ...u, id: 3, owner: 255, kind: 'Spearman', military: true, ranged: 0, max_moves: 2 } as UnitView;
-  v.units = [raider];
-  expect(v.players[0].faction).toBe('Celts');
-  expect(knownThreats(v).every((n) => n === 0)).toBe(true);
-  expect(buildLensTiles(v, 'threat')).toEqual([]);
+  expect(buildLensTiles(v, 'settle', [{ pos: hexAt(0, v.width), band: 'Good', rank: 1 } as SettlementScore])).toEqual([]);
 });
 it('shows every legal site by band with top-three markers, no map scores, and no unreachable recommendations', () => {
   const v = fixture(), u = settler(v); v.units = [u];
@@ -86,7 +44,7 @@ it('shows every legal site by band with top-three markers, no map scores, and no
   expect(tiles.filter((t) => t.rank)).toHaveLength(3);
   expect(tiles.find((t) => t.rank === 1)?.index).toBe(tileIndex(u.pos, v.width, v.height));
   for (const s of sites) expect(s.breakdown.reduce((n, p) => n + p.value, 0)).toBe(s.score);
-  expect(tiles.every((t) => t.label === undefined && t.band !== undefined)).toBe(true);
+  expect(tiles.every((t) => t.band !== undefined)).toBe(true);
 });
 it('leaves an explored site untinted when only the anonymous real-city gap blocks it', () => {
   const v = fixture(), u = settler(v);
@@ -145,14 +103,12 @@ it('the tinted tiles are exactly the legal tiles: unreachable, risky and far sit
   expect(tiles.every((t) => !('risk' in t))).toBe(true);
 });
 describe.each(['atlas'] as const)('%s screen-space renderer', (look) => {
-  it.each([0.28, 0.9, 2.4])('draws all six lenses without errors at zoom %s', (zoom) => {
+  it.each([0.28, 0.9, 2.4])('draws both lenses without errors at zoom %s', (zoom) => {
     const v = fixture(), u = settler(v); v.units = [u]; v.tiles[1].owner = 0; v.tiles[50].ruin = true;
     v.tiles[1].resource = 'Iron'; v.tiles[2].resource = 'Stone'; v.tiles[3].resource = 'Coal'; v.tiles[3].owner = 1;
     const ctx = new Proxy({}, { get: (target, key) => (target as Record<PropertyKey, unknown>)[key] ?? vi.fn(), set: (target, key, value) => { (target as Record<PropertyKey, unknown>)[key] = value; return true; } }) as CanvasRenderingContext2D;
     const metrics = lensMetrics(36 * zoom);
     expect(metrics.font).toBeGreaterThanOrEqual(9);
-    const everything = buildOverlayTiles(v, { yields: true, resources: true, borders: true });
-    for (const pass of ['tint', 'labels'] as const) drawOwnerOverlay(ctx, everything.borders, { x: 180, y: 180, zoom }, 800, 600, v.width, 2, look, pass, 1, new Set([54]));
     for (const lens of LENSES) for (const pass of ['tint', 'labels'] as const) for (const yieldsOn of [false, true]) drawLens(ctx, buildLensTiles(v, lens, settlementSites(v, u)), { x: 180, y: 180, zoom }, 800, 600, v.width, 2, look, pass, new Map([[54, 25]]), [], () => 0, { yieldsOn });
   });
   it('uses five distinct greens, deeper for better sites and readable over every terrain, with only a thin accent line stronger', () => {
@@ -163,7 +119,7 @@ describe.each(['atlas'] as const)('%s screen-space renderer', (look) => {
     }) as unknown as CanvasRenderingContext2D;
     const lens = MAP_STYLES[look].lens;
     for (const faded of [false, true]) {
-      for (const band of SITE_BANDS) drawLens(ctx, [{ index: 0, tint: '', band, faded }], { x: 0, y: 0, zoom: 1 }, 800, 600, 12, 1, look);
+      for (const band of SITE_BANDS) drawLens(ctx, [{ index: 0, band, faded }], { x: 0, y: 0, zoom: 1 }, 800, 600, 12, 1, look);
     }
     // Poor is a faint tint and the washes deepen with quality, each less covering where the land is only remembered; every edge is a thin line.
     const covers = SITE_BANDS.map((band) => lens.settleAlpha[band]);
@@ -182,10 +138,10 @@ describe.each(['atlas'] as const)('%s screen-space renderer', (look) => {
       get: (target, key) => (target as Record<PropertyKey, unknown>)[key] ?? (() => undefined),
       set: (target, key, value) => { (target as Record<PropertyKey, unknown>)[key] = value; return true; },
     }) as unknown as CanvasRenderingContext2D;
-    drawLens(ctx, [{ index: 0, tint: '', band: 'Great', faded: false }], { x: 0, y: 0, zoom: 0.9 }, 800, 600, 12, 1, look, 'tint');
+    drawLens(ctx, [{ index: 0, band: 'Great', faded: false }], { x: 0, y: 0, zoom: 0.9 }, 800, 600, 12, 1, look, 'tint');
     expect(dashes).toEqual([]);
     expect(strokes).toEqual([MAP_STYLES[look].lens.settle.Great]);
-    for (const zoom of [0.28, 0.9, 2]) for (const pass of ['tint', 'labels'] as const) drawLens(ctx, [{ index: 0, tint: '', band: 'Great', faded: false }], { x: 0, y: 0, zoom }, 800, 600, 12, 1, look, pass);
+    for (const zoom of [0.28, 0.9, 2]) for (const pass of ['tint', 'labels'] as const) drawLens(ctx, [{ index: 0, band: 'Great', faded: false }], { x: 0, y: 0, zoom }, 800, 600, 12, 1, look, pass);
     expect(arcs).toEqual([]);
   });
   it('rings the top three in ink with a paper edge, so the ring shows on the deepest green', () => {
@@ -195,24 +151,17 @@ describe.each(['atlas'] as const)('%s screen-space renderer', (look) => {
       set: (target, key, value) => { (target as Record<PropertyKey, unknown>)[key] = value; return true; },
     }) as unknown as CanvasRenderingContext2D;
     const lens = MAP_STYLES[look].lens;
-    drawLens(ctx, [{ index: 0, tint: '', band: 'Exceptional', rank: 1, faded: false }], { x: 0, y: 0, zoom: 0.9 }, 800, 600, 12, 1, look, 'tint');
+    drawLens(ctx, [{ index: 0, band: 'Exceptional', rank: 1, faded: false }], { x: 0, y: 0, zoom: 0.9 }, 800, 600, 12, 1, look, 'tint');
     const ring = strokes.slice(-2);
     expect(ring.map((s) => s.color)).toEqual([lens.paper, lens.ink]);
     expect(ring[0].width).toBeGreaterThan(ring[1].width);
   });
 });
 
-it('Discovery can show a Deep Survey ruin without revealing surrounding terrain', () => {
-  const v = fixture();
-  v.tiles[0] = { explored: false, visible: false, terrain: null, ruin: true, owner: null };
-  expect(buildLensTiles(v, 'discovery').find((t) => t.index === 0)?.label).toBe('◇');
-  expect(buildOverlayTiles(v, { ...DEFAULT_OVERLAYS, yields: true }).yields.some((t) => t.index === 0)).toBe(false);
-});
-
 it('draws only the Best spot badge above an occupied tile, with no score or empty label plate', () => {
   const text = vi.fn(), rectangles = vi.fn();
   const ctx = new Proxy({ fillText: text, fillRect: rectangles }, { get: (target, key) => (target as Record<PropertyKey, unknown>)[key] ?? vi.fn(), set: (target, key, value) => { (target as Record<PropertyKey, unknown>)[key] = value; return true; } }) as unknown as CanvasRenderingContext2D;
-  const tile = { index: 0, tint: '', band: 'Great' as const, rank: 1, faded: false };
+  const tile = { index: 0, band: 'Great' as const, rank: 1, faded: false };
   const cam = { x: 0, y: 0, zoom: 0.9 };
   drawLens(ctx, [tile], cam, 800, 600, 12, 1, 'atlas', 'tint');
   expect(text).not.toHaveBeenCalled();
@@ -228,7 +177,7 @@ it('draws only the Best spot badge above an occupied tile, with no score or empt
 it('moves the Best spot badge below its hex when a panel covers the space above it', () => {
   const rectangles = vi.fn();
   const ctx = new Proxy({ fillRect: rectangles }, { get: (target, key) => (target as Record<PropertyKey, unknown>)[key] ?? vi.fn(), set: (target, key, value) => { (target as Record<PropertyKey, unknown>)[key] = value; return true; } }) as unknown as CanvasRenderingContext2D;
-  const tile = { index: 0, tint: '', band: 'Great' as const, rank: 1, faded: false };
+  const tile = { index: 0, band: 'Great' as const, rank: 1, faded: false };
   const cam = { x: 0, y: 0, zoom: 0.9 }, r = 36 * cam.zoom;
   // Hex 0 centres at (400, 300); a first-game hint covers everything above its centre.
   drawLens(ctx, [tile], cam, 800, 600, 12, 1, 'atlas', 'labels', new Map([[0, 25]]), [{ x: 0, y: 0, w: 800, h: 300 }]);
@@ -240,7 +189,7 @@ it('moves the Best spot badge below its hex when a panel covers the space above 
 it('skips a recommendation when every candidate badge position is under a HUD panel', () => {
   const text = vi.fn(), rectangles = vi.fn();
   const ctx = new Proxy({ fillRect: rectangles, fillText: text }, { get: (target, key) => (target as Record<PropertyKey, unknown>)[key] ?? vi.fn(), set: (target, key, value) => { (target as Record<PropertyKey, unknown>)[key] = value; return true; } }) as unknown as CanvasRenderingContext2D;
-  const tile = { index: 0, tint: '', band: 'Great' as const, rank: 1, faded: false };
+  const tile = { index: 0, band: 'Great' as const, rank: 1, faded: false };
   drawLens(ctx, [tile], { x: 0, y: 0, zoom: 0.9 }, 800, 600, 12, 1, 'atlas', 'labels', new Map(), [{ x: 0, y: 0, w: 800, h: 600 }]);
   expect(text).not.toHaveBeenCalled();
   expect(rectangles).not.toHaveBeenCalled();
@@ -249,7 +198,7 @@ it('skips a recommendation when every candidate badge position is under a HUD pa
 it.each([0.28, 0.9, 2.4])('keeps all three badges distinct at zoom %s', (zoom) => {
   const text = vi.fn(), rectangles = vi.fn();
   const ctx = new Proxy({ fillText: text, fillRect: rectangles }, { get: (target, key) => (target as Record<PropertyKey, unknown>)[key] ?? vi.fn(), set: (target, key, value) => { (target as Record<PropertyKey, unknown>)[key] = value; return true; } }) as unknown as CanvasRenderingContext2D;
-  drawLens(ctx, [0, 1, 2].map((index) => ({ index, tint: '', band: 'Great' as const, rank: index + 1, faded: false })), { x: 0, y: 0, zoom }, 800, 600, 12, 1, 'atlas', 'labels');
+  drawLens(ctx, [0, 1, 2].map((index) => ({ index, band: 'Great' as const, rank: index + 1, faded: false })), { x: 0, y: 0, zoom }, 800, 600, 12, 1, 'atlas', 'labels');
   expect(text.mock.calls.map((c) => c[0])).toEqual(['Best spot', '#2', '#3']);
   const boxes = rectangles.mock.calls as number[][];
   for (const [i, a] of boxes.entries()) for (const b of boxes.slice(i + 1)) {
@@ -265,7 +214,7 @@ it('keeps settle badges clear of all HUD panels at 1000x600', () => {
     { x: 720, y: 360, w: 260, h: 220 }, // This Turn
     { x: 10, y: 20, w: 220, h: 250 },  // lens panel
   ];
-  drawLens(ctx, [0, 1, 2].map((index) => ({ index, tint: '', band: 'Great' as const, rank: index + 1, faded: false })), { x: 0, y: 0, zoom: 0.9 }, 1000, 600, 12, 1, 'atlas', 'labels', new Map(), panels);
+  drawLens(ctx, [0, 1, 2].map((index) => ({ index, band: 'Great' as const, rank: index + 1, faded: false })), { x: 0, y: 0, zoom: 0.9 }, 1000, 600, 12, 1, 'atlas', 'labels', new Map(), panels);
   const boxes = rectangles.mock.calls as number[][];
   for (const [x, y, w, h] of boxes) for (const panel of panels) {
     expect(x < panel.x + panel.w && x + w > panel.x && y < panel.y + panel.h && y + h > panel.y).toBe(false);

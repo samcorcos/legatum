@@ -114,21 +114,19 @@ describe('purchase previews', () => {
     view.units.find((u) => u.id === unit.id)!.siege_offer = { price: { total: 70, parts: [['Siege', 70]] }, blocker: null };
     view.units.push({ ...view.units[0], id: 99, upgrade_cost: 120, upgrade_breakdown: { total: 120, parts: [['Upgrade', 120]] }, upgrade_need: 'Iron' });
     view.aircraft = [{ id: 900, owner: 0, kind: 'Fighter', city: 1, hp: 100, upgrade_cost: 200, upgrade_options: [{ via: 'StealthFighter', to: 'StealthFighter', cost: 200 }] }];
-    view.company_offers = [{ seller: 2, unit: 'Spearman', price: 80 }];
     const buyCost = view.cities[1].detail!.options.find((o) => sameItem(o.item, spearman))!.buy_cost!;
     const orders: Order[] = [
       { type: 'UpgradeAircraft', plane: 900 },
-      { type: 'HireCompany', city: 1, seller: 2, unit: 'Spearman' },
       { type: 'BuyItem', city: 2, item: spearman },
       { type: 'UpgradeSiege', unit: unit.id },
       { type: 'UpgradeUnit', unit: 99 },
     ];
     const forecast = pendingSpend(view, orders, []);
-    expect(forecast.before(orders[1] as Extract<Order, { type: 'HireCompany' }>, 1).gold).toBe(810);
-    expect(forecast.before(orders[0] as Extract<Order, { type: 'UpgradeAircraft' }>, 0).gold).toBe(730 - buyCost);
-    expect(forecast.gold).toBe(530 - buyCost);
-    expect(forecast.available({ type: 'UpgradeUnit', unit: 555 }).gold).toBe(530 - buyCost);
-    expect(forecast.available(orders[0] as Extract<Order, { type: 'UpgradeAircraft' }>, 0).gold).toBe(730 - buyCost);
+    expect(forecast.before(orders[1] as Extract<Order, { type: 'BuyItem' }>, 1).gold).toBe(810);
+    expect(forecast.before(orders[0] as Extract<Order, { type: 'UpgradeAircraft' }>, 0).gold).toBe(810 - buyCost);
+    expect(forecast.gold).toBe(610 - buyCost);
+    expect(forecast.available({ type: 'UpgradeUnit', unit: 555 }).gold).toBe(610 - buyCost);
+    expect(forecast.available(orders[0] as Extract<Order, { type: 'UpgradeAircraft' }>, 0).gold).toBe(810 - buyCost);
     expect(forecast.supply.get('Iron')).toBe(2);
     expect(forecast.supply.get('Silicon')).toBe(1);
   });

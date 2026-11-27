@@ -68,7 +68,7 @@ describe('marks keep clear of a neighbouring town', () => {
   it("draws no yield cluster on a city's own tile", () => {
     const tiles = Array.from({ length: 4 }, () => ({ explored: true, visible: true, terrain: 'Grassland', owner: 0 }));
     const view = { width: 2, height: 2, me: 0, players: [{ id: 0, faction: 'Rome' }], tiles, cities: [{ pos: { q: 0, r: 0 } }] } as unknown as PlayerView;
-    const out = buildOverlayTiles(view, { yields: true, resources: false, borders: false });
+    const out = buildOverlayTiles(view, { yields: true });
     expect(out.yields.map((t) => t.index)).not.toContain(0);
     expect(out.yields.length).toBe(3);
   });
@@ -93,15 +93,15 @@ describe('a walled town fits inside its ring', () => {
     if (era === 'renaissance') continue;
     let ring: Png;
     try { ring = read(`${era}-walls`); } catch { continue; }
-    it(`${era}: every town size, scaled, ends inside the ring's wall on the cut line`, () => {
+    it(`${era}: every town size and era ends inside the ring's wall on the cut line`, () => {
       const room = outerHalfWidth(ring) - WALL;
-      for (const tier of CITY_TIERS) {
+      for (const townEra of CITY_ERAS) for (const tier of CITY_TIERS) {
         let town: Png;
-        try { town = read(`${era}-${tier}`); } catch { continue; }
+        try { town = read(`${townEra}-${tier}`); } catch { continue; }
         let l = town.width, rr = 0;
         for (let x = 0; x < town.width; x++) if (town.alpha[cy * town.width + x] > 128) { l = Math.min(l, x); rr = Math.max(rr, x); }
         const half = Math.max(cx - l, rr - cx) * WALLED_TOWN_SCALE;
-        expect(half, `${era}-${tier}`).toBeLessThanOrEqual(room);
+        expect(half, `${townEra}-${tier}`).toBeLessThanOrEqual(room);
       }
     });
   }

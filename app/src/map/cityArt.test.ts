@@ -1,9 +1,72 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CITY_ERAS, CITY_TIERS, cityArtArrivals, cityArtEpoch, cityImage, cityStem, cityTier, cityUrl, markStem, missingCityArt, ringEraOf, spriteSize, traceCityArt, wallStem, wallTierOf } from './cityArt';
+import { fileURLToPath } from 'node:url';
+import { alphaOf } from '../test/pngAlpha';
+import { CITY_ERAS, CITY_GROUND, CITY_TIERS, WALLED_TOWN_SCALE, cityArtArrivals, cityArtEpoch, cityDrawDrop, cityDrawScale, cityImage, cityStem, cityTier, cityUrl, markStem, missingCityArt, ringEraOf, spriteSize, traceCityArt, wallDrawScale, wallStem, wallTierOf } from './cityArt';
+import cityScaleData from './cityScale.json';
+import { HEX_SIZE, HEX_W, BANNER_BOTTOM } from './grid';
+import { CITY_WORLD } from './terrain';
 
 const only = (...stems: string[]) => (stem: string, size: 64 | 128 | 512) => size === 512 && stems.includes(stem);
 
 describe('city art', () => {
+  it('normalizes representative house height while footprints grow by tier', () => {
+    expect(cityDrawScale(markStem('hamlet'))).toBe(1);
+    const bounds = [[0.55, 0.66], [0.73, 0.84], [0.96, 1.08], [1.24, 1.36]];
+    for (const era of CITY_ERAS) for (const [index, tier] of CITY_TIERS.entries()) {
+      const stem = `${era}-${tier}` as keyof typeof cityScaleData.sprites;
+      const { houseHeightPx, scale } = cityScaleData.sprites[stem];
+      expect(cityDrawScale(stem)).toBe(scale * cityScaleData.globalScaleFactor);
+      expect(houseHeightPx * cityDrawScale(stem), stem).toBeCloseTo(cityScaleData.targetHouseHeightPx * cityScaleData.globalScaleFactor, 1);
+      const width = (CITY_GROUND.x1 - CITY_GROUND.x0) * CITY_WORLD / 512 * cityDrawScale(stem) / HEX_W;
+      expect(width, stem).toBeGreaterThanOrEqual(bounds[index][0]);
+      expect(width, stem).toBeLessThanOrEqual(bounds[index][1]);
+      expect(wallDrawScale(cityDrawScale(stem)) * WALLED_TOWN_SCALE, stem).toBeCloseTo(Math.min(cityDrawScale(stem), WALLED_TOWN_SCALE));
+      // A conservative high roof (master y=60) ends below the banner's lower edge.
+      const roofY = cityDrawDrop(cityDrawScale(stem)) - (CITY_GROUND.middle - 60) * CITY_WORLD / 512 * cityDrawScale(stem);
+      expect(roofY, stem).toBeGreaterThan(-BANNER_BOTTOM * HEX_SIZE);
+    }
+  });
+  it('measures opaque sprite widths at map scale, including the hamlet floor', () => {
+    const widths = (tier: string) => CITY_ERAS.map((era) => {
+      const stem = `${era}-${tier}`;
+      const png = alphaOf(fileURLToPath(new URL(`../assets/cities/${stem}.png`, import.meta.url)));
+      let left = png.width, right = -1, top = png.height;
+      for (let y = 0; y < png.height; y++) for (let x = 0; x < png.width; x++) {
+        if (png.alpha[y * png.width + x] < 128) continue;
+        left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y);
+      }
+      const scale = cityDrawScale(stem);
+      const roofTop = cityDrawDrop(scale) + (top - CITY_GROUND.middle) * CITY_WORLD / png.height * scale;
+      expect(roofTop, `${stem} roof and banner`).toBeGreaterThan(-BANNER_BOTTOM * HEX_SIZE);
+      return (right - left + 1) * CITY_WORLD / png.width * scale / HEX_W;
+    }).sort((a, b) => a - b);
+    expect(widths('metropolis')[4]).toBeCloseTo(1.3, 1);
+    expect(widths('hamlet')[0]).toBeGreaterThanOrEqual(0.45);
+  });
+  it('keeps every walled tier within 1.4 hex widths, including the complete ring', () => {
+    const widthOf = (path: URL) => {
+      const png = alphaOf(fileURLToPath(path));
+      let left = png.width, right = -1;
+      for (let y = 0; y < png.height; y++) for (let x = 0; x < png.width; x++) {
+        if (png.alpha[y * png.width + x] < 128) continue;
+        left = Math.min(left, x); right = Math.max(right, x);
+      }
+      return (right - left + 1) / png.width;
+    };
+    const townWidths = new Map(CITY_ERAS.flatMap((era) => CITY_TIERS.map((tier) => {
+      const stem = `${era}-${tier}`;
+      return [stem, widthOf(new URL(`../assets/cities/${stem}.png`, import.meta.url))] as const;
+    })));
+    for (const ringEra of CITY_ERAS) {
+      const ringWidth = widthOf(new URL(`../assets/cities/${ringEra}-walls.png`, import.meta.url));
+      for (const townEra of CITY_ERAS) for (const tier of CITY_TIERS) {
+        const stem = `${townEra}-${tier}`;
+        const scale = wallDrawScale(cityDrawScale(stem));
+        const footprint = Math.max(ringWidth, townWidths.get(stem)! * WALLED_TOWN_SCALE) * CITY_WORLD * scale;
+        expect(footprint / HEX_W, `${ringEra} ring around ${stem}`).toBeLessThanOrEqual(1.4);
+      }
+    }
+  });
   it('sizes follow the art bands: 1-3, 4-7, 8-12, 13+', () => {
     expect([1, 3, 4, 7, 8, 12, 13, 30].map(cityTier)).toEqual(['hamlet', 'hamlet', 'town', 'town', 'city', 'city', 'metropolis', 'metropolis']);
   });

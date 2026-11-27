@@ -1,0 +1,3 @@
+# Cinematic prompting: negative prompts fail; fix edges in post (2026-11-27)
+
+The Renaissance era film (Omni Flash 1.2 via the Gemini API) put satellite dishes, TV aerials and glass skylights on 15th-century rooftops in a wide aerial shot. Adding "no satellite dishes, no antennas" to the prompt didn't remove them. Describing the cathedral exactly (one octagonal dome, marble ribs, lantern, bell tower, "stays in view, never changes shape") did fix a made-up cluster of domes. What was left was fixed for free in post: the shot was trimmed by 4.5 s and cropped 160 px from the left. Lessons and checks are in `.claude/skills/legatum-art/references/marketing-and-animation.md` ("Prompting lessons"). Add a lesson there after every film and every regeneration.

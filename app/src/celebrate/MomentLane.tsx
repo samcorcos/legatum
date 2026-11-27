@@ -20,7 +20,7 @@ import { DURATION, heldMoment, momentsForTurn, planMoments, type Counter, type E
 import { UnlockMomentCard, activateUnlock } from './UnlockMoment';
 import { EraUpTakeover, activateEraUp } from './EraUpTakeover';
 import { ScoreCheck } from './ScoreCheck';
-import { MeetingTakeover } from './MeetingTakeover';
+import { MeetingTakeover, showMeetingPlace } from './MeetingTakeover';
 import { settleResearch } from './researchSettled';
 import { effectiveResearchQueue } from '../orders';
 import './celebrate.css';
@@ -157,7 +157,7 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
         // Return takes the primary and Esc puts it off; neither reaches End Turn or the map, and neither drops the cards queued behind.
         if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dismiss(); }
         else if (e.key === 'Enter' && plain && !typing && !(target?.closest('button, a[href], summary') && !target.closest('.moment-lane'))) {
-          e.preventDefault(); e.stopPropagation(); dismiss(); if (card) activateUnlock(card); else if (eraUp) activateEraUp(eraUp);
+          e.preventDefault(); e.stopPropagation(); dismiss(); if (card) activateUnlock(card); else if (eraUp) activateEraUp(eraUp); else if (active.meeting) showMeetingPlace(active.meeting);
         } else if ((e.key === 't' || e.key === 'T') && plain && !typing && (card?.chooseNext || eraUp?.primary === 'research')) dismiss(); // the game opens the tech panel
       };
       window.addEventListener('keydown', held, true);

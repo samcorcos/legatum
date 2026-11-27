@@ -62,13 +62,6 @@ for (const size of SIZES) test.describe(`celts barbarian peace ${size.name}`, ()
       await hexPoint(page, at);
       await shot(page, size, `cb-${label}-02-far-zoom`);
       await page.evaluate(() => { const m = (window as unknown as { legatumMap: { camera: { zoom: number }; redraw(): void } }).legatumMap; m.camera.zoom = 1.25; m.redraw(); });
-      // The Threat lens: barbarians draw no danger for the Celts.
-      await page.getByRole('radio', { name: 'Threat', exact: true }).first().click();
-      if (faction === 'Celts') await expect(page.locator('.lens-empty')).toHaveText("Nothing in sight can attack you next turn. Barbarians don't attack you.");
-      await page.mouse.move(5, size.height / 2);
-      await page.waitForTimeout(400);
-      await shot(page, size, `cb-${label}-02a-threat-lens`);
-      await page.getByRole('radio', { name: 'Default', exact: true }).first().click();
       // Hover a barbarian: does its card say it never attacks the Celts?
       const barb = await posOf(page, 'unit', setup.attackers[2]);
       await aim(page, barb, page.locator('.tilecard'));

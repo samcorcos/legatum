@@ -1,6 +1,6 @@
 import type { CityView, Event, Faction, Order, OrderError, PeaceProposal, PlayerView, ProductionItem } from './types';
 import { goldForViewer } from './deals';
-import { effectiveResearchQueue, pendingUnitOrder, productionQueue, unitsNeedingOrders } from './orders';
+import { effectiveResearchQueue, pendingUnitOrder, productionQueue, productionRefusal, shortRefusal, unitsNeedingOrders } from './orders';
 import type { ReleasedUnit } from './releasedGarrison';
 import { idleCitiesNeedingProduction } from './ui/forecastWarnings';
 import { incomingCalls, incomingOffers, offerSettledBy, proposalCounterparty, teamName, withLocalDiplomacy } from './diplomacy';
@@ -23,7 +23,9 @@ export type DecisionTarget = { kind: 'unit' | 'city' | 'siege'; id: number } | {
 /** `healed`: a unit whose Heal order ended at full health in the turn that just resolved. */
 export type PendingDecision = DecisionTarget & { label: string; issue?: string; fix?: string; healed?: boolean;
   /** The city whose occupation lock just lifted: this unit was holding it and asks for orders once. */
-  released?: string };
+  released?: string;
+  /** The city's build was refused this turn ("Musketman can't start: No Niter to spare"): choose another. */
+  refused?: string };
 
 /** Why a retained queue head can't start: core's placement blockers (population, spawn room). */
 function waitingReason(city: CityView, item: ProductionItem, faction?: Faction): string {
@@ -110,7 +112,12 @@ export function pendingDecisions(view: PlayerView, orders: Order[], errors: Orde
   const unchosen = new Set(cityAutomationPreview(view, valid)?.unchosen_cities ?? []);
   const idleCityDecisions: PendingDecision[] = idleCitiesNeedingProduction(view, valid)
     .filter((c) => !unchosen.has(c.id)).sort((a, b) => a.id - b.id)
-    .map((c) => ({ kind: 'city', id: c.id, label: cityDecisionLabel(view, c, valid) }));
+    .map((c) => {
+      // A build the engine refused leaves the city idle: say why, or the player sees their pick and a prompt that ignores it.
+      const refusal = productionRefusal(orders, errors, c.id);
+      const refused = (refusal && shortRefusal(refusal)) || undefined;
+      return { kind: 'city', id: c.id, label: refused ? `${c.name}: ${refused}` : cityDecisionLabel(view, c, valid), ...(refused ? { refused } : {}) };
+    });
   const plans = view.diplomacy ? withLocalDiplomacy(view, local?.humans ?? [view.me], local
     ? local.orders.map((os, seat) => os.filter((_, i) => !local.errors[seat]?.some((e) => e.index === i))) : [valid]).diplomacy.queued : [];
   return [

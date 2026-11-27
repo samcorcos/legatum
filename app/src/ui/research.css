@@ -165,7 +165,7 @@
   border: 1px solid var(--rule-2);
   border-left: 4px solid var(--accent);
   box-shadow: 2px 2px 0 var(--rule-2);
-  user-select: none;
+  -webkit-user-select: none; user-select: none;
 }
 .era-card:is(.available, .queued, .researching) { cursor: pointer; }
 .era-card:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }

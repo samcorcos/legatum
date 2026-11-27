@@ -924,14 +924,14 @@ pub(crate) fn upkeep_breakdown_with_military(
             paid,
         ) - paid * UPKEEP_PER_UNIT,
     );
-    b.add(
-        "Mercenary Companies",
-        crate::company::count(state, p) as i32 * crate::company::UPKEEP,
-    );
     b.add("Treaties", treaty_upkeep(state, p).total);
-    let cities = city_upkeep(state, p);
-    if cities > 0 {
-        b.add(city_upkeep_label(state), cities);
+    let (gross, offset, offices) = city_upkeep_charge_and_offset(state, p);
+    if gross > 0 {
+        b.add(city_upkeep_label(state), gross);
+    }
+    if !offices.is_empty() {
+        b.parts.push((revenue_offices_label(&offices), -offset));
+        b.total -= offset;
     }
     b
 }
@@ -945,17 +945,87 @@ pub fn city_upkeep_label(state: &GameState) -> String {
 }
 
 pub fn city_upkeep(state: &GameState, p: PlayerId) -> i32 {
+    let cities = state.cities_of(p).count() as i32;
+    let liable = cities - exempt_india_cities(state, p).count() as i32;
+    city_upkeep_total(state, cities, liable)
+}
+
+fn city_upkeep_charge_and_offset(state: &GameState, p: PlayerId) -> (i32, i32, Vec<String>) {
+    let cities = state.cities_of(p).count() as i32;
+    let gross = city_upkeep_total(state, cities, cities);
+    let net = city_upkeep(state, p);
+    let mut offices: Vec<_> = exempt_india_cities(state, p)
+        .map(|city| city.name.clone())
+        .collect();
+    offices.sort();
+    (gross, gross - net, offices)
+}
+
+fn revenue_offices_label(offices: &[String]) -> String {
+    format!("Revenue Offices ({}): no city upkeep", offices.join(", "))
+}
+
+fn exempt_india_cities(state: &GameState, p: PlayerId) -> impl Iterator<Item = &City> {
+    state.cities_of(p).filter(move |city| {
+        state.player(p).faction == Faction::India
+            && !state
+                .setup
+                .rule_experiments
+                .rule_off(FactionRule::IndiaOfficeUpkeep)
+            && !state.setup.rule_experiments.no_city_upkeep
+            && data::has_building(&city.buildings, BuildingKind::Market)
+    })
+}
+
+fn city_upkeep_total(state: &GameState, cities: i32, liable: i32) -> i32 {
     state
         .setup
         .rule_experiments
-        .city_upkeep(state.cities_of(p).count() as i32)
+        .city_upkeep_with_liable(cities, liable)
 }
 
 /// Extra Gold per turn if this empire gains one city, using the same rounding as its total bill.
 pub fn added_city_upkeep(state: &GameState, p: PlayerId) -> i32 {
     let cities = state.cities_of(p).count() as i32;
-    let rules = state.setup.rule_experiments;
-    rules.city_upkeep(cities + 1) - rules.city_upkeep(cities)
+    let liable = cities - exempt_india_cities(state, p).count() as i32;
+    city_upkeep_total(state, cities + 1, liable + 1) - city_upkeep_total(state, cities, liable)
+}
+
+/// Gold saved each turn if this owned city builds an Indian Revenue Office now.
+pub fn revenue_office_upkeep_savings(state: &GameState, city: &City) -> i32 {
+    let p = city.owner;
+    if state.player(p).faction != Faction::India
+        || state
+            .setup
+            .rule_experiments
+            .rule_off(FactionRule::IndiaOfficeUpkeep)
+        || data::has_building(&city.buildings, BuildingKind::Market)
+    {
+        return 0;
+    }
+    let cities = state.cities_of(p).count() as i32;
+    let liable = cities - exempt_india_cities(state, p).count() as i32;
+    city_upkeep_total(state, cities, liable) - city_upkeep_total(state, cities, liable - 1)
+}
+
+/// Extra Gold per turn an Indian non-capital city would send to the treasury once it builds a
+/// Revenue Office now: the Gold its regional court keeps today (all of it, or half under the
+/// `india_office_full` ablation). The Office's own Gold is in its effect line, not here.
+pub fn revenue_office_remittance_gain(state: &GameState, city: &City) -> i32 {
+    let rules = &state.setup.rule_experiments;
+    if state.player(city.owner).faction != Faction::India
+        || city.is_capital
+        || rules.rule_off(FactionRule::IndiaRemittance)
+        || data::has_building(&city.buildings, BuildingKind::Market)
+    {
+        return 0;
+    }
+    let kept = city_totals(state, city).gold.max(0);
+    if rules.rule_off(FactionRule::IndiaOfficeFull) {
+        kept / 2
+    } else {
+        kept
+    }
 }
 
 /// Food a city needs to grow, less decadence (rounding down once).
@@ -1063,7 +1133,15 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
                 .rule_off(FactionRule::IndiaRemittance)
         {
             let remitted = if data::has_building(&c.buildings, BuildingKind::Market) {
-                y.gold / 2
+                if state
+                    .setup
+                    .rule_experiments
+                    .rule_off(FactionRule::IndiaOfficeFull)
+                {
+                    y.gold / 2
+                } else {
+                    y.gold
+                }
             } else {
                 0
             };
@@ -1104,8 +1182,13 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     for (label, amount) in treaties.parts {
         gold.add(format!("Treaty upkeep: {label}"), -amount);
     }
-    if administration > 0 {
-        gold.add(city_upkeep_label(state), -administration);
+    let (gross, offset, offices) = city_upkeep_charge_and_offset(state, p);
+    if gross > 0 {
+        gold.add(city_upkeep_label(state), -gross);
+    }
+    if !offices.is_empty() {
+        gold.parts.push((revenue_offices_label(&offices), offset));
+        gold.total += offset;
     }
     PlayerIncome {
         cities,
@@ -1240,27 +1323,6 @@ fn undiscounted_production_cost(
         full * 90 / 100
     } else {
         full
-    }
-}
-
-/// What `buyer` pays in Production-equivalent terms for `version`'s own version of unit `kind`:
-/// that faction's price, less the buyer's own Military Science discount (a hired Company,
-/// `company::price`).
-pub fn version_unit_cost(
-    state: &GameState,
-    buyer: crate::types::PlayerId,
-    version: Faction,
-    kind: UnitKind,
-) -> i32 {
-    let cost = state
-        .setup
-        .rule_experiments
-        .unit_stats_for(version, kind)
-        .cost;
-    if military_science_discount(state, buyer, ProductionItem::Unit { unit: kind }) {
-        cost * 90 / 100
-    } else {
-        cost
     }
 }
 
@@ -2034,51 +2096,16 @@ pub(crate) fn production_check_at_era<R: Reason>(
         ProductionItem::Improvement { improvement, tile } => {
             crate::improvements::check(state, city, improvement, tile)
         }
-        ProductionItem::Unit { unit } if data::pays_upkeep(unit) => levy_check(state, city.owner),
         ProductionItem::Unit { .. } | ProductionItem::Project { .. } => None,
     }
 }
 
-/// Land units that pay ordinary military upkeep. Companies have their separate bill.
+/// Land units that pay ordinary military upkeep.
 pub fn upkeep_unit_count(state: &GameState, owner: PlayerId) -> usize {
     state
         .units_of(owner)
-        .filter(|u| data::pays_upkeep(u.kind) && !crate::company::is_company(u))
+        .filter(|u| data::pays_upkeep(u.kind))
         .count()
-}
-
-/// Armed units an empire fields now, the count thin levies cap (`data::levy_cap`). Hired
-/// Companies are outside the levy: they have their own contract and upkeep (`company`).
-pub fn levy_count(state: &GameState, owner: PlayerId) -> usize {
-    let land_units = upkeep_unit_count(state, owner);
-    let aircraft = state
-        .aircraft
-        .iter()
-        .filter(|plane| {
-            state
-                .cities
-                .get(&plane.city)
-                .is_some_and(|city| city.owner == owner)
-        })
-        .count();
-    land_units + aircraft
-}
-
-/// The empire's levy: (armed units, cap), when its faction has a cap.
-pub fn levy(state: &GameState, owner: PlayerId) -> Option<(usize, usize)> {
-    data::levy_cap_rules(
-        state.setup.rule_experiments.faction_rules_off,
-        state.player(owner).faction,
-        state.cities_of(owner).count(),
-    )
-    .map(|cap| (levy_count(state, owner), cap))
-}
-
-/// Thin levies: no new armed unit while the empire is at its cap. Losing a city never disbands
-/// units; it only blocks new ones until the empire is back under the cap.
-fn levy_check<R: Reason>(state: &GameState, owner: PlayerId) -> Option<R> {
-    let (units, cap) = levy(state, owner).filter(|(units, cap)| units >= cap)?;
-    Some(R::word(|| format!("Levies full: {units} of {cap}")))
 }
 
 /// The Heir: one at a time. He is retrained only once no Heir of this Byzantium exists anywhere,

@@ -118,7 +118,8 @@ test('Diplomacy: a human offers an alliance and sees the AI decision and its rea
   await expect(offer.locator('.cost-chip')).toHaveCount(0);
   await expect(page.getByText(/Upkeep \d+ Gold\/turn/).first()).toBeVisible();
   await offer.click();
-  await expect(page.getByRole('button', { name: /Queued: Offer Alliance/ })).toBeVisible();
+  await expect(page.getByTestId('diplomacy-queued')).toContainText('Alliance offer: sent when you end the turn.');
+  await expect(page.getByRole('button', { name: 'Offer Alliance', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Close diplomacy', exact: true }).click();
   for (const turn of [17, 18]) {
     await endPlanning(page);
@@ -218,10 +219,10 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1000, height: 600 }])
     await rules.locator('summary').click();
     await expect(rules.getByText(/A betrayed team won’t ally/)).toBeVisible();
     await accept.click();
-    // G17: the inbox closes; reopened, the card shows the answer as its state, with Undo.
+    // G17: the inbox closes; reopened, the card shows a ready line with Cancel.
     await expect(panel).toHaveCount(0);
     await page.evaluate(() => (window as unknown as { legatum: { getState(): { set(p: object): void } } }).legatum.getState().set({ diplomacyOpen: true }));
-    await expect(card.locator('.offer-answer')).toContainText('Accepted: Alliance starts turn 17');
+    await expect(card.getByTestId('diplomacy-queued')).toContainText('Accept Alliance: you accept when you end the turn.');
     await expect(card.locator('.btn.primary')).toHaveCount(0);
     await expect(card.getByRole('button', { name: 'Decline instead', exact: true })).toBeVisible();
   });

@@ -1,13 +1,10 @@
 .game { --lens-bottom: max(16px, env(safe-area-inset-bottom)); }
 /* Named bottom-left map-tools slot. The measurement is only the persistent dock,
    never the phone's out-of-flow chooser. */
-.map-lenses { position: absolute; bottom: var(--lens-bottom, 16px); left: 16px; z-index: 4; width: min(320px, calc(100% - 32px)); color: var(--ink); background: var(--tip-bg); border: var(--slip-border); padding: 6px 10px; box-shadow: 0 2px 10px #0002; }
-.lens-group-label { display: flex; align-items: baseline; gap: 6px; margin: 0 0 2px; font-size: 11.5px; line-height: 1.1; font-weight: 600; }
-.lens-group-label small { font-size: 11px; font-weight: 400; color: var(--muted); }
-.overlay-toggles + .lens-group-label { margin-top: 3px; }
-/* Overlays are checkboxes (a box that fills with a check); lenses are the filled buttons below. Different shapes, so they never read as one group. */
-.overlay-toggles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
-.overlay-tip { display: block; min-width: 0; }
+.map-lenses { position: absolute; bottom: var(--lens-bottom, 16px); left: 16px; z-index: 4; width: max-content; max-width: min(26rem, calc(100% - 32px)); color: var(--ink); background: var(--tip-bg); border: var(--slip-border); padding: 6px 10px; box-shadow: 0 2px 10px #0002; }
+/* Two exclusive lenses and the Yields checkbox share one row. */
+.lens-bar { display: flex; align-items: stretch; gap: 3px; }
+.overlay-tip { display: block; }
 .overlay-toggle { display: flex; align-items: center; gap: 4px; width: 100%; min-height: 26px; padding: 1px 4px; color: var(--ink); background: transparent; border: 1px dashed var(--rule); font: inherit; font-size: 11px; cursor: pointer; text-align: left; white-space: nowrap; }
 .overlay-toggle:hover { border-color: var(--accent); background: var(--field); }
 .overlay-toggle[aria-checked='true'] { border: 1px solid var(--ink); background: var(--field); font-weight: 700; }
@@ -17,14 +14,14 @@
 .overlay-box svg { width: 10px; height: 10px; fill: none; stroke: var(--panel); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .overlay-toggle kbd { margin-left: auto; padding: 0 2px; font: 600 9px var(--sans); color: var(--muted); border: 1px solid var(--rule); background: var(--panel); }
 .lens-toggle-overlays { font-weight: 400; color: var(--muted); }
-.lens-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; }
+.lens-options { display: flex; gap: 3px; }
 /* Compact: only the "Lens: X" toggle stays in the dock (phones, and while a city is selected). */
 .lens-toggle { display: block; width: 100%; height: 44px; min-height: 44px; padding: 6px 12px; color: var(--ink); background: var(--tip-bg); border: var(--slip-border); font: 600 13px var(--sans); text-align: left; cursor: pointer; }
 .lens-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* Default lens beside a selection's panel: a small chip to the right of the dock, so the panel runs to the bottom of the window. */
 .game .map-lenses[data-chip='true'] { left: calc(16px + var(--dock-width, 352px) + 8px); width: auto; }
 .game .map-lenses[data-chip='true'] .lens-toggle { width: auto; height: 30px; min-height: 30px; padding: 4px 12px; }
-.game .map-lenses[data-chip='true'] .lens-content { right: auto; width: 320px; }
+.game .map-lenses[data-chip='true'] .lens-content { right: auto; width: max-content; }
 @media (pointer: coarse) { .game .map-lenses[data-chip='true'] .lens-toggle { height: 44px; min-height: 44px; } }
 @media (max-width: 1280px) { .game { --dock-width: min(320px, calc(100vw - 32px)); } }
 .game .map-lenses[data-compact='true'] { padding: 0; border: 0; box-shadow: none; background: transparent; }
@@ -32,7 +29,7 @@
   /* The open chooser floats above the toggle, so the measured dock (and the city panel) keep their size. */
   .game .map-lenses[data-compact='true'] .lens-content { position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); padding: 8px 10px; color: var(--ink); background: var(--tip-bg); border: var(--slip-border); box-shadow: 0 2px 10px #0002; }
 }
-.lens-options button { min-height: 26px; padding: 1px 0; color: var(--ink); background: var(--field); border: 1px solid var(--rule); font: inherit; font-size: 10.5px; cursor: pointer; white-space: nowrap; }
+.lens-options button { min-height: 26px; padding: 1px 9px; color: var(--ink); background: var(--field); border: 1px solid var(--rule); font: inherit; font-size: 10.5px; cursor: pointer; white-space: nowrap; }
 .lens-options button[aria-checked='true'] { background: var(--primary-bg); color: var(--primary-ink); border-color: var(--primary-bg); font-weight: 600; }
 .lens-options button:focus-visible, .settle-recommendations button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .game .advisor-card { max-height: calc(100% - var(--lens-height, 260px) - var(--lens-bottom) - 100px); overflow: auto; }
@@ -50,8 +47,8 @@
 .lens-legend p { margin: 6px 0 2px; }
 .lens-yield-key, .settlement-yields { display: inline-flex; flex-wrap: wrap; gap: 7px; }
 .lens-yield-key { gap: 2px; vertical-align: -3px; }
-.lens-group-label .lens-yield-line { display: inline-flex; align-items: center; gap: 4px; }
-.lens-group-label small, .lens-group-label .tip-trigger { white-space: nowrap; }
+.lens-yield-line { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 11px; white-space: nowrap; }
+
 .lens-yield-key > span, .settlement-yields > span { display: inline-flex; align-items: center; gap: 2px; }
 /* One scale, five joined swatches, each with its name: darker green is a better place for a city. The swatch is the band's colour at the share of it that covers the ground. */
 .settle-scale { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1.5fr; margin: 6px 0; }
@@ -59,7 +56,6 @@
 .settle-scale em { font-style: normal; font-size: 11px; line-height: 1.2; text-align: center; white-space: nowrap; }
 .settle-scale .settle-swatch { width: auto; height: 14px; box-shadow: none; border: 1px solid var(--ink); border-left-width: 0; }
 .settle-scale span:first-child .settle-swatch { border-left-width: 1px; }
-.lens-owner-key i { display: inline-block; width: 9px; height: 9px; flex-shrink: 0; border: 1px solid #0004; }
 .settle-swatch { display: inline-block; width: 12px; height: 12px; flex: none; border: 1px solid var(--ink); box-shadow: 0 0 0 1px var(--panel); }
 .settle-swatch.band-poor { background: color-mix(in srgb, var(--settle-poor) var(--settle-poor-a), var(--panel)); }
 .settle-swatch.band-fair { background: color-mix(in srgb, var(--settle-fair) var(--settle-fair-a), var(--panel)); }
@@ -73,23 +69,6 @@
 /* No Colonia site known: the ring is empty, so it never promises a gilt ring on the map. */
 .settle-ring-empty { flex: 0 0 auto; width: 14px; height: 14px; border-radius: 50%; border: 1.5px dashed var(--ink-2, #5a4a3a); }
 .settle-ring-gilt { flex: 0 0 auto; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #c9a227; box-shadow: 0 0 0 1px var(--ink, #2b2118), inset 0 0 0 1px var(--ink, #2b2118); }
-.lens-owner-key { display: flex; flex-wrap: wrap; gap: 3px 5px; margin-top: 3px; }
-.lens-owner-key span { gap: 3px; padding-right: 2px; font-variant-numeric: tabular-nums; font-weight: 600; }
-.lens-owner-key i { width: 11px; height: 11px; border-width: 2px; border-style: solid; }
-.overlay-legend p { margin: 4px 0 0; }
-.lens-owner-key span { display: inline-flex; align-items: center; }
-.lens-resource-key { display: grid; gap: 4px; margin-top: 6px; }
-.lens-key-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
-.lens-key-row > b { min-width: 42px; font-weight: 600; color: var(--muted); }
-.lens-resource-key span { display: inline-flex; align-items: center; gap: 4px; }
-.lens-resource-key i { display: inline-block; width: 10px; height: 10px; flex-shrink: 0; border: 1px solid #0004; }
-.lens-resource-key i.ring-yours, .lens-resource-key i.ring-free, .lens-resource-key i.ring-foreign { border-radius: 50%; background: transparent; }
-.lens-resource-key i.ring-wanted { display: inline-grid; place-items: center; width: 12px; height: 12px; border: 0; border-radius: 50%; background: #b3392b; color: #fff; font: 700 9px/1 var(--sans); font-style: normal; box-shadow: 0 0 0 1px var(--paper, #f1e6c9); }
-.lens-resource-key i.ring-yours { border: 3px solid var(--ink); }
-.lens-resource-key i.ring-free { border: 1px solid var(--ink); }
-.lens-resource-key i.ring-foreign { border: 3px double var(--ink); }
-.lens-supply { list-style: none; margin: 6px 0 0; padding: 0; }
-.lens-supply li { margin: 2px 0; }
 .settle-top-key { margin: 6px 0 3px; }
 .settle-recommendations { display: flex; gap: 6px; }
 .settle-recommendations .btn { flex: 1; padding: 5px 6px; min-height: 30px; font-size: 12px; }
@@ -122,22 +101,8 @@
 .settlement-wonders { list-style: none; padding: 6px 0 0; margin: 6px 0 0; font-size: 12px; line-height: 1.35; border-top: 1px solid var(--frame); }
 .settlement-wonders li + li { margin-top: 3px; }
 
-/* Legends of overlays that are on may scroll when the window is short, so the unit panel beside them keeps its primary action in view. */
-.overlay-legend { max-height: clamp(60px, calc(100vh - 500px), 360px); overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
-/* A custom scrollbar stays visible, so a legend cut short by a small window says there is more. */
-.overlay-legend::-webkit-scrollbar { width: 6px; }
-.overlay-legend::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
-.overlay-legend::-webkit-scrollbar-track { background: transparent; }
-.overlay-legend p, .overlay-legend .lens-key-row { margin: 3px 0 0; }
-.lens-key-content { display: grid; gap: 3px; }
-.lens-border-key { flex: none; }
-
-.lens-key-toggle { margin-left: auto; padding: 0 5px; color: var(--ink); background: var(--field); border: 1px solid var(--control-border, var(--rule)); font: inherit; font-size: 11px; cursor: pointer; }
-.lens-key-toggle::after { content: ''; display: inline-block; margin-left: 4px; border: 3px solid transparent; border-top-color: currentColor; border-bottom-width: 0; vertical-align: 2px; }
-.lens-key-toggle[aria-expanded='true']::after { border-top-width: 0; border-bottom: 3px solid currentColor; }
-.lens-key-toggle:hover { border-color: var(--accent); }
-.lens-key-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
 /* Rome: the Colonia Victrix lead on a site that counts's card, in gilt like the forecast's VP line. */
 .settlement-colonia { display: flex; align-items: flex-start; gap: 6px; margin: 0 0 6px; padding: 4px 6px; font-weight: 600; border-left: 3px solid #c9a227; background: color-mix(in srgb, #c9a227 12%, transparent); }
 .settlement-colonia svg { flex: 0 0 auto; color: #8f6f1c; }
+/* An open lens sheet or the Settle legend is what the player asked for: keep it above the advisor card (z-index 65) on short windows. */
+.game .map-lenses[data-open='true'], .map-lenses:has(.lens-legend) { z-index: 67; }

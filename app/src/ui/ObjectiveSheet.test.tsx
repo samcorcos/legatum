@@ -64,7 +64,7 @@ it('opens one row at a time with the public numbers, rule and era progress', () 
   act(() => row('era-2').querySelector<HTMLButtonElement>('button')!.click());
   expect(sheet().querySelector('#sl-detail-GreatWork')).toBeNull();
   expect(sheet().querySelectorAll('#sl-detail-era-2 .vh-obj')).toHaveLength(3);
-  expect(row('era-2').querySelector('.sl-token')?.getAttribute('title')).toMatch(/scored the Classical Age/);
+  expect(row('era-2').querySelector('.sl-token')?.getAttribute('aria-label')).toMatch(/scored the Classical Age/);
 });
 
 it('shows team VP over its first member and hold turns in that head', () => {

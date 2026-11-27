@@ -18,7 +18,7 @@ dialog.gameover.go-reveal {
 }
 .gr { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; animation: gr-in 520ms ease-out backwards; }
 .gr-art { position: absolute; inset: 0; animation: gr-art-in 1600ms 60ms ease-out backwards; }
-.gr-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; animation: gr-drift 9000ms ease-out both; user-select: none; }
+.gr-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; animation: gr-drift 9000ms ease-out both; -webkit-user-select: none; user-select: none; }
 .gr-wash { position: absolute; inset: 0; pointer-events: none; background:
   radial-gradient(ellipse 70% 80% at 30% 50%, rgb(21 15 8 / .25), rgb(21 15 8 / .7) 70%),
   linear-gradient(90deg, rgb(21 15 8 / .55) 0, rgb(21 15 8 / .35) 34%, rgb(21 15 8 / .82) 58%, rgb(21 15 8 / .92) 100%); }
@@ -173,7 +173,7 @@ dialog.gameover.go-report {
 .pg-count { margin-left: auto; font: 600 10px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 
 /* The chart. */
-.hc { position: relative; width: 100%; user-select: none; }
+.hc { position: relative; width: 100%; -webkit-user-select: none; user-select: none; }
 .hc svg { display: block; overflow: visible; }
 .hc svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .hc-band rect { fill: var(--panel); }

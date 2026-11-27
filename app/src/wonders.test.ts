@@ -53,7 +53,7 @@ describe('wonder art on the map', () => {
   it('drops under every lens and stays quieter when remembered', () => {
     expect(wonderArtAlpha(true, undefined)).toBe(0.95);
     expect(wonderArtAlpha(true, 'default')).toBe(0.95);
-    for (const lens of ['settle', 'movement', 'threat', 'discovery']) expect(wonderArtAlpha(true, lens)).toBeLessThan(0.6);
+    for (const lens of ['settle']) expect(wonderArtAlpha(true, lens)).toBeLessThan(0.6);
     // The Yields overlay only steps the painting back a little, whichever lens is on.
     expect(wonderArtAlpha(true, 'default', true)).toBeLessThan(0.95);
     expect(wonderArtAlpha(true, 'default', true)).toBeGreaterThan(0.6);

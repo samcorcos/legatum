@@ -488,7 +488,7 @@ export const KESHIG_SHOT_LIMIT = 'A shot never moves it and cannot take a city.'
 const UNIQUE_PIECE: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, UniquePiece> & { Aztecs: null; Celts: null } = {
   Aztecs: null,
   Switzerland: { name: 'Alpine Redoubt', replaces: 'Walls', cost: 120, effect: '+15 city strength, more each era', requires: 'Masonry', rules: [] },
-  India: { name: 'Revenue Office', replaces: 'Market', cost: 60, effect: '+3 Gold; non-capital cities remit half the Gold they make', requires: 'Currency', rules: ['Only India can build the Imperial Diwan after every owned city has one.'] },
+  India: { name: 'Revenue Office', replaces: 'Market', cost: 60, effect: '+3 Gold', requires: 'Currency', rules: ['Only India can build the Imperial Diwan after every owned city has one.'] },
   // The Tagmatic Soldier is the Pikeman plus 4 design strength on the era curve, read from the stats so a retuned curve follows (a getter, as the Keshig's).
   get Byzantium(): UniquePiece {
     return { name: 'Tagmatic Soldier', replaces: 'Pikeman', cost: 162, effect: `${unitStatsFor('Byzantium', 'Pikeman').strength} strength, 2 moves`, requires: 'Feudalism', rules: ['Phalangite upgrade costs 84 Gold.'] };
@@ -534,21 +534,33 @@ export const uniquePieceGain = (faction: Faction): string => {
   return piece ? [piece.effect, ...piece.rules.map((r) => r.replace(/\.$/, ''))].join('. ') : '';
 };
 const BYZANTIUM_LEGIONARY = uniquePieceText(UNIQUE_PIECE.Byzantium);
-/** Byzantium's Mercenary Company rule in plain words, every number from core's `company` rules. */
-export const companyRule = (): string =>
-  `Hire a Company: the special unit of an empire you have met and are not at War with, as that empire fields it. You pay ${RULES.company.hirePercent === 100 ? 'its Production cost' : `${RULES.company.hirePercent}% of its Production cost`} in Gold, and the seller keeps it.`;
+/** Byzantium's rule break, Buy a city (core `buy_city`, rules 66): the card's rule; the Guide prints `byzantiumBuyCityDetail`. */
+export const BYZANTIUM_BUY_CITY = `Buy a rival’s city with Gold. The owner gets the Gold and ${RULES.buyCity.offerTurns} turns’ warning.`;
+/** Its price, the fall of Constantinople (core `buy_city::capital_fall`). */
+export const BYZANTIUM_COLLAPSE = 'Lose your capital and you lose every city, unless your Heir is in another of your cities.';
+/** The fine print of Buy a city, from core's constants (the Guide and the faction tooltip). */
+export const byzantiumBuyCityDetail = (): string => {
+  const b = RULES.buyCity;
+  return [
+    'Make an offer for a rival’s city that touches your land, while you are at Peace or allied with its owner.',
+    'Capitals and original capitals are never for sale, nor is a city still resisting its capture.',
+    `The price is ${b.base} Gold, plus ${b.perPopulation} per population and ${b.buildingPercent}% of the Gold price of its buildings.`,
+    `Each Walls level adds ${b.wallsPercent}%, and each military unit of the owner’s team in or next to the city adds ${b.guardPercent}%.`,
+    'A city that holds a goal’s VP costs double.',
+    `The Gold is held for ${b.offerTurns} turns. Then the city is yours with its population, buildings and land, and its owner gets the Gold.`,
+    'War between you calls the offer off and the Gold comes back.',
+    `You may offer more than the price, up to ${b.maxBidPercent}% of it. The owner gets all of it, and it takes more units or Walls to stop.`,
+    `If the owner raises the price above your offer, it fails and you lose ${b.failFeePercent}% of the Gold.`,
+    'You can make one offer at a time.',
+  ].join(' ');
+};
+export const BYZANTIUM_COLLAPSE_DETAIL = 'If a rival captures your capital, every other Byzantine city falls to it at the same moment, each captured as usual. If your Heir stands in another of your cities then, only the capital falls, and that city becomes your capital.';
 /** Switzerland's tolls in plain words: +1 Gold for every N people in a city (the number is core's `data::SWISS_TOLL_POPULATION`). */
 export const SWISS_CHEAP_BUYS = 'You buy buildings and units at 175% of their Production cost in Gold (others pay 200%).';
 export const SWISS_CAPTURE_RULE = 'Lose a city and its captor takes that city’s share of your treasury, by population (twice that for your capital).';
 export const swissTollRule = (): string => `Each city earns +1 Gold for every ${RULES.swissTollPopulation} population.`;
 /** Switzerland's interest in plain words: no maximum (user, 2026-10-17); the number is core's `data::SWISS_INTEREST_THRESHOLD`. */
 export const swissInterestRule = (): string => `Every ${RULES.swissInterestThreshold} Gold in your treasury earns +1 Gold a turn in interest.`;
-/** Thin levies (mirrors core `data::LEVY_EXTRA`): the Byzantium fields at most one armed unit per city, plus this many. */
-export const LEVY_EXTRA = 1;
-/** The Byzantium's drawback in plain words, kept on one line so a redesign is one edit. */
-export const THIN_LEVIES = `Thin levies: you can field at most one military unit per city, plus ${LEVY_EXTRA === 1 ? 'one' : LEVY_EXTRA} more.`;
-/** The Guide's fine print for Thin levies (the card says only the headline above). */
-export const THIN_LEVIES_DETAIL = `${THIN_LEVIES} Aircraft count; Scouts don't. Losing a city never disbands units, but you can't raise new ones until you are back under the limit.`;
 /** Unique-piece prose where a faction has more than one piece. */
 const PIECE_TEXT: Partial<Record<Faction, Partial<Record<string, string>>>> = {
   Byzantium: { 'u:Pikeman': BYZANTIUM_LEGIONARY },
@@ -716,8 +728,8 @@ export const FACTION_INFO: Record<Faction, FactionInfo> = {
   Egypt: factionInfo('egypt', 'Egypt', 'The river builds everything.', `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${RULES.egyptNileBuildPercent === 100 ? '' : `: ${RULES.egyptNileBuildPercent} progress for every 100 Food`}.`, uniquePieceText(UNIQUE_PIECE.Egypt, 'Egypt'), goalLine('Egypt'), "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it."),
   Aztecs: factionInfo('aztecs', 'Aztecs', 'War feeds the city. Torches carry the New Fire.', FLOWER_WARS, '', goalLine('Aztecs'), AZTEC_NO_HORSES + '.'),
   Switzerland: factionInfo("switzerland", "Switzerland", "Guard the passes. Keep the accounts.", `${swissTollRule()} ${swissInterestRule()} ${SWISS_CHEAP_BUYS}`, uniquePieceText(UNIQUE_PIECE.Switzerland), goalLine('Switzerland'), `Military unit upkeep is triple: 3 Gold a turn instead of 1. ${SWISS_CAPTURE_RULE}`),
-  India: factionInfo("india", "India", "Akbar's regional courts bind a populous empire.", `Cities can be founded 3 tiles apart. +1 Food in every city. Each other Indian city within ${RULES.indiaNetworkRadius} tiles adds ${RULES.indiaNetworkPercentPerCity}% to Food and Production.`, uniquePieceText(UNIQUE_PIECE.India), goalLine('India'), `Non-capital cities send no Gold to your treasury until they have a Revenue Office, then half the Gold they make. Corruption cuts all four city yields by ${RULES.indiaYieldPercentPerHex}% per tile beyond ${RULES.indiaCapitalRadius} from the capital, up to 100%. Production never falls below 3.`),
-  Byzantium: factionInfo("byzantium", "Byzantium", "Hold Constantinople. Hire the swords.", companyRule(), BYZANTIUM_LEGIONARY, goalLine('Byzantium'), THIN_LEVIES_DETAIL),
+  India: factionInfo("india", "India", "Akbar's regional courts bind a populous empire.", `Cities can be founded 3 tiles apart. +1 Food in every city. Each other Indian city within ${RULES.indiaNetworkRadius} tiles adds ${RULES.indiaNetworkPercentPerCity}% to Food and Production. A city with a Revenue Office pays no city upkeep.`, uniquePieceText(UNIQUE_PIECE.India), goalLine('India'), `Non-capital cities send no Gold to your treasury until they have a Revenue Office, then all the Gold they make. Corruption cuts all four city yields by ${RULES.indiaYieldPercentPerHex}% per tile beyond ${RULES.indiaCapitalRadius} from the capital, up to 100%. Production never falls below 3.`),
+  Byzantium: factionInfo("byzantium", "Byzantium", "Hold Constantinople.", BYZANTIUM_BUY_CITY, BYZANTIUM_LEGIONARY, goalLine('Byzantium'), BYZANTIUM_COLLAPSE),
   Germany: factionInfo("germany", "Germany", "Coal, steel, and skilled hands.", `Your strategic deposits supply twice as much. Your Gold and Science projects pay more: ${RULES.germanyProjectGoldPercent}% and ${RULES.germanyProjectSciencePercent}% of a city’s Production. Other empires get ${RULES.projectGoldPercent}% and ${RULES.projectSciencePercent}%.`, uniquePieceText(UNIQUE_PIECE.Germany), goalLine('Germany'), 'Each Production building in a German city costs 1 Food.'),
   Celts: factionInfo("celts", "Celts", "Raid, burn and move on.", `A sack takes ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp. A sacked rival capital scores 1 VP for good. Barbarians don't attack the Celts.`, '', goalLine('Celts'), "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it."),
   Mongols: factionInfo("mongols", "Mongols", "Across the steppe, news travels.", "Military units, Scouts too, get +1 move. Settlers keep 2 moves. A city with a Market at least 8 tiles from your capital earns +2 Gold.", uniquePieceText(UNIQUE_PIECE.Mongols), goalLine('Mongols'), "Mongol military units get no defence bonus from terrain, though fortifying still works. The Mongols never build or upgrade Walls, and a city they capture loses its Walls. They buy no Siege before the Medieval era."),
@@ -1059,7 +1071,7 @@ export function unitStatsFor(faction: Faction, kind: UnitKind) {
 export function standardUnitStatsFor(faction: Faction, kind: UnitKind) {
   return { ...UNIT_STATS[kind], ...standardUnitStats[faction][kind] };
 }
-/** The unit each faction's special unit replaces (core `data::special_unit`): every faction has one, and a Mercenary Company sells nothing else. */
+/** The unit each faction's special unit replaces (core `data::special_unit`): every faction has one. */
 export const SPECIAL_UNIT: Record<Faction, UnitKind> = RULES.specialUnits as Record<Faction, UnitKind>;
 /** A faction's special unit, as its own people name it ("Eagle Warrior"). */
 export const specialUnitName = (faction: Faction): string => itemName({ kind: 'Unit', unit: SPECIAL_UNIT[faction] }, faction);

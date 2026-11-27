@@ -103,7 +103,7 @@ def german_growth(games):
 ALWAYS_ON = {
     "swiss_tolls", "swiss_interest", "swiss_cheap_buys", "swiss_redoubt",
     "swiss_unit_upkeep", "swiss_capture_bounty", "india_food", "india_network", "india_close_cities",
-    "india_corruption", "india_remittance", "byzantium_levy", "byzantium_tagmatic",
+    "india_corruption", "india_remittance", "byzantium_tagmatic",
     "celts_barbarian_peace", "mongols_moves",
     "mongols_commerce", "mongols_keshig", "mongols_no_terrain",
     "sparta_veterans", "sparta_no_wounds", "sparta_kill_heal", "sparta_phalanx", "sparta_premium",
@@ -133,13 +133,6 @@ def first_applies(rule, games, faction):
         turns = [g["telemetry"]["faction_goal_turns"].get(str(p["id"])) for g, p in rows.values()]
         got = [t for t in turns if t is not None]
         return f"first scores median T{median(got):.0f} ({100 * len(got) // n}% of seats ever hold it)" if got else "never scored"
-    if rule == "byzantium_companies":
-        firsts = []
-        for g, p in rows.values():
-            hires = [h["turn"] for h in g["telemetry"].get("company_hires", []) if h["buyer"] == p["id"]]
-            if hires:
-                firsts.append(min(hires))
-        return f"first hire median T{median(firsts):.0f} ({100 * len(firsts) // n}% of seats hire)" if firsts else "never hired"
     if rule in ("celts_sack", "celts_no_keep"):
         sacks = [g["telemetry"].get("celts_razes", {}).get(str(p["id"]), 0) for g, p in rows.values()]
         return f"first capture; {100 * sum(1 for x in sacks if x) // n}% of seats sack at least once ({statistics.mean(sacks):.1f} per seat)"

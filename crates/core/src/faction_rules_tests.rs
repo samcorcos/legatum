@@ -578,52 +578,9 @@ fn india_remittance_off_lets_every_city_keep_its_gold() {
         let c = found(&mut s, P0, at(2, 6));
         let city = s.cities.get_mut(&c).unwrap();
         city.population = 6;
-        city.buildings.insert(BuildingKind::Market);
         economy::player_income(&s, P0).gold.total
     };
     assert!(income(Some(FactionRule::IndiaRemittance)) > income(None));
-}
-
-#[test]
-fn byzantium_companies_off_closes_the_shop() {
-    let build = |rule: Option<FactionRule>| {
-        let mut setup = crate::GameSetup::all_ai(5);
-        setup.players.truncate(2);
-        setup.players[0].faction = Faction::Byzantium;
-        setup.players[1].faction = Faction::Sparta;
-        for (i, p) in setup.players.iter_mut().enumerate() {
-            p.team = crate::TeamId(i as u8);
-        }
-        if let Some(rule) = rule {
-            setup.rule_experiments = off(rule);
-        }
-        let mut s =
-            crate::game::blank_game(&setup, crate::state::Map::new(24, 16, Terrain::Grassland));
-        s.player_mut(P1).techs.extend(TechId::ALL);
-        let teams = s.teams();
-        s.diplomacy.as_mut().unwrap().meet_all(&teams);
-        for r in &mut s.diplomacy.as_mut().unwrap().relations {
-            r.state = crate::diplomacy::RelationState::Peace;
-        }
-        let settler = crate::game::spawn_unit(&mut s, P0, UnitKind::Settler, hex(4, 4));
-        crate::rules::cities::found_city(&mut s, settler, &mut Vec::new()).unwrap();
-        s
-    };
-    assert!(!crate::company::offers(&build(None), P0).is_empty());
-    let s = build(Some(FactionRule::ByzantiumCompanies));
-    assert!(crate::company::offers(&s, P0).is_empty());
-    let city = s.cities_of(P0).next().unwrap();
-    let reason = crate::company::blocker(&s, city, UnitKind::Spearman, P1).unwrap();
-    assert!(reason.contains("switched off"), "{reason}");
-}
-
-#[test]
-fn byzantium_levy_off_lifts_the_cap() {
-    let mut s = state_of(Faction::Byzantium, None);
-    found(&mut s, P0, at(5, 5));
-    assert_eq!(economy::levy(&s, P0).map(|(_, cap)| cap), Some(2));
-    s.setup.rule_experiments = off(FactionRule::ByzantiumLevy);
-    assert_eq!(economy::levy(&s, P0), None);
 }
 
 #[test]

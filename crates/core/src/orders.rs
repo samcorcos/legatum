@@ -121,16 +121,8 @@ pub enum Order {
         city: CityId,
         item: ProductionItem,
     },
-    /// Byzantium only: hire a Mercenary Company (`company`), an armed unit `seller` can field
-    /// now, paid to `seller` in Gold. It appears in the city next turn and goes home when its
-    /// contract ends. Takes the city's one purchase for the turn.
-    HireCompany {
-        city: CityId,
-        unit: UnitKind,
-        seller: PlayerId,
-    },
     /// Buy an unowned tile next to the city's territory, within its work radius, for Gold.
-    /// Shares the city's one purchase per turn with BuyItem and HireCompany.
+    /// Shares the city's one purchase per turn with BuyItem.
     BuyTile {
         city: CityId,
         tile: Hex,
@@ -211,6 +203,16 @@ pub enum Order {
     GiveGold {
         to: PlayerId,
         amount: i32,
+    },
+    /// Byzantium only (`buy_city`, rules 63): offer `gold` for a rival's city, from its price up
+    /// to `buy_city::MAX_BID_PERCENT`% of it (0 or left out: the price). The Gold leaves the
+    /// treasury into escrow at once and the city changes hands at the end of the third turn after
+    /// this one, unless War or a price rise above the offer stops it first
+    /// (`buy_city::bid_blocker` says why an order is refused). One offer at a time.
+    BuyCity {
+        city: CityId,
+        #[serde(default, skip_serializing_if = "is_zero")]
+        gold: i32,
     },
 }
 

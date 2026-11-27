@@ -134,14 +134,27 @@ def sizes(tree):
 OPEN_LIMITS = {"kb": 500, "requests": 40, "settle_ms": 1000, "oversize": 0}
 
 
+def seat_holds_city(game, seat=0):
+    """Whether `seat` is alive with a city in an engine save: the first-open probe needs one to open."""
+    players, cities = game.get("players") or [], game.get("cities") or []
+    cities = cities.values() if isinstance(cities, dict) else cities
+    alive = seat < len(players) and players[seat].get("alive", True)
+    return bool(alive and any(c.get("owner") == seat for c in cities))
+
+
 def first_open(tree):
     """`open.<screen>.<metric>` for every screen the probe can open, from the app `sizes` just built."""
     out_dir = WORK / "first-open"
     out_dir.mkdir(parents=True, exist_ok=True)
     save, report = out_dir / "save-40.json", out_dir / "report.json"
     try:
-        sh(["cargo", "run", "--release", "-q", "-p", "legatum-wasm", "--example", "turn_profile", "--",
-            "45", "7000001", "csv", str(out_dir / "orders.jsonl"), f"40:{save}"], cwd=tree)
+        # The probe plays seat 0, and opens its city: take the first seed where seat 0 still holds one at turn 40
+        # (an AI change can get it conquered in any one seed, which left the city screen unmeasured).
+        for seed in range(7000001, 7000009):
+            sh(["cargo", "run", "--release", "-q", "-p", "legatum-wasm", "--example", "turn_profile", "--",
+                "45", str(seed), "csv", str(out_dir / "orders.jsonl"), f"40:{save}"], cwd=tree)
+            if seat_holds_city(json.loads(save.read_text())):
+                break
         sh(["node", str(REPO / "tools/perf/first-open.cjs"), "--dist", str(tree / "app/dist"), "--save", str(save),
             "--turn", "41", "--out", str(report)], cwd=tree)
         screens = json.loads(report.read_text())["screens"]

@@ -1093,7 +1093,6 @@ impl Planner<'_> {
         }
         self.ctx.own_units.iter().any(|u| {
             composition::is_combat(u.kind)
-                && u.contract_until.is_none()
                 && data::unit_stats(u.kind)
                     .upgrades_to
                     .is_some_and(|to| data::unit_stats(to).requires == Some(tech))
@@ -1420,15 +1419,22 @@ impl Planner<'_> {
     }
 
     /// The production option shows gross city Gold. India's provincial court sends none
-    /// until its Revenue Office is complete, then only half, rounded like the engine.
+    /// until its Revenue Office is complete, then all of it (or half with the Office rule off).
     pub(crate) fn remitted_city_gold(&self, city: &CityView, gross: i32) -> i32 {
-        if self.faction == Faction::India && !city.is_capital {
+        if self.faction == Faction::India
+            && !city.is_capital
+            && self.rule_on(legatum_core::experiments::FactionRule::IndiaRemittance)
+        {
             if city
                 .detail
                 .as_ref()
                 .is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Market))
             {
-                gross / 2
+                if self.rule_on(legatum_core::experiments::FactionRule::IndiaOfficeFull) {
+                    gross
+                } else {
+                    gross / 2
+                }
             } else {
                 0
             }
@@ -1576,7 +1582,7 @@ impl Planner<'_> {
         self.ctx
             .own_units
             .iter()
-            .filter(|u| legatum_core::data::pays_upkeep(u.kind) && u.contract_until.is_none())
+            .filter(|u| legatum_core::data::pays_upkeep(u.kind))
             .count() as i32
     }
 
@@ -1651,6 +1657,7 @@ impl Planner<'_> {
         self.tag_buys("door");
         self.pass("modernization");
         self.plan_modernization();
+        self.retire_obsolete();
         self.tag_buys("modernization");
         self.pass("emergency_production");
         self.plan_emergency_production();
@@ -1768,8 +1775,7 @@ impl Planner<'_> {
         let can_assign = |c: &CityView| {
             c.detail.as_ref().is_some_and(|d| {
                 (d.producing.is_none()
-                    || matches!(d.producing, Some(ProductionItem::Project { .. }))
-                    || self.levy_blocks(d.producing))
+                    || matches!(d.producing, Some(ProductionItem::Project { .. })))
                     && d.resistance <= 0
                     && !self
                         .orders
@@ -1838,8 +1844,7 @@ impl Planner<'_> {
                 && matches!(d.producing, Some(ProductionItem::Building { .. }))
                 && d.yields.total.food <= 2 * c.population;
             if (reconsider || footing || abandon_wonder || egypt_stalled || d.producing.is_none()
-                || matches!(d.producing, Some(ProductionItem::Project { .. }))
-                || self.levy_blocks(d.producing))
+                || matches!(d.producing, Some(ProductionItem::Project { .. })))
                 && d.resistance <= 0
                 && !self
                     .orders
@@ -2056,7 +2061,7 @@ impl Planner<'_> {
         picked.len() as i32
     }
 
-    /// Armed units this seat wants, within its thin-levy cap (`levy.rs`).
+    /// Armed units this seat wants.
     pub(crate) fn desired_army(&self) -> i32 {
         let wanted = self.uncapped_army();
         let wanted = if self.faction == Faction::India && self.decisions.india_network_guard > 0 {
@@ -2081,8 +2086,7 @@ impl Planner<'_> {
         } else {
             wanted
         };
-        let wanted = wanted + self.wary_guard();
-        self.levy_now().map_or(wanted, |(_, cap)| wanted.min(cap))
+        wanted + self.wary_guard()
     }
 
     /// Gene `swiss_playbook` 1+: a Hard Swiss city's Alpine Redoubt is its garrison (the
@@ -2483,9 +2487,11 @@ impl Planner<'_> {
             }
         }
         for city in raze {
-            self.orders.retain(|o| !matches!(o,
+            self.orders.retain(|o| {
+                !matches!(o,
                 Order::SetProduction { city: id, .. } | Order::SetProductionQueue { city: id, .. }
-                | Order::BuyItem { city: id, .. } | Order::HireCompany { city: id, .. } if *id == city));
+                | Order::BuyItem { city: id, .. } if *id == city)
+            });
             self.orders.push(Order::Raze { city });
         }
     }
@@ -3514,7 +3520,8 @@ impl Planner<'_> {
     /// training that this city can start now; with `ranged` false, the cheapest melee unit.
     fn quick_defender(&self, c: &CityView, ranged: bool) -> Option<ProductionItem> {
         let rules = self.view().rule_experiments;
-        c.detail
+        let candidates: Vec<_> = c
+            .detail
             .as_ref()?
             .options
             .iter()
@@ -3528,6 +3535,11 @@ impl Planner<'_> {
                 }
                 _ => None,
             })
+            .collect();
+        let floor = self.modern_floor(candidates.iter().map(|(_, unit)| *unit));
+        candidates
+            .into_iter()
+            .filter(|(_, unit)| data::unit_era_tier(*unit) >= floor)
             .max_by_key(|(o, unit)| {
                 let stats = rules.unit_stats_for(self.faction, *unit);
                 if ranged {
@@ -3564,7 +3576,7 @@ impl Planner<'_> {
             if c.walls {
                 let stake =
                     city_keep_value(c) * self.decisions.walled_defense_percent.max(alarm) / 100;
-                let chosen = c
+                let candidates: Vec<_> = c
                     .detail
                     .as_ref()?
                     .options
@@ -3576,6 +3588,11 @@ impl Planner<'_> {
                         (composition::is_melee_line(unit) || composition::is_ranged_line(unit))
                             .then_some((o, unit))
                     })
+                    .collect();
+                let floor = self.modern_floor(candidates.iter().map(|(_, unit)| *unit));
+                let chosen = candidates
+                    .into_iter()
+                    .filter(|(_, unit)| data::unit_era_tier(*unit) >= floor)
                     .max_by_key(|(o, unit)| {
                         let after = self.defense_risk(
                             c,
@@ -3585,13 +3602,16 @@ impl Planner<'_> {
                                 *unit,
                             )),
                         );
-                        let stats = self
-                            .view()
-                            .rule_experiments
-                            .unit_stats_for(self.faction, *unit);
-                        ((if after.falls { 0 } else { stake })
-                            + 2 * stats.strength.max(stats.ranged))
-                            * 100
+                        let strength = if self.decisions.modern_army > 0 {
+                            self.modernization_power(*unit, 0, data::UNIT_HP, false, c.pos)
+                        } else {
+                            let stats = self
+                                .view()
+                                .rule_experiments
+                                .unit_stats_for(self.faction, *unit);
+                            stats.strength.max(stats.ranged)
+                        };
+                        ((if after.falls { 0 } else { stake }) + 2 * strength) * 100
                             / o.turns.max(1)
                             - o.cost
                     })
@@ -4817,6 +4837,15 @@ impl Planner<'_> {
                         }
                         return GARRISON_FLOOR_VALUE + kind_bonus;
                     }
+                    // The fall of Constantinople (gene `byz_capital_guard`): the capital's
+                    // guards grow with the cities riding on it. Rivals of Byzantium (gene
+                    // `byz_border_guard`): a defender raises a touching city's price.
+                    let guard = self
+                        .byz_capital_garrison_value(c)
+                        .max(self.byz_border_guard_value(c));
+                    if guard > 0 && k.military > 0 && solvent && unit != UnitKind::Scout {
+                        return guard + kind_bonus;
+                    }
                     if !self.mongol_horde()
                         && self.difficulty == legatum_core::AiDifficulty::Hard
                         && cities >= 2
@@ -4938,6 +4967,12 @@ impl Planner<'_> {
                                 40
                             }) + self.agoge_value(c)
                         }
+                        // The fall of Constantinople: Walls for a capital that carries the empire.
+                        BuildingKind::Walls | BuildingKind::UpgradeWalls
+                            if self.byz_capital_walls_value(c) > 0 =>
+                        {
+                            self.byz_capital_walls_value(c) + k.military * 2
+                        }
                         BuildingKind::UpgradeWalls => {
                             // It also repairs a damaged Walls bar, which never heals by itself.
                             let missing = (c.walls_max_hp - c.walls_hp).max(0);
@@ -4976,11 +5011,17 @@ impl Planner<'_> {
                                 } else {
                                     70
                                 };
-                                (opt.yields.total.gold
+                                let gross = (opt.yields.total.gold
                                     + data::building_stats(BuildingKind::Market).yields.gold)
-                                    .max(0)
-                                    / 2
-                                    * weight
+                                    .max(0);
+                                let remitted = if self.rule_on(
+                                    legatum_core::experiments::FactionRule::IndiaOfficeFull,
+                                ) {
+                                    gross
+                                } else {
+                                    gross / 2
+                                };
+                                remitted * weight
                             } else {
                                 0
                             };
@@ -5638,7 +5679,7 @@ impl Planner<'_> {
             {
                 continue;
             }
-            let best = d
+            let candidates: Vec<_> = d
                 .options
                 .iter()
                 .filter(|o| {
@@ -5670,6 +5711,17 @@ impl Planner<'_> {
                         - d.yields.total.gold;
                     let reserve = (added_upkeep - income).max(0) * 10;
                     self.gold_left + income * o.turns >= reserve
+                })
+                .collect();
+            let floor = self.modern_floor(candidates.iter().filter_map(|o| match o.item {
+                ProductionItem::Unit { unit } => Some(unit),
+                _ => None,
+            }));
+            let best = candidates
+                .into_iter()
+                .filter(|o| match o.item {
+                    ProductionItem::Unit { unit } => data::unit_era_tier(unit) >= floor,
+                    _ => true,
                 })
                 .max_by_key(|o| {
                     let ProductionItem::Unit { unit } = o.item else {
@@ -7967,6 +8019,10 @@ mod india_office_tests {
             .unwrap()
             .buildings
             .push(BuildingKind::Market);
+        assert_eq!(delta(&view), 6);
+        view.rule_experiments
+            .faction_rules_off
+            .insert(legatum_core::experiments::FactionRule::IndiaOfficeFull);
         assert_eq!(delta(&view), 3);
     }
 
@@ -8047,17 +8103,17 @@ mod india_office_tests {
         office.yields.total.gold = 6;
         assert_eq!(
             planner.item_base_value(1, city, &office, &tally) - ordinary,
-            400
+            800
         );
         planner.decisions.india_office_goal_value = 800;
         assert_eq!(
             planner.item_base_value(1, city, &office, &tally) - ordinary,
-            1200
+            1600
         );
         planner.decisions.india_last_office_value = 1200;
         assert_eq!(
             planner.item_base_value(1, city, &office, &tally) - ordinary,
-            1800
+            2200
         );
     }
 

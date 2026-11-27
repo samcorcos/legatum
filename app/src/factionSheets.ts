@@ -6,7 +6,7 @@
 import {
   FLOWER_WARS, AZTEC_NO_HORSES, BUILDING_STATS, INDIA_CAPITAL_RADIUS, INDIA_NETWORK_PERCENT_PER_CITY, INDIA_NETWORK_RADIUS, INDIA_YIELD_PERCENT_PER_HEX,
   GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, PROJECT_GOLD_PERCENT, PROJECT_SCIENCE_PERCENT, EGYPT_NILE_BUILD_PERCENT,
-  KESHIG_KIND, RULES, SPECIAL_UNIT, TECH_NAME, UNIT_NAME, UNIT_STATS, specialUnitEdge, specialUnitName, companyRule, THIN_LEVIES, THIN_LEVIES_DETAIL, factionGoalVp, itemName, swissInterestRule, swissTollRule, SWISS_CHEAP_BUYS, SWISS_CAPTURE_RULE, unitStatsFor,
+  KESHIG_KIND, RULES, BYZANTIUM_BUY_CITY, BYZANTIUM_COLLAPSE, BYZANTIUM_COLLAPSE_DETAIL, byzantiumBuyCityDetail, SPECIAL_UNIT, TECH_NAME, UNIT_NAME, UNIT_STATS, specialUnitEdge, specialUnitName, factionGoalVp, itemName, swissInterestRule, swissTollRule, SWISS_CHEAP_BUYS, SWISS_CAPTURE_RULE, unitStatsFor,
 } from './data';
 import { pieceAgainst } from './pieceCompare';
 import type { BuildingKind, Faction, ProductionItem, TechId } from './types';
@@ -144,20 +144,21 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     ratings: { aggression: 2, economy: 4, complexity: 3 },
     pairs: [
       { strength: `A city gains ${INDIA_NETWORK_PERCENT_PER_CITY}% Food and Production for every other Indian city within ${INDIA_NETWORK_RADIUS} tiles.`, price: `Cities lose ${INDIA_YIELD_PERCENT_PER_HEX}% of their yields for every tile beyond ${INDIA_CAPITAL_RADIUS} from your capital.`, priceDetail: `Corruption cuts all four yields by ${INDIA_YIELD_PERCENT_PER_HEX}% per tile beyond ${INDIA_CAPITAL_RADIUS} from the capital. At ${indiaZeroAt} tiles its Food, Gold and Science reach zero, though Production never falls below 3.`, strengthIcon: 'city', priceIcon: 'capital' },
-      { strength: 'Cities can be founded 3 tiles apart, closer than anyone else. Every city gets +1 Food.', price: 'Cities other than your capital send you no Gold until they build a Revenue Office.', priceDetail: 'Non-capital cities send no Gold to the treasury until they have a Revenue Office, then half the Gold they make.', strengthIcon: 'yield-food', priceIcon: 'yield-gold' },
-      { strength: 'Revenue Office replaces the Market. Build one in every city to unlock the Imperial Diwan.', strengthDetail: `Revenue Office replaces the Market and keeps +3 Gold. Build one in every owned city to unlock the Imperial Diwan; whoever holds its city scores ${factionGoalVp('India')} VP.`, strengthIcon: 'building-market-india', onCard: true },
+      { strength: 'Cities can be founded 3 tiles apart, closer than anyone else. Every city gets +1 Food.', price: 'Cities other than your capital send you no Gold until they build a Revenue Office.', priceDetail: 'Non-capital cities send no Gold to the treasury until they have a Revenue Office, then all the Gold they make.', strengthIcon: 'yield-food', priceIcon: 'yield-gold' },
+      { strength: 'Revenue Office replaces the Market. Build one in every city to unlock the Imperial Diwan.', strengthDetail: `Revenue Office replaces the Market and keeps +3 Gold. Its city pays no city upkeep, but still counts toward the empire's city total. Build one in every owned city to unlock the Imperial Diwan; whoever holds its city scores ${factionGoalVp('India')} VP.`, strengthIcon: 'building-market-india', onCard: true },
       specialRow('India', 'unit-warelephant'),
     ],
     counteredBy: 'Capture the Imperial Diwan to take its points. Contest the compact city network.',
   },
   Byzantium: {
-    identity: 'Armies for hire',
-    lore: 'The eastern Roman Empire held Constantinople for a thousand years. When its thin professional army could not win, it opened the treasury and hired other empires’ armies.',
+    identity: 'Buys its empire',
+    lore: 'The eastern Roman Empire held Constantinople for a thousand years. It took the Armenian kingdoms of Vaspurakan in 1021 and Ani in 1045 when their kings ceded them for estates and titles.',
     ratings: { aggression: 2, economy: 3, complexity: 3 },
     pairs: [
-      { strength: "Hire a Company: buy another empire's special unit with Gold.", strengthDetail: companyRule(), price: THIN_LEVIES, priceDetail: THIN_LEVIES_DETAIL, strengthIcon: 'fortify', priceIcon: 'unit-spearman' },
+      { strength: BYZANTIUM_BUY_CITY, strengthDetail: byzantiumBuyCityDetail(), price: BYZANTIUM_COLLAPSE, priceDetail: BYZANTIUM_COLLAPSE_DETAIL, strengthIcon: 'yield-gold', priceIcon: 'capital' },
+      specialRow('Byzantium', 'unit-tagmatic'),
     ],
-    counteredBy: 'Outlast every Company: its countdown is public, its upkeep drains the treasury, and an unpaid Company turns barbarian.',
+    counteredBy: 'Defend the cities next to Byzantium to raise their price, or go to War. Take Constantinople and you take every Byzantine city.',
   },
   Germany: {
     identity: 'Industry shapes the land',

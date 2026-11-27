@@ -160,19 +160,14 @@ it('explains that a VP win means holding the target, and what resets it', () => 
   expect(victory).not.toMatch(/reach their target together/);
 });
 
-it('explains Mercenary Companies from the generated numbers', () => {
-  const c = RULES.company;
+it('keeps the Guide free of the retired Mercenary Companies and thin levies', () => {
   const turns = renderToStaticMarkup(<GuideContent section="turns" />);
-  expect(turns).toContain('Mercenary Companies (Byzantium)');
-  expect(turns).toContain(`The price is ${c.hirePercent}% of that version’s Production cost, in Gold, and all of it goes to the seller`);
-  expect(turns).toContain(`serves ${c.turns} turns, then goes home`);
+  expect(turns).not.toContain('Mercenary Companies');
+  expect(turns).not.toContain('Thin levies');
   expect(turns).not.toMatch(/tribute|Bought peace/i);
-  expect(turns).not.toContain('Hire an army');
   expect(turns).toContain('Allies defend each other, and join wars by choice.');
   expect(turns).toContain('A Peace offer is between two teams');
   expect(turns).toContain('Making Peace on your own is not a betrayal');
-  expect(turns).toContain('Thin levies (Byzantium)');
-  expect(turns).toContain('at most one military unit per city, plus one more. Aircraft count');
   expect(turns).not.toContain('120%');
 });
 

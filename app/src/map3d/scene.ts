@@ -33,6 +33,7 @@ import {
   type Field, type World,
 } from './world';
 import { MapWater } from './water';
+import { SELECT_HALO, SELECT_INK, selectionBreath, selectionBurst } from '../map/selectionMark';
 import { MapAtmosphere, MapPost } from './post';
 
 const PARCH = new THREE.Color('#d9c9a3');
@@ -53,6 +54,10 @@ const MODEL_URL = (slug: string) => `${import.meta.env.BASE_URL}models/units/${s
 export interface Overlays {
   hover: Hex | null;
   selected: Hex | null;
+  /** What is selected (a unit or city id): a change plays the selection burst, even on the same tile. */
+  selectedKey?: string;
+  /** The selected unit, ringed on its own base so it stands out from others on its tile. */
+  selectedUnit?: number | null;
   /** The planned route of the selected unit, tile by tile from its position. */
   route: Hex[];
 }
@@ -104,6 +109,14 @@ export class MapScene {
   private units = new THREE.Group();
   private hoverRing: THREE.Mesh;
   private selRing: THREE.Mesh;
+  /** The selection mark's dark halo, its breathing wash, and the ring that bursts out when the selection changes (map/selectionMark.ts). */
+  private selHalo: THREE.Mesh;
+  private selFill: THREE.Mesh;
+  private selBurst: THREE.Mesh;
+  private selUnitRing: THREE.Mesh;
+  private selUnit: number | null = null;
+  private selKey = '';
+  private selAt = -Infinity;
   private route: THREE.Mesh;
   private mixers: THREE.AnimationMixer[] = [];
   private models = new Map<string, Promise<GLTF | null>>();
@@ -131,7 +144,23 @@ export class MapScene {
     this.scene.add(sun, sun.target, this.static_, this.dynamic, this.units);
     // Rings are thin ground-hugging bands, not GL lines (WebGL draws lines 1 px wide whatever the zoom).
     this.hoverRing = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: '#fbf1cf', transparent: true, opacity: 0.85, depthTest: false, side: THREE.DoubleSide }));
-    this.selRing = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: '#e2b13a', depthTest: false, side: THREE.DoubleSide }));
+    this.selRing = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: SELECT_INK, transparent: true, depthTest: false, side: THREE.DoubleSide }));
+    this.selHalo = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: SELECT_HALO, transparent: true, opacity: 0.85, depthTest: false, side: THREE.DoubleSide }));
+    this.selFill = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: SELECT_INK, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide }));
+    // The burst: a flat hexagonal band round the origin, placed on the tile and scaled out.
+    const band: number[] = [];
+    for (let e = 0; e < 6; e++) {
+      const a = CORNERS[e], b = CORNERS[(e + 1) % 6], k = 0.9;
+      band.push(a[0], 0, a[1], a[0] * k, 0, a[1] * k, b[0], 0, b[1], b[0], 0, b[1], a[0] * k, 0, a[1] * k, b[0] * k, 0, b[1] * k);
+    }
+    this.selBurst = new THREE.Mesh(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(band, 3)),
+      new THREE.MeshBasicMaterial({ color: SELECT_INK, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+    this.selHalo.renderOrder = 5;
+    for (const o of [this.selFill, this.selHalo, this.selBurst]) { o.visible = false; this.scene.add(o); }
+    this.selBurst.renderOrder = 6;
+    this.selUnitRing = new THREE.Mesh(new THREE.RingGeometry(0.128, 0.152, 40).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: SELECT_INK, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+    this.selUnitRing.renderOrder = 7; this.selUnitRing.visible = false; this.scene.add(this.selUnitRing);
     this.route = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: '#f3dc8a', transparent: true, opacity: 0.9, depthTest: false, side: THREE.DoubleSide }));
     for (const o of [this.hoverRing, this.selRing, this.route]) { o.renderOrder = 6; o.visible = false; this.scene.add(o); }
   }
@@ -681,7 +710,17 @@ export class MapScene {
       mesh.geometry = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
     };
     ring(this.hoverRing, o.hover, 0.03, 0.91, 0.95);
-    ring(this.selRing, o.selected, 0.04, 0.895, 0.95);
+    ring(this.selHalo, o.selected, 0.038, 0.85, 0.985);
+    ring(this.selRing, o.selected, 0.04, 0.885, 0.955);
+    ring(this.selFill, o.selected, 0.036, 0, 0.87);
+    this.selUnit = o.selectedUnit ?? null;
+    const key = o.selected ? o.selectedKey ?? `${o.selected.q},${o.selected.r}` : '';
+    if (key !== this.selKey) { this.selKey = key; this.selAt = key ? performance.now() : -Infinity; }
+    const si = o.selected ? tileIndexOf(o.selected, w, h) : -1;
+    if (si >= 0) {
+      const cx = tileX(si, w), cz = tileZ(si, w);
+      this.selBurst.position.set(cx, Math.max(0, this.heightAt(cx, cz)) + 0.05, cz);
+    }
     // Route: a flat gilt ribbon from tile centre to tile centre, following the ground.
     const pts = o.route.map((hx) => tileIndexOf(hx, w, h)).filter((i) => i >= 0);
     this.route.visible = pts.length > 1;
@@ -1019,6 +1058,24 @@ export class MapScene {
     for (; k < this.shotPool.length; k++) this.shotPool[k].visible = false;
   }
 
+  /** The selection mark's breathing and its burst (held still with motion off). */
+  private stepSelection(now: number) {
+    const fig = this.selUnit != null ? this.unitGroups.get(this.selUnit) : undefined;
+    this.selUnitRing.visible = !!fig && this.selRing.visible;
+    if (fig) this.selUnitRing.position.set(fig.position.x, fig.position.y + 0.012, fig.position.z);
+    if (!this.selRing.visible) { this.selBurst.visible = false; return; }
+    const pulse = selectionBreath(this.uniforms.uTime.value * 1000, this.still);
+    (this.selFill.material as THREE.MeshBasicMaterial).opacity = 0.08 + 0.12 * pulse;
+    (this.selRing.material as THREE.MeshBasicMaterial).opacity = 0.8 + 0.2 * pulse;
+    const burst = this.still ? null : selectionBurst(now - this.selAt);
+    this.selBurst.visible = !!burst;
+    if (burst) {
+      this.selBurst.scale.setScalar(0.97 * burst.scale);
+      (this.selBurst.material as THREE.MeshBasicMaterial).opacity = burst.alpha;
+      this.animating = true;
+    }
+  }
+
   /** Render one frame. Returns false when nothing moved (the caller may skip frames). */
   frame(): boolean {
     const dt = Math.min(0.05, this.clock.getDelta());
@@ -1031,6 +1088,7 @@ export class MapScene {
       this.animating = true;
     }
     if (!this.still) for (const m of this.mixers) m.update(dt);
+    this.stepSelection(performance.now());
     this.post.render(this.scene, this.camera);
     const was = this.animating;
     this.animating = false;

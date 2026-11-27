@@ -8,7 +8,7 @@
 // grid, glyphs, towns, fog, territory, fog hatch, unexplored veil, known edge.
 import type { CityView, PlayerView, Terrain } from '../types';
 import { PLAYER_BORDER_DASH, rgba } from '../theme';
-import { CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE, townOval, cityArtArrivals, drawCityCanvas, cityArtEpoch, cityImage, cityStem, cityTier, footingsStem, walledTown, markStem, ringEraOf, spriteSize, traceCityArt, wallStem } from './cityArt';
+import { CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE, townOval, cityArtArrivals, cityDrawDrop, cityDrawScale, drawCityCanvas, cityArtEpoch, cityImage, cityStem, cityTier, footingsStem, walledTown, markStem, ringEraOf, spriteSize, traceCityArt, wallDrawScale, wallStem } from './cityArt';
 import { sitesOf } from './constructionSites';
 import { mapBorderColor, mapPlayerColor, type BorderSpec, type MapStyle } from './style';
 import { getBorderVariant, type BorderVariant } from './borderVariant';
@@ -99,7 +99,7 @@ const SC_SOFT = 0.25;
 const MARGIN = 96;
 /** Padding (device px) around the band/veil scratch so blurs don't fade at chunk seams. */
 const PAD = 72;
-/** World size of a city sprite's 512 px canvas (its ground oval is 93% of it: about a hex and a quarter wide, as Civ cities spill past their tile) and how far below the hex centre the oval's middle sits: low enough that the screen-space banner above the hex does not hide the roofs. */
+/** Reference world size for a city master. Detailed towns use their measured per-sprite scale. */
 export const CITY_WORLD = 92;
 export const CITY_DROP = 18;
 /** A town's footprint about its hex centre (world units): the land art and ruins beside a town keep clear of it. */
@@ -1135,7 +1135,7 @@ export class TerrainCache {
     const b = this.bounds;
     const off = x0 + cw < b.minX - HEX_SIZE || y0 + cw < b.minY - HEX_SIZE || x0 > b.maxX + HEX_SIZE || y0 > b.maxY + HEX_SIZE;
     // Feature sprites reach a little past the hex, so the dev terrain variants gather a wider ring.
-    const m = getTerrainVariant() === 'current' ? HEX_SIZE : this.organic ? HEX_SIZE + ORGANIC_REACH : HEX_SIZE * 1.4;
+    const m = getTerrainVariant() === 'current' ? 64 : this.organic ? Math.max(64, HEX_SIZE + ORGANIC_REACH) : 64;
     const tiles = off ? [] : tilesInRect(x0 - m, y0 - m, x0 + cw + m, y0 + cw + m, this.w, this.h);
     const anyExplored = tiles.some((i) => this.tiles[i].explored);
     // CSS px per world px this chunk is drawn for (the stand-in pretends to be seen at a typical zoom).
@@ -1852,22 +1852,25 @@ export class TerrainCache {
     g.imageSmoothingEnabled = true;
     g.imageSmoothingQuality = 'high';
     const stem = far ? markStem(tier) : cityStem(era, tier);
-    const size = spriteSize(CITY_WORLD * s);
+    const townScale = far ? 1 : cityDrawScale(stem);
+    const ringScale = wallDrawScale(townScale);
+    const drop = far ? CITY_DROP : cityDrawDrop(townScale);
+    const size = spriteSize(CITY_WORLD * s * (far ? 1 : Math.max(townScale, ringScale)));
     const img = stem ? cityImage(stem, size) : null;
     const rstem = this.ringStem(i);
     const ring = rstem ? cityImage(rstem, size) : null;
     if (far || !rstem) {
-      if (img) this.drawSprite(g, img);
+      if (img) this.drawSprite(g, img, 'all', townScale, drop);
       if (ring) this.drawSprite(g, ring);
       return;
     }
     // The town stands inside its ring: the far wall behind it, the near wall in front (never a ring painted across the houses).
-    if (ring) this.drawSprite(g, ring, 'back');
+    if (ring) this.drawSprite(g, ring, 'back', ringScale, drop);
     // Clipped to the ring's court, so no house stands on a rampart; until the ring loads, just the scaled town.
     const fitted = img && ring ? walledTown(img, ring) : null;
-    if (fitted) this.drawSprite(g, fitted);
-    else if (img) this.drawSprite(g, img, 'all', WALLED_TOWN_SCALE);
-    if (ring) this.drawSprite(g, ring, 'front');
+    if (fitted) this.drawSprite(g, fitted, 'all', ringScale, drop);
+    else if (img) this.drawSprite(g, img, 'all', ringScale * WALLED_TOWN_SCALE, drop);
+    if (ring) this.drawSprite(g, ring, 'front', ringScale, drop);
   }
 
   /**
@@ -1884,10 +1887,10 @@ export class TerrainCache {
    * One city-art canvas, its ground oval centred on the hex (a little low, so tall roofs rise into the hex's top half),
    * drawn at `scale` about the oval's centre, whole or as a wall ring's `back` or `front` part (`drawCityCanvas`).
    */
-  private drawSprite(g: Ctx2D | CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement, part: 'all' | 'back' | 'front' = 'all', scale = 1) {
+  private drawSprite(g: Ctx2D | CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement, part: 'all' | 'back' | 'front' = 'all', scale = 1, drop = CITY_DROP) {
     const k = CITY_WORLD / CITY_CANVAS;
     const size = CITY_WORLD * scale;
-    const x = -(CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k * scale, y = -CITY_GROUND.middle * k * scale + CITY_DROP;
+    const x = -(CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k * scale, y = -CITY_GROUND.middle * k * scale + drop;
     drawCityCanvas(g, img, x, y, size, part);
   }
 

@@ -41,6 +41,15 @@ export function asTheirs(text: string): string {
 }
 
 /**
+ * Closing the plate with Continue (or Return) takes the map to where you met them, so you see where they are: the
+ * place `empireLocation` chose (their nearest seen city, else their unit). The map glides there, or cuts under reduced
+ * motion. Esc closes it without moving the map, and Diplomacy opens the panel instead.
+ */
+export function showMeetingPlace(meeting: NonNullable<Moment['meeting']>): void {
+  if (meeting.where) useGame.getState().jumpTo(meeting.where.at, true);
+}
+
+/**
  * First contact (Sam's co-op partner, 2026-11-25: "like in Civ, when you first meet a civ, there's an unwrapping"): a
  * full-screen plate in the era takeover's language. A sealed letter breaks open on the current era's painting, their
  * people's portrait and greeting in their own words, what they do well and what it costs them (the faction sheet's own
@@ -87,7 +96,7 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
   const cities = them.reduce((n, p) => n + p.cities, 0);
   const vp = them.reduce((n, p) => n + p.vp, 0);
   const where = whereLine(card.where);
-  const showOnMap = () => { feel.select(); dismiss(); if (card.where) useGame.getState().jumpTo(card.where.at); };
+  const close = () => { feel.select(); dismiss(); showMeetingPlace(card); };
   const diplomacy = () => { feel.select(); dismiss(); useGame.getState().set({ diplomacyOpen: true, diplomacyTeam: card.team, reportOpen: false, techOpen: false }); };
   return <div key={moment.id} className={`era-takeover meeting ${reduced ? 'reduced' : ''}`} role="dialog" aria-modal="true" aria-label={`You meet ${name}`}
     data-testid="meeting-takeover" data-people={lead.faction} data-tier={moment.tier}>
@@ -139,11 +148,10 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
     </div>
     <footer className="et-foot mt-foot">
         <div className="mt-links">
-          {card.where && <button className="btn quiet" onClick={showOnMap}>Show on map</button>}
           <button className="btn quiet" onClick={diplomacy}>Diplomacy</button>
         </div>
         <div className="et-buttons">
-          <button ref={primary} className="btn primary" data-primary-action onClick={() => { feel.select(); dismiss(); }}>Continue <span className="kbd">Return</span></button>
+          <button ref={primary} className="btn primary" data-primary-action onClick={close}>Continue <span className="kbd">Return</span></button>
         </div>
     </footer>
   </div>;

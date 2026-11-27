@@ -1,7 +1,10 @@
 // A new player's advisor at both desktop sizes. Each shot keeps the live recommendation and its ring together.
 import { test, expect } from '../fixtures';
-import { SIZES, shot, type GameWindow } from './helpers';
+import { SIZES, loadFixture, shot, type GameWindow } from './helpers';
 import { setMapSeed } from '../mapSeed';
+import { coreFixture } from '../../src/test/coreFixture';
+import { captureOrdersFixture } from '../../src/test/captureOrdersFixture';
+import { endPlanning } from '../turnActions';
 
 test.describe.configure({ mode: 'parallel' });
 for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, () => {
@@ -108,7 +111,12 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
         && techRing.y <= nodeBox.y && techRing.y + techRing.height >= nodeBox.y + nodeBox.height, 'the ring surrounds the tree node').toBe(true);
       await node.click();
     } else await tech.getByRole('button', { name: 'Research now' }).first().click();
-    // With research chosen, the advisor's next step is closing the panel, and its ring is on Close.
+    // The queue lesson comes first and rings another technology in the open panel.
+    await expect(card).toHaveAttribute('data-advisor-id', 'researchQueue');
+    await expect(card.locator('.advisor-copy p')).toHaveText('Queue more technologies to keep researching after the current one.');
+    await expect(ring).toBeVisible();
+    await card.getByRole('button', { name: 'Got it' }).click();
+    // With the lesson acknowledged, the advisor rings Close.
     await expect(card).toHaveAttribute('data-advisor-id', 'closeResearch');
     await expect(ring).toBeVisible();
     const close = (await tech.getByRole('button', { name: 'Close research' }).boundingBox())!;
@@ -148,5 +156,42 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     await expect(card).toHaveAttribute('data-advisor-id', 'endTurn');
     await expect(ring).toBeVisible();
     await capture('08-end-turn-ring');
+  });
+});
+
+test.describe('locked garrison lesson 1000x600', () => {
+  test.use({ viewport: { width: 1000, height: 600 } });
+
+  test('points to Diplomacy without covering End turn', async ({ page }) => {
+    const { state } = captureOrdersFixture();
+    await loadFixture(page, coreFixture(state), 1, true);
+    await endPlanning(page);
+    await expect(page.getByTestId('turn-number')).toHaveText('2');
+    for (let i = 0; i < 8; i++) {
+      if (await page.locator('.moment-card').isVisible()) await page.keyboard.press('Escape');
+      else if (await page.getByRole('button', { name: 'Close report' }).isVisible()) {
+        await page.getByRole('button', { name: 'Close report' }).click();
+        break;
+      }
+      await page.waitForTimeout(400);
+    }
+    await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
+    const card = page.locator('[data-testid="advisor"][data-advisor-id="garrisonLock"]');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('Your military units in Vestige stay as its garrison until Peace with Switzerland or their elimination. Vestige builds nothing until then.');
+    await expect(card).toContainText('Make Peace with Switzerland in Diplomacy to free your garrison.');
+    const diplomacy = page.locator('.game .panel.vp .rivals-foot button');
+    const ring = page.getByTestId('advisor-ring');
+    await expect(diplomacy).toBeVisible();
+    await expect(ring).toBeVisible();
+    const target = (await diplomacy.boundingBox())!, outline = (await ring.boundingBox())!;
+    expect(outline.x).toBeLessThan(target.x);
+    expect(outline.y).toBeLessThan(target.y);
+    expect(outline.x + outline.width).toBeGreaterThan(target.x + target.width);
+    expect(outline.y + outline.height).toBeGreaterThan(target.y + target.height);
+    const cardBox = (await card.boundingBox())!, turn = (await page.locator('.seatbar .cta').boundingBox())!;
+    expect(cardBox.x + cardBox.width <= turn.x || cardBox.x >= turn.x + turn.width
+      || cardBox.y + cardBox.height <= turn.y || cardBox.y >= turn.y + turn.height).toBe(true);
+    await shot(page, SIZES.find((size) => size.name === '1000x600')!, '09-locked-garrison-ring');
   });
 });

@@ -1,0 +1,10 @@
+Medieval era film: two 8 s shots from the Gemini API (model gemini-omni-1.2-flash, Interactions API, 16:9, 720p, 8 s, with generated sound), 2026-11-27, crossfaded into one film:
+  ffmpeg -i shot1.mp4 -i shot2.mp4 -filter_complex "[0:v]fade=t=in:st=0:d=0.6,settb=AVTB[v0];[1:v]settb=AVTB[v1];[v0][v1]xfade=transition=fade:duration=0.6:offset=7.4,fade=t=out:st=14.6:d=0.9,format=yuv420p[v];[0:a][1:a]acrossfade=d=0.6,afade=t=in:d=0.6,afade=t=out:st=14.4:d=1.1[a]" -map "[v]" -map "[a]" -c:v libx264 -crf 25 -movflags +faststart -c:a aac -b:a 96k cut.mp4
+  ffmpeg -i cut.mp4 -c:v libx264 -preset slow -crf 27 -movflags +faststart -c:a copy medieval.mp4
+The 720p shot masters are archived outside git.
+
+Shot 1:
+Cinematic opening shot, a thriving 13th-century European cathedral-and-castle town on a river, bright late-morning light under a clear blue sky with soft white clouds. The camera glides low along the river past a turning wooden water mill and a small sailing barge, then rises to reveal the timber-roofed guild streets, a soaring Gothic stone cathedral with flying buttresses and twin towers, and a fortified castle on the wooded hill beyond, with golden fields and vineyards on the far slopes. Townspeople work on the quays. Historically grounded architecture and clothing, epic and hopeful, painterly natural light. No text, no letters, no flags of modern nations, no modern objects.
+
+Shot 2:
+Cinematic closing shot, the same 13th-century European town in bright late-morning light under a blue sky. A peaceful procession of mounted knights in mail and surcoats, led by a knight on a white horse, rides through the stone town gate under hanging red and blue banners with simple lions and lilies and no writing; cheering townspeople in wool tunics and linen headdresses throw flower petals from the walls and windows. The camera tracks alongside the riders, then cranes up and pulls back over the crowd to reveal the Gothic cathedral and the castle on the hill, leaving open sky in the upper third. Historically grounded, celebratory and triumphant, painterly natural light. No text, no letters, no modern objects, no violence.

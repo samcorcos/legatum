@@ -77,6 +77,14 @@ export function DeclareWarPrompt() {
   const allied = relation?.state === 'Alliance';
   const standing = allied ? `You're allied with ${team}` : `You're at ${relation?.state ?? 'Peace'} with ${team}`;
   const attacksNow = attacking && 'action' in war && (!ranged || war.action.effective_turn === view.turn);
+  // Byzantium's Buy a city: War between buyer and seller calls a running offer off (core `buy_city::process_offers`).
+  const teamOf = (id: number) => view.players.find((p) => p.id === id)?.team;
+  const offersCalledOff = (view.city_offers ?? []).flatMap((o) => {
+    const name = view.cities.find((c) => c.id === o.city)?.name ?? 'the city';
+    if (o.buyer === view.me && teamOf(o.seller) === prompt.team) return [`Your offer for ${name} is called off, and the Gold comes back.`];
+    if (o.seller === view.me && teamOf(o.buyer) === prompt.team) return [`${empireTitle(view, prompt.team)}'s offer for ${name} is called off.`];
+    return [];
+  });
   const members = empireMembers(view, prompt.team).slice(0, 2);
   const names = members.map((m) => FACTION_INFO[m.faction].name);
   // An aircraft strikes; every other unit attacks. The aircraft's target list says the same words ("Declare War and strike").
@@ -111,6 +119,7 @@ export function DeclareWarPrompt() {
         {war.action.cost > 0 && <ForYouLine tone="cost">Breaks your Alliance inside its protected window: <Amount n={war.action.cost} unit="Gold" />.</ForYouLine>}
         {war.action.betrayal && <ForYouLine tone="cost">Betrayal: {team} won't ally with you for {allianceTerms().betrayalTurns} turns.</ForYouLine>}
         {allied && <ForYouLine tone="note">The Alliance ends: no more shared sight or open borders.</ForYouLine>}
+        {offersCalledOff.map((text) => <ForYouLine key={text} tone="note">{text}</ForYouLine>)}
         {warLines(war.action, view).map((l) => <ForYouLine key={l.text} tone={l.tone}>{l.text}</ForYouLine>)}
         {!allied && war.action.cost === 0 && <ForYouLine tone="note">Costs no Gold.</ForYouLine>}
       </ul></div>

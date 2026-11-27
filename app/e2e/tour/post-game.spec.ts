@@ -92,18 +92,18 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '97a-cities-overview');
     await page.keyboard.press('Escape');
     await expect(page.locator('.co-table')).toHaveCount(0);
-    // The three overlays stack over the default lens.
+    // Yields stacks over the default lens.
     const chooser = page.getByRole('button', { name: /^Lens: / });
     if (await chooser.isVisible()) await chooser.click();
-    for (const name of ['Yields', 'Resources', 'Borders']) {
+    for (const name of ['Yields']) {
       await overlayBox(page, name).click();
       await expect(overlayBox(page, name)).toBeChecked();
     }
     if (await chooser.isVisible()) await chooser.click();
     await page.mouse.move(5, size.height / 2);
-    await shot(page, size, '97b-overlays-all-on');
+    await shot(page, size, '97b-yields-on');
     if (await chooser.isVisible()) await chooser.click();
-    for (const name of ['Yields', 'Resources', 'Borders']) {
+    for (const name of ['Yields']) {
       await overlayBox(page, name).click();
       await expect(overlayBox(page, name)).not.toBeChecked();
     }
