@@ -90,7 +90,7 @@ on a projected war route and prefers unwalled cities in the opening. On Hard and
 2026-10-11, `sparta_search_only` = 0), it trains a modest assault
 wing once a reachable unwalled rival city is known, opens a feasible Campaign even when
 the short Search forecast favors Economy, credits capture healing in siege losses, and
-continues to the next exposed city after a capture. Since 2026-11-26 Hard Sparta also plays the committed conquest opening Hard Rome plays (gene `sparta_rome_opening` 1; `rome_opening.rs::conquest_opening_faction`; genes and numbers in `ai-hard-genes.md` section 10). Its wounded field units may recover at the normal 10/20 HP rate. These choices are AI policy only. Until 2026-10-11 plain Hard kept its earlier
+continues to the next exposed city after a capture. Since 2026-11-26 Hard Sparta also plays the committed conquest opening Hard Rome plays (gene `sparta_rome_opening` 1; `rome_opening.rs::conquest_opening_faction`; genes and numbers in `ai-hard-genes.md` section 10; since 2026-11-27 gene `sparta_chain_opening` 1 chains the opening to the nearest open capital after an elimination, `rome_finish.rs::rome_opening_last_turn`). Its wounded field units may recover at the normal 10/20 HP rate. These choices are AI policy only. Until 2026-10-11 plain Hard kept its earlier
 thresholds and plan valuation; with them it never declared on a one-city Germany with five
 Spearmen (war scenario Sparta's First Blood, 0/64 → 64/64 once plain Hard plays the policy). The tactical attack forecast still applies. The veteran objective starts at most one
 war; an additional front needs the ordinary public-victory containment checks
