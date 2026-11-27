@@ -64,7 +64,9 @@ it('an empire at Peace: offers lead under one Gold field whose forecast names th
   // Queued: the button gives way to a "ready" line with its own Cancel, so a second click can't
   // silently take the offer back.
   expect(button('Offer Open Borders')).toBeFalsy();
-  expect(container.querySelector('[data-testid=diplomacy-queued]')!.textContent!.trim()).toBe('Offer ready: it is sent when you end the turn. You pay 40 Gold if they accept. Cancel');
+  expect(container.querySelector('[data-testid=diplomacy-queued]')!.textContent!.trim()).toBe('Open Borders offer: sent when you end the turn. You pay 40 Gold if they accept. Cancel');
+  expect(document.activeElement).toBe(container.querySelector('[data-testid=diplomacy-queued] button'));
+  expect(container.querySelector('.diplomacy-queued-check')).toBeTruthy();
   // Cancel removes the queued offer whatever Gold it carries.
   act(() => (container.querySelector('[data-testid=diplomacy-queued] button') as HTMLButtonElement).click());
   expect(orders()).toEqual([]);
@@ -104,7 +106,8 @@ it('Give Gold to a met empire at Peace queues a gift to its leader', async () =>
   expect(gift.querySelector('.gold-stepper')).toBeTruthy();
   act(() => (gift.querySelector('[data-testid=give-gold]') as HTMLButtonElement).click());
   expect(orders()).toEqual([{ type: 'GiveGold', to: leader, amount: 50 }]);
-  expect(gift.querySelector('[data-testid=gift-queued]')).toBeTruthy();
+  expect(gift.querySelector('[data-testid=gift-queued]')?.textContent).toContain('Gift: you give 50 Gold');
+  expect(document.activeElement).toBe(gift.querySelector('[data-testid=gift-queued] button'));
 });
 
 it('Open Borders: the mark beside the treaty state, the passage line and Close borders', async () => {
