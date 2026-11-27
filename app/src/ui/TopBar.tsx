@@ -17,7 +17,6 @@ import { ScienceHoverSummary } from './ScienceHover';
 import { Amount, Amounts, Quantity } from './Amounts';
 import { CitiesButton } from './CitiesOverview';
 import { HoardReadout, TombReadout } from './FactionGoalProgress';
-import { LevyCounter } from './Levy';
 import { DecadenceNote } from './DecadenceNote';
 import { pendingSpend } from './productionPurchases';
 import { TrainingLine, TrainingTip } from './Training';
@@ -145,7 +144,6 @@ export function TopBar() {
           <span className="pos" data-celebration-counter="science">{signed(e.science_per_turn.total)}<CounterDelta counter="science" /></span>
         </Tip>
         <SupplyChips view={view} />
-        <LevyCounter />
         <span className="population-counter" data-celebration-counter="population" title="Total population in your cities"><Icon name="title-most-populous" size={12} className="count-icon ui-mark" label="Population" /><span className="count-label">Pop. </span><b>{view.cities.filter((c) => c.owner === view.me && c.detail).reduce((n, c) => n + c.population, 0)}</b><CounterDelta counter="population" /></span>
         {!phone && <Tip content={<>
           <div className="bd-title">{eraName(r.era)} era</div>

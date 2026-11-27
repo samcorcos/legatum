@@ -135,6 +135,11 @@ it('rings the city panel\'s Buy a tile button', () => {
   expect(targetElement({ kind: 'control', name: 'buyTile' })?.textContent).toBe('Buy a tile · from 50 Gold');
 });
 
+it('rings the Make an offer button of a city purchase', () => {
+  render(<div className="city-panel"><button data-testid="buy-city-offer">Make an offer (400 Gold)</button></div>);
+  expect(targetElement({ kind: 'control', name: 'buyCity' })?.textContent).toBe('Make an offer (400 Gold)');
+});
+
 it('while a tile is being placed, shows only the tip that asked for it', () => {
   useAdvisor.setState({ seen: ['welcome', 'report', 'howToWin'], tips: {} });
   const city = view.cities.find((c) => c.owner === view.me)!;

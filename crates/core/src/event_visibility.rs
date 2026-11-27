@@ -73,6 +73,13 @@ pub fn visible_events(
         .collect();
     let at =
         |h| before.tile(h).is_some_and(|t| t.visible) || after.tile(h).is_some_and(|t| t.visible);
+    // Cities the viewer knows at all (seen now or remembered): a city offer is public to them.
+    let known_cities: BTreeSet<_> = before
+        .cities
+        .iter()
+        .chain(&after.cities)
+        .map(|c| c.id)
+        .collect();
     events
         .iter()
         .filter_map(|event| {
@@ -125,6 +132,8 @@ pub fn visible_events(
             let visible = match event {
                 Event::WarDeclared { .. }
                 | Event::HeirBorn { .. }
+                | Event::CapitalFell { .. }
+                | Event::HeirRefuge { .. }
                 | Event::WarJoined { .. }
                 | Event::PeaceEstablished { .. }
                 | Event::TreatyActivated { .. }
@@ -138,12 +147,23 @@ pub fn visible_events(
                 Event::GoldGiven { from, to, .. } => {
                     teammates.contains(from) || teammates.contains(to)
                 }
-                // The Gold is private to the two empires.
-                Event::CompanyHired { owner, seller, .. } => {
-                    teammates.contains(owner) || teammates.contains(seller)
+                // A city offer is public to everyone who knows the city; the two empires always see it.
+                Event::CityOfferMade {
+                    city,
+                    buyer,
+                    seller,
+                    ..
                 }
-                Event::CompanyDeparted { owner, pos, .. }
-                | Event::CompanyTurned { owner, pos, .. } => teammates.contains(owner) || at(*pos),
+                | Event::CityOfferEnded {
+                    city,
+                    buyer,
+                    seller,
+                    ..
+                } => {
+                    teammates.contains(buyer)
+                        || teammates.contains(seller)
+                        || known_cities.contains(city)
+                }
                 Event::WonderDiscovered { owner, .. } => teammates.contains(owner),
                 Event::ProposalCreated { proposal }
                 | Event::ProposalAccepted { proposal, .. }

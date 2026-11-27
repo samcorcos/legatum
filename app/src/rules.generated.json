@@ -364,6 +364,17 @@
       }
     }
   },
+  "buyCity": {
+    "base": 75,
+    "buildingPercent": 20,
+    "failFeePercent": 10,
+    "goalMultiplier": 2,
+    "guardPercent": 20,
+    "maxBidPercent": 300,
+    "offerTurns": 3,
+    "perPopulation": 25,
+    "wallsPercent": 25
+  },
   "calendarLabels": [
     "4000 BC",
     "4000 BC",
@@ -1389,11 +1400,6 @@
   "classBonusPercent": 40,
   "coloniaBorderReach": 2,
   "coloniaLevel": 3,
-  "company": {
-    "hirePercent": 100,
-    "turns": 30,
-    "upkeep": 2
-  },
   "decadence": {
     "powerWindowTurns": 50
   },
@@ -10021,7 +10027,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 65,
+  "saveVersion": 66,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,

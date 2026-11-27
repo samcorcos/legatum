@@ -240,10 +240,7 @@ impl Planner<'_> {
 
         let mut waves: BTreeMap<TechId, i32> = BTreeMap::new();
         for u in &self.ctx.own_units {
-            if !composition::is_combat(u.kind)
-                || u.contract_until.is_some()
-                || u.upgrade_supply_blocker.is_some()
-            {
+            if !composition::is_combat(u.kind) || u.upgrade_supply_blocker.is_some() {
                 continue;
             }
             let Some(to) = data::unit_stats(u.kind).upgrades_to else {
@@ -403,7 +400,7 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| composition::is_combat(u.kind) && u.contract_until.is_none())
+            .filter(|u| composition::is_combat(u.kind))
             .filter_map(|u| {
                 let mut kind = u.kind;
                 let mut total = 0;

@@ -15,7 +15,7 @@ import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, Unit
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch' | 'buyTile'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
 export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean; tip?: boolean }
 export interface AdvisorContext {

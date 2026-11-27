@@ -176,8 +176,6 @@ impl ViewBuilder {
                 power: 0,
                 lead_percent: 0,
                 decadence_percent: 0,
-                levy: None,
-                companies: 0,
             })
             .collect();
         let mut b = Self {
@@ -272,7 +270,9 @@ impl ViewBuilder {
                 aircraft: Vec::new(),
                 air_sightings: Vec::new(),
                 air_contacts: Vec::new(),
-                company_offers: Vec::new(),
+                city_buys: Vec::new(),
+                city_offers: Vec::new(),
+                byzantine_capitals: Vec::new(),
                 great_works: Vec::new(),
                 standings: Default::default(),
                 winner: None,
@@ -454,8 +454,6 @@ impl ViewBuilder {
             occupation_lock: None,
             upgrade_cost: None,
             heir_of: None,
-            contract_until: None,
-            origin: None,
         });
         self
     }
@@ -744,6 +742,18 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
             Order::SetAutoFire { .. } => panic!("AI seats do not set human garrison automation"),
             Order::SetCityAutomation { .. } => panic!("AI seats do not delegate city production"),
             Order::BuyTile { .. } => panic!("AI seats do not buy tiles"),
+            // Buy a city (rules 63): only an offer the view says is legal now.
+            Order::BuyCity { city, gold } => {
+                assert!(
+                    view.city_buys.iter().any(|b| b.city == *city
+                        && b.buyer == view.me
+                        && b.blocker.is_none()
+                        && *gold >= b.price
+                        && *gold <= b.max_bid
+                        && *gold <= view.economy.gold),
+                    "city offer the view refuses: {city:?} for {gold}"
+                );
+            }
             // Deals (rules 61): Hard's coalition Gold, only with deals on.
             Order::GiveGold { to, amount } => {
                 assert!(
@@ -763,7 +773,7 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
                 );
                 assert!(!orders.iter().any(|other| matches!(other,
                     Order::SetProduction { city: id, .. } | Order::SetProductionQueue { city: id, .. }
-                    | Order::BuyItem { city: id, .. } | Order::HireCompany { city: id, .. } if id == city)));
+                    | Order::BuyItem { city: id, .. } if id == city)));
             }
             Order::BreakTreaty { .. }
             | Order::DeclareWar { .. }
@@ -896,16 +906,6 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
                     }
                 );
                 assert!(cost <= view.economy.gold);
-            }
-            Order::HireCompany { city, unit, seller } => {
-                own_city(*city);
-                assert!(bought.insert(*city), "two buys for one city");
-                let offer = view
-                    .company_offers
-                    .iter()
-                    .find(|o| o.unit == *unit && o.seller == *seller)
-                    .expect("company not on offer");
-                assert!(offer.price <= view.economy.gold);
             }
             Order::SetResearchQueue { techs } => {
                 research += 1;

@@ -2261,6 +2261,15 @@ fn movement_round(
     }
     for (unit, city) in &captures_city {
         let owner = state.units[unit].owner;
+        // An earlier capture this step may already have taken the city (the fall of
+        // Constantinople takes every Byzantine city at once): only a hostile city is taken.
+        if !state
+            .cities
+            .get(city)
+            .is_some_and(|c| hostile(state, owner, c.owner))
+        {
+            continue;
+        }
         battle::capture_city(state, *city, owner, events);
     }
     // Hostile civilians left under an arriving military unit are captured.

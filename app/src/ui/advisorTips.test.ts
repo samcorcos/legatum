@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FixtureClient } from '../test/fixtureEngine';
 import { hexAt, neighbors, distance, tileIndex } from '../hex';
-import type { PlayerView, SupplyView } from '../types';
+import type { Order, PlayerView, SupplyView } from '../types';
 import { advisorSuggestion } from './advisorModel';
 import { strategyTip, TIP_COOLDOWN, TIP_GAP } from './advisorTips';
 
@@ -20,6 +20,55 @@ const iron = (over: Partial<SupplyView> = {}): SupplyView => ({ resource: 'Iron'
   supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, spare: 0, ...over });
 
 describe('situational tips', () => {
+  it('Byzantium: a city it can afford to buy; the seller: what keeps its city', async () => {
+    const v = await game();
+    const r = rival(v);
+    const city = mine(v);
+    v.cities.push({ ...city, id: 7002, owner: r.id, name: 'Pylos', is_capital: false, pos: neighbors(neighbors(city.pos)[0])[0] });
+    const breakdown = { total: 400, parts: [['Starting price', 400]] as [string, number][] };
+    v.city_buys = [{ city: 7002, buyer: v.me, price: 400, breakdown }];
+    expect(strategyTip(v, {})?.id).not.toBe('tip:buy');
+    v.economy.gold = 450;
+    const buy = strategyTip(v, {});
+    expect(buy).toMatchObject({ id: 'tip:buy', title: 'You can buy Pylos', steps: [{ target: { kind: 'tile' } }, { target: { kind: 'control', name: 'buyCity' } }] });
+    expect(buy!.why).toContain('costs 400 Gold');
+    // A queued offer, or a refusal, ends it.
+    expect(strategyTip(v, {}, false, null, [{ type: 'BuyCity', city: 7002 }])?.id).not.toBe('tip:buy');
+    v.city_buys = [{ city: 7002, buyer: v.me, price: 400, breakdown, blocker: 'You are already buying Nicaea: one offer at a time' }];
+    expect(strategyTip(v, {})?.id).not.toBe('tip:buy');
+
+    // The seller's side: its own city under offer, while the offer still holds.
+    v.city_buys = [];
+    v.economy.gold = 50;
+    v.city_offers = [{ city: city.id, buyer: r.id, seller: v.me, escrow: 500, ends_turn: 22, turns_left: 3, price_now: 450 }];
+    const keep = strategyTip(v, {});
+    expect(keep).toMatchObject({ id: `tip:offer:${city.id}:22`, title: `Keep ${city.name}?` });
+    expect(keep!.steps[0].instruction).toContain('Move military units in or next to it, or declare War');
+    v.city_offers = [{ ...v.city_offers[0], guards_to_stop: 2, walls_to_stop: 1 }];
+    expect(strategyTip(v, {})!.steps[0].instruction).toContain('Move 2 more military units in or next to it, or declare War');
+    v.city_offers = [{ ...v.city_offers[0], price_now: 600 }];
+    expect(strategyTip(v, {})?.id ?? '').not.toMatch(/^tip:offer/);
+  });
+
+  it('suggests a buy only when the Gold is free after the other queued orders', async () => {
+    const v = await game();
+    const city = mine(v);
+    v.cities.push({ ...city, id: 7002, owner: rival(v).id, name: 'Pylos', is_capital: false, pos: neighbors(neighbors(city.pos)[0])[0] });
+    v.city_buys = [{ city: 7002, buyer: v.me, price: 400, breakdown: { total: 400, parts: [['Starting price', 400]] } }];
+    v.economy.gold = 450;
+    expect(strategyTip(v, {})?.id).toBe('tip:buy');
+    const gift: Order = { type: 'GiveGold', to: rival(v).id, amount: 100 } as unknown as Order;
+    expect(strategyTip(v, {}, false, null, [gift])?.id).not.toBe('tip:buy');
+  });
+
+  it('shows the seller notice even right after another tip', async () => {
+    const v = await game();
+    const r = rival(v);
+    const city = mine(v);
+    v.city_offers = [{ city: city.id, buyer: r.id, seller: v.me, escrow: 500, ends_turn: 22, turns_left: 3, price_now: 450 }];
+    expect(strategyTip(v, { gold: v.turn - 1, '#gold': 1 })?.id).toBe(`tip:offer:${city.id}:22`);
+  });
+
   it('stays quiet when nothing calls for advice, and in the first turns', async () => {
     const v = await game();
     expect(strategyTip(v, {})).toBeNull();

@@ -3,10 +3,11 @@ import { goalCitiesAt, goalCityBannerPart, tombSiteAt, tombSiteLine } from '../g
 import { itemName } from '../data';
 import type { CityView, PlayerView } from '../types';
 import { wallTierOf } from './cityArt';
+import { capitalFallLine, offerChip, offerOn } from '../buyCity';
 import { WALL_TIER_LABEL } from './sprites';
 
 /** The parts of a drawn banner, in their visual order: a goal city's seal (left end), population, owner, name, the capital's star (right end). */
-export function bannerTooltip(view: Pick<PlayerView, 'players'> & Partial<Pick<PlayerView, 'me' | 'colonias' | 'royal_tombs' | 'tomb_sites'>>, city: CityView): string {
+export function bannerTooltip(view: Pick<PlayerView, 'players'> & Partial<Pick<PlayerView, 'me' | 'cities' | 'colonias' | 'royal_tombs' | 'tomb_sites' | 'city_offers' | 'byzantine_capitals'>>, city: CityView): string {
   const site = tombSiteAt(view, city.id);
   const goals = [...goalCitiesAt(view, city.id).map((g) => goalCityBannerPart(view, g)), ...(site ? [tombSiteLine({ me: view.me ?? -1, players: view.players }, site).replace(/\.$/, '')] : [])];
   const parts = [...goals, `Population ${city.visible ? city.population : 'unknown'}`, empireOfPlayer(view, city.owner), city.name];
@@ -21,6 +22,11 @@ export function bannerTooltip(view: Pick<PlayerView, 'players'> & Partial<Pick<P
     const founder = empireOfPlayer(view, city.original_capital_of ?? city.owner);
     parts.push(`Original capital of ${founder} · a rival scores 1 VP while it holds it`);
   }
+  // Byzantium (core `buy_city`): a running offer's countdown, and what taking a Byzantine capital does.
+  const offer = offerOn(view, city.id);
+  if (offer) parts.push(`${offerChip(view, city.id)} by ${empireOfPlayer(view, offer.buyer)} for ${offer.escrow} Gold`);
+  const fall = capitalFallLine({ me: view.me ?? -1, players: view.players, cities: view.cities ?? [], byzantine_capitals: view.byzantine_capitals }, city);
+  if (fall) parts.push(fall.replace(/\.$/, ''));
   return parts.join(' · ');
 }
 

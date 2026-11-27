@@ -77,11 +77,8 @@ pub struct Collector {
     great_work_turns: BTreeMap<u8, BTreeMap<String, u32>>,
     great_works_bought: BTreeMap<u8, u32>,
     barbarians: crate::barbarian_telemetry::BarbarianTelemetry,
-    company_hires: Vec<CompanyHire>,
-    companies_departed: BTreeMap<u8, u32>,
-    companies_turned: BTreeMap<u8, u32>,
-    levies: BTreeMap<u8, LevyTelemetry>,
     celts_razes: BTreeMap<u8, u64>,
+    byzantium: BTreeMap<u8, ByzantiumTelemetry>,
     germany_project_city_turns: BTreeMap<String, u64>,
     sparta: Option<SpartaTelemetry>,
     empire_flow: BTreeMap<u8, EmpireFlowTelemetry>,
@@ -249,29 +246,6 @@ impl Collector {
                 } if owner.0 == sparta.seat && data::unit_stats(*unit_kind).military => {
                     sparta.military_destroyed += 1;
                 }
-                Event::CompanyHired {
-                    owner,
-                    seller,
-                    unit,
-                    gold,
-                    until,
-                    ..
-                } => {
-                    self.company_hires.push(CompanyHire {
-                        turn: resolved_turn,
-                        buyer: owner.0,
-                        seller: seller.0,
-                        unit: format!("{unit:?}"),
-                        gold: *gold,
-                        until: *until,
-                    });
-                }
-                Event::CompanyDeparted { owner, .. } => {
-                    *self.companies_departed.entry(owner.0).or_default() += 1;
-                }
-                Event::CompanyTurned { owner, .. } => {
-                    *self.companies_turned.entry(owner.0).or_default() += 1;
-                }
                 _ => {}
             }
         }
@@ -314,6 +288,36 @@ impl Collector {
                 by, ordered: false, ..
             } => {
                 *self.celts_razes.entry(by.0).or_default() += 1;
+            }
+            Event::CityOfferMade { buyer, .. } => {
+                self.byzantium.entry(buyer.0).or_default().offers += 1;
+            }
+            Event::CityOfferEnded {
+                buyer,
+                outcome,
+                reason,
+                ..
+            } => {
+                let b = self.byzantium.entry(buyer.0).or_default();
+                match outcome {
+                    legatum_core::buy_city::OfferOutcome::Sold => {
+                        b.purchases += 1;
+                        b.first_purchase_turn.get_or_insert(resolved_turn);
+                    }
+                    legatum_core::buy_city::OfferOutcome::Failed => b.failed += 1,
+                    legatum_core::buy_city::OfferOutcome::Cancelled => {
+                        b.cancelled += 1;
+                        *b.cancel_reasons.entry(cancel_kind(reason)).or_default() += 1;
+                    }
+                }
+            }
+            Event::CapitalFell { player, cities, .. } => {
+                let b = self.byzantium.entry(player.0).or_default();
+                b.collapses += 1;
+                b.cities_lost_to_collapse += cities.len() as u32;
+            }
+            Event::HeirRefuge { player, .. } => {
+                self.byzantium.entry(player.0).or_default().refuges += 1;
             }
             Event::EraEntered { player, era, .. } => {
                 self.era_entries
@@ -761,30 +765,6 @@ impl Collector {
                     cities: state.cities_of(p.id).count() as u32,
                 });
             }
-            if let Some((units, cap)) = legatum_core::economy::levy(state, p.id).filter(|_| p.alive)
-            {
-                let l = self.levies.entry(p.id.0).or_default();
-                l.turns += 1;
-                l.unit_turns += units as u64;
-                l.cap_turns += cap as u64;
-                let full = units >= cap;
-                l.at_cap_turns += u32::from(full);
-                l.war_at_cap_turns += u32::from(
-                    full && state
-                        .players
-                        .iter()
-                        .any(|q| q.alive && q.team != p.team && state.at_war(p.id, q.id)),
-                );
-                if full {
-                    l.stalled_city_turns += state
-                        .cities_of(p.id)
-                        .filter(|c| {
-                            matches!(c.producing, Some(legatum_core::ProductionItem::Unit { unit })
-                                if legatum_core::data::pays_upkeep(unit))
-                        })
-                        .count() as u32;
-                }
-            }
             let cities = state.cities_of(p.id).count();
             self.peak_cities
                 .entry(p.id.0)
@@ -885,12 +865,9 @@ impl Collector {
             great_works_bought: self.great_works_bought.clone(),
             bounty_gold_received: self.bounty_gold_received.clone(),
             swiss_treasury: self.swiss_treasury.clone(),
-            company_hires: self.company_hires.clone(),
-            companies_departed: self.companies_departed.clone(),
-            companies_turned: self.companies_turned.clone(),
-            levies: self.levies.clone(),
             goal_cities: self.goal_cities.finish(),
             celts_razes: self.celts_razes.clone(),
+            byzantium: self.byzantium.clone(),
             upkeep_disbands: self.upkeep_disbands.clone(),
             city_combat: Some(self.city_combat.clone()),
             germany_project_city_turns: self.germany_project_city_turns.clone(),
@@ -1171,7 +1148,7 @@ pub struct EmpireFlowTelemetry {
     /// incomplete or lost production. Dynamic Settler pricing makes it an estimate.
     pub completed_production_value: i64,
     /// Upkeep owed after each resolved turn while alive, summed (`economy::upkeep`: military
-    /// beyond the free units, faction modifiers, companies and treaties). Older reports omit it.
+    /// beyond the free units, faction modifiers, and treaties). Older reports omit it.
     #[serde(default)]
     pub upkeep_paid: i64,
 }
@@ -1193,6 +1170,46 @@ pub struct SwissTreasury {
     /// Net Gold per turn, interest included.
     pub net_gold: i32,
     pub cities: u32,
+}
+
+/// One Byzantium seat's city offers and capital falls (`Collector::observe_event`).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ByzantiumTelemetry {
+    pub offers: u32,
+    pub purchases: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_purchase_turn: Option<u32>,
+    /// The owner raised the price above the escrow.
+    pub failed: u32,
+    pub cancelled: u32,
+    /// Cancellations by kind (`cancel_kind`): war, changed_hands, eliminated, team, gone, other.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub cancel_reasons: BTreeMap<String, u32>,
+    /// Its capital was taken and every other city with it.
+    pub collapses: u32,
+    pub cities_lost_to_collapse: u32,
+    /// Its capital was taken while the Heir sheltered elsewhere.
+    pub refuges: u32,
+}
+
+/// A cancellation reason (core `buy_city`'s public line, "Offer for X called off: <why>. ...")
+/// as a short key.
+fn cancel_kind(reason: &str) -> String {
+    let reason = reason.split_once("called off: ").map_or(reason, |(_, r)| r);
+    let kind = if reason.starts_with("War ") {
+        "war"
+    } else if reason.contains("changed hands") {
+        "changed_hands"
+    } else if reason.contains("eliminated") {
+        "eliminated"
+    } else if reason.contains("team") {
+        "team"
+    } else if reason.contains("gone") {
+        "gone"
+    } else {
+        "other"
+    };
+    kind.into()
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1261,23 +1278,17 @@ pub struct GameTelemetry {
     /// 200 (`SWISS_TREASURY_TURNS`). Absent on reports from before the uncapped-interest rule.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub swiss_treasury: Vec<SwissTreasury>,
-    /// Every Mercenary Company hired this game, in order (`company`).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub company_hires: Vec<CompanyHire>,
-    /// Companies that served out their contract, and that turned barbarian unpaid, per employer seat.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub companies_departed: BTreeMap<u8, u32>,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub companies_turned: BTreeMap<u8, u32>,
-    /// Thin levies (`economy::levy`), per Byzantium seat.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub levies: BTreeMap<u8, LevyTelemetry>,
     /// Rome's Colonia Victrix and Egypt's royal tomb, per Rome or Egypt seat
     /// (`goal_city_telemetry`). Older reports omit it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub goal_cities: BTreeMap<u8, crate::goal_city_telemetry::GoalCityTelemetry>,
     #[serde(default)]
     pub celts_razes: BTreeMap<u8, u64>,
+    /// Byzantium's Buy a city and the fall of Constantinople, by Byzantium seat (offers it made,
+    /// cities bought, the first purchase's resolved turn, offers failed and cancelled and why,
+    /// collapses and Heir refuges). Older reports omit it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub byzantium: BTreeMap<u8, ByzantiumTelemetry>,
     /// Units disbanded for unpaid upkeep (`rules::cities::pay_gold`), by owner seat.
     #[serde(default)]
     pub upkeep_disbands: BTreeMap<u8, u64>,
@@ -1330,32 +1341,6 @@ pub struct GameTelemetry {
     /// individual null turns mean an observed empire never reached that milestone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub openings: Option<BTreeMap<u8, EmpireOpening>>,
-}
-
-/// A levy-capped empire's armed units against its cap over a game, per resolved turn.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct LevyTelemetry {
-    pub turns: u32,
-    /// Sum over turns of armed units and of the cap.
-    pub unit_turns: u64,
-    pub cap_turns: u64,
-    /// Turns the empire stood at its cap.
-    pub at_cap_turns: u32,
-    /// City-turns a city's production sat on an armed unit the cap blocked.
-    pub stalled_city_turns: u32,
-    /// Turns the empire was at war while at its cap.
-    pub war_at_cap_turns: u32,
-}
-
-/// One Mercenary Company hired: who paid whom, for what, and when the contract ends.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CompanyHire {
-    pub turn: u32,
-    pub buyer: u8,
-    pub seller: u8,
-    pub unit: String,
-    pub gold: i32,
-    pub until: u32,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2382,5 +2367,60 @@ mod tests {
         assert!(!s.scores_reconcile());
         assert_eq!(s.terminal_scores.all_players.reconciliation_failures, 1);
         assert_eq!(s.terminal_scores.all_teams.reconciliation_failures, 1);
+    }
+
+    #[test]
+    fn byzantium_offers_and_collapses_are_counted_per_buyer() {
+        use legatum_core::buy_city::OfferOutcome;
+        use legatum_core::{CityId, PlayerId};
+        let mut c = Collector::default();
+        let (byz, seller) = (PlayerId(1), PlayerId(2));
+        let ended = |outcome, reason: &str| Event::CityOfferEnded {
+            city: CityId(5),
+            buyer: byz,
+            seller,
+            outcome,
+            paid: 0,
+            refund: 0,
+            fee: 0,
+            reason: reason.into(),
+        };
+        for turn in [10, 20] {
+            c.observe_event(
+                turn,
+                &Event::CityOfferMade {
+                    city: CityId(5),
+                    buyer: byz,
+                    seller,
+                    escrow: 300,
+                    price: 300,
+                    guards_to_stop: 1,
+                    ends_turn: turn + 3,
+                },
+            );
+        }
+        c.observe_event(13, &ended(OfferOutcome::Failed, "price rose"));
+        c.observe_event(
+            21,
+            &ended(
+                OfferOutcome::Cancelled,
+                "Offer for C5 called off: War between A and B. The Gold went back.",
+            ),
+        );
+        c.observe_event(30, &ended(OfferOutcome::Sold, "sold"));
+        c.observe_event(
+            40,
+            &Event::CapitalFell {
+                player: byz,
+                captor: seller,
+                capital: CityId(1),
+                cities: vec![CityId(2), CityId(3)],
+            },
+        );
+        let b = &c.byzantium[&1];
+        assert_eq!((b.offers, b.purchases, b.failed, b.cancelled), (2, 1, 1, 1));
+        assert_eq!(b.first_purchase_turn, Some(30));
+        assert_eq!(b.cancel_reasons.get("war"), Some(&1));
+        assert_eq!((b.collapses, b.cities_lost_to_collapse), (1, 2));
     }
 }

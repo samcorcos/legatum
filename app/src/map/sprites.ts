@@ -389,6 +389,25 @@ export function drawTag(ctx: CanvasRenderingContext2D, look: LookId, x: number, 
   ctx.restore();
 }
 
+/**
+ * Byzantium's offer on a city: a gilt coin with the turns left, set on the banner's end (its centre on the edge, so
+ * it never reaches the units on the next tile). The ring says whose side it is from the viewer's seat.
+ */
+export function drawOfferCoin(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, turnsLeft: number, tone: 'good' | 'bad' | 'neutral', alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const r = 8.5;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#e6c56c'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = tone === 'bad' ? INK.atlas.red : tone === 'good' ? INK.atlas.good : INK.atlas.ink; ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = INK.atlas.ink;
+  ctx.beginPath(); ctx.arc(x, y, r + 1.2, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = INK.atlas.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `700 11px ${FONTS[look].sans}`;
+  ctx.fillText(String(turnsLeft), x, y + 0.5);
+  ctx.restore();
+}
+
 /** Under Byzantium's Heir on a tile nobody of yours can see: a gilt halo, so he reads as "here" over the fog (his position is public). */
 export function drawHeirHalo(ctx: CanvasRenderingContext2D, x: number, y: number, w: number) {
   ctx.save();
@@ -401,58 +420,6 @@ export function drawHeirHalo(ctx: CanvasRenderingContext2D, x: number, y: number
   // A solid gilt ring with an ink rim: he is here, now, and everyone can see it.
   ctx.beginPath(); ctx.arc(x, y, w * 1.3, 0, Math.PI * 2); ctx.strokeStyle = INK.atlas.ink; ctx.lineWidth = 4.4; ctx.stroke();
   ctx.beginPath(); ctx.arc(x, y, w * 1.3, 0, Math.PI * 2); ctx.strokeStyle = heirGilt(); ctx.lineWidth = 2.6; ctx.stroke();
-  ctx.restore();
-}
-
-/**
- * A hired Company's contract mark (public), centred under its token: the seller's faction seal and the turns of contract left
- * ("7 left"), or "Last turn" in red when it goes home this turn. The words carry the meaning; the seal says whose it was.
- */
-export function drawContractTag(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, origin: Faction | undefined, left: number) {
-  const text = left === 0 ? 'Last turn' : `${left} turn${left === 1 ? '' : 's'}`;
-  const last = left === 0;
-  ctx.save();
-  const fs = 10;
-  ctx.font = `700 ${fs}px ${FONTS[look].sans}`;
-  const seal = origin ? 11 : 0;
-  const tw = ctx.measureText(text).width + 8 + (seal ? seal + 2 : 0), th = fs + 5;
-  const bx = x - tw / 2;
-  ctx.beginPath();
-  ctx.rect(bx, y, tw, th);
-  ctx.fillStyle = last ? INK.atlas.red : INK.atlas.vellum;
-  ctx.fill();
-  ctx.strokeStyle = INK.atlas.ink;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  if (origin) {
-    const ic = tintedIcon(`faction-${origin.toLowerCase()}`, last ? INK.atlas.light : INK.atlas.ink, seal * (ctx.getTransform().a || 1));
-    if (ic) ctx.drawImage(ic, bx + 3, y + (th - seal) / 2, seal, seal);
-  }
-  ctx.fillStyle = last ? INK.atlas.light : INK.atlas.ink;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, x + (seal ? (seal + 2) / 2 : 0), y + th / 2 + 0.5);
-  ctx.restore();
-}
-
-/** Zoomed out, a Company's pip carries only its turns left, on a small ink plaque at the lower right (red on its last turn). */
-export function drawContractPip(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, half: number, left: number) {
-  const text = left === 0 ? '!' : String(left);
-  ctx.save();
-  ctx.font = `700 9px ${FONTS[look].sans}`;
-  const w = Math.max(11, ctx.measureText(text).width + 6), h = 11;
-  const bx = x + half * 0.5, by = y + half * 0.45;
-  ctx.beginPath();
-  ctx.rect(bx, by, w, h);
-  ctx.fillStyle = left === 0 ? INK.atlas.red : INK.atlas.ink;
-  ctx.fill();
-  ctx.strokeStyle = INK.atlas.vellum;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = INK.atlas.vellum;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, bx + w / 2, by + h / 2 + 0.5);
   ctx.restore();
 }
 

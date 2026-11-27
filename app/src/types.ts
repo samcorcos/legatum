@@ -334,9 +334,6 @@ export interface UnitView {
   resting_heal?: Breakdown | null;
   /** An Heir only (public): the Byzantium empire whose goal he carries, whoever holds him now. */
   heir_of?: PlayerId | null;
-  /** A hired Mercenary Company (public): the last turn of its contract (it goes home at the end of that turn) and the faction that sold it. */
-  contract_until?: number;
-  origin?: Faction;
 }
 
 /** Military upkeep effect of building one more of this unit (legatum-ui: every build card shows
@@ -558,10 +555,6 @@ export interface PlayerPublic {
   goal_rule?: GoalRule | null;
   /** The empire's current era, 1-based (1 Ancient .. 9 Future; core `objectives::era_of`): it rises the turn the previous era's last technology lands. Public. */
   era: number;
-  /** Thin levies (Byzantium only, public): armed units fielded and the cap (one per city, plus one). */
-  levy?: LevyView;
-  /** Mercenary Companies this empire fields (public; absent when none). */
-  companies?: number;
   /** Its current Gold, public to every player (0 once dead). */
   gold?: number;
   /** Public economy value: Gold plus Production across its cities (0 once dead). */
@@ -579,12 +572,6 @@ export interface PlayerPublic {
   /** Optional decadence: the percent cut from every yield of this empire's cities. */
   decadence_percent?: number;
 }
-
-/** One seller's Company in the shop (core `company::Offer`): its own special unit, what it costs now in Gold, and why it cannot be hired yet, if so. */
-export interface CompanyOffer { seller: PlayerId; unit: UnitKind; price: number; unavailable?: string }
-
-/** An empire's armed units against its thin-levy cap (core `view::LevyView`). */
-export interface LevyView { units: number; cap: number }
 
 interface EconomyView {
   military_purchases?: number;
@@ -1023,15 +1010,88 @@ export interface PlayerView {
   air_sightings?: AirSightingView[];
   /** Aircraft previously seen in hangars or reported in a battle; the base may be unknown. */
   air_contacts?: AirContactView[];
-  /** Byzantium only, private: every Company it could hire now, by seller and kind (the shop). Sellers at War, unmet or on its team are already left out. */
-  company_offers?: CompanyOffer[];
   great_works?: GreatWorkView[];
+  /** Byzantium's Buy a city (core `buy_city::buy_views`): a Byzantine viewer gets every known rival city with its own refusal; any other viewer gets the cities a met Byzantium could buy now, and its own cities that touch Byzantine land. Absent with the rule off. */
+  city_buys?: CityBuyView[];
+  /** Every running city offer the viewer may know of (core `buy_city::offer_views`). */
+  city_offers?: CityOfferView[];
+  /** Each living Byzantium's capital and Heir refuge, public (core `buy_city::capital_views`). Absent with the fall of Constantinople off. */
+  byzantine_capitals?: CapitalFallView[];
   standings: TeamStanding[];
   winner: TeamId | null;
   finished: boolean;
   /** The game's public record (core `history::GameHistory`), present only once the game is finished. */
   history?: GameHistory | null;
 }
+
+// ---- buy_city.rs ----
+
+/** One city's price for one Byzantium (core `buy_city::CityBuyView`). */
+export interface CityBuyView {
+  city: CityId;
+  /** The Byzantium that would buy it. */
+  buyer: PlayerId;
+  price: number;
+  /** Every line of the price; the parts sum to `price`. */
+  breakdown: Breakdown;
+  /** Why the buyer cannot make the offer now; absent when it can. */
+  blocker?: string | null;
+  /** The price's first step (base, population, buildings); an offer keeps it. */
+  base_price?: number;
+  /** The full Gold price of its buildings (Walls left out). */
+  buildings_gold?: number;
+  /** It holds a goal's held VP (the price doubles). */
+  holds_goal?: boolean;
+  /** Armed units of the owner's team in or next to it now. */
+  guards?: number;
+  /** The buyer's own view: Gold it lacks for the price when only its treasury blocks the offer. */
+  short_of_gold?: number;
+  /** The most the buyer may offer (core `MAX_BID_PERCENT` of the price). */
+  max_bid?: number;
+  /** The buyer's own view: the bid choices, each with what stops it. */
+  bids?: BidView[];
+}
+
+/** One bid choice on a city (core `buy_city::BidView`). */
+export interface BidView {
+  /** Percent of the price (100 is the price). */
+  percent: number;
+  gold: number;
+  /** More military units in or next to the city that would lift its price above this bid. */
+  guards_to_stop: number;
+  /** More Walls levels that would; absent when Walls alone cannot. */
+  walls_to_stop?: number | null;
+}
+
+/** A running offer (core `buy_city::CityOfferView`). */
+export interface CityOfferView {
+  city: CityId;
+  buyer: PlayerId;
+  seller: PlayerId;
+  /** The Gold held for the sale. */
+  escrow: number;
+  /** The city changes hands at the end of this turn. */
+  ends_turn: number;
+  /** Turn ends left before the sale, counting this one (1 on the last turn). */
+  turns_left: number;
+  /** The offer's price now; the offer fails at the end of a turn on which it is above `escrow`. */
+  price_now: number;
+  /** More military units in or next to the city that would lift `price_now` above `escrow` (0: already above). */
+  guards_to_stop?: number;
+  /** More Walls levels that would; absent when Walls alone cannot. */
+  walls_to_stop?: number | null;
+}
+
+/** A Byzantium's capital and Heir refuge (core `buy_city::CapitalFallView`). */
+export interface CapitalFallView {
+  player: PlayerId;
+  /** Take it and you take every Byzantine city, unless `refuge`. */
+  capital: CityId | null;
+  /** The other Byzantine city the Heir stands in now, which would become the capital. */
+  refuge?: CityId | null;
+}
+
+export type OfferOutcome = 'Sold' | 'Cancelled' | 'Failed';
 
 // ---- history.rs ----
 
@@ -1117,14 +1177,15 @@ export type Order =
   /** `to`: the line where there is a choice (a Biplane: 'Fighter' or 'Bomber'); omitted for the default line. */
   | { type: 'UpgradeAircraft'; plane: UnitId; to?: UnitKind }
   | { type: 'UpgradeUnit'; unit: UnitId }
-  /** Byzantium only: hire a Mercenary Company of `unit` from `seller` in `city` (core `company`); it takes the city's one purchase for the turn. */
-  | { type: 'HireCompany'; city: CityId; unit: UnitKind; seller: PlayerId }
   | { type: 'BuyTile'; city: CityId; tile: Hex }
   /** Buy Siege for a land military unit in own territory: its attacks on a city ignore enemy Walls, for good (core `rules::siege`). */
   | { type: 'UpgradeSiege'; unit: UnitId }
   | { type: 'Action'; action: GameAction }
   /** Give Gold to a living teammate (core `rules::gifts`): it moves after this turn's purchases, capped at the Gold left then. */
-  | { type: 'GiveGold'; to: PlayerId; amount: number };
+  | { type: 'GiveGold'; to: PlayerId; amount: number }
+  /** Byzantium only: offer to buy a rival's city (core `buy_city`). The price leaves the treasury into escrow; the city changes hands after 3 turns unless the offer is stopped. */
+  /** `gold`: the offer, from the price up to 300% of it; absent or 0 offers the price. */
+  | { type: 'BuyCity'; city: CityId; gold?: number };
 
 /**
  * A one-time empire action (core `orders::Action`, serde tag "action"). One order carries them
@@ -1185,12 +1246,14 @@ export type Event =
   | { type: 'CallLapsed'; call: WarCall; effective_turn: number; reason: string }
   /** Byzantium's Heir was born in `city` (public: every empire is told, and his position is public from then on). */
   | { type: 'HeirBorn'; city: CityId; owner: PlayerId; city_name: string; at: Hex }
-  /** Byzantium hired a Mercenary Company: `gold` went to `seller`, and the unit serves until the end of turn `until`. */
-  | { type: 'CompanyHired'; city: CityId; owner: PlayerId; seller: PlayerId; unit: UnitKind; gold: number; until: number }
-  /** A Company's contract ended and it went home from `pos`. */
-  | { type: 'CompanyDeparted'; unit: UnitKind; owner: PlayerId; origin?: Faction | null; pos: Hex }
-  /** An unpaid Company turned barbarian where it stood. */
-  | { type: 'CompanyTurned'; unit: UnitKind; owner: PlayerId; origin?: Faction | null; pos: Hex }
+  /** Byzantium made an offer for a rival's city: `escrow` Gold is held and the city changes hands at the end of turn `ends_turn` unless the offer is stopped. */
+  | { type: 'CityOfferMade'; city: CityId; buyer: PlayerId; seller: PlayerId; escrow: number; price?: number; guards_to_stop?: number; ends_turn: number }
+  /** An offer ended: sold (`paid` to the seller), cancelled (`refund` in full) or failed on a price rise (`refund` minus the lost `fee`). */
+  | { type: 'CityOfferEnded'; city: CityId; buyer: PlayerId; seller: PlayerId; outcome: OfferOutcome; paid?: number; refund?: number; fee?: number; reason: string }
+  /** The fall of Constantinople: `captor` took Byzantium's capital and with it every city in `cities`. */
+  | { type: 'CapitalFell'; player: PlayerId; captor: PlayerId; capital: CityId; cities: CityId[] }
+  /** `captor` took Byzantium's capital, but its Heir stood in `refuge`, which became the capital. */
+  | { type: 'HeirRefuge'; player: PlayerId; captor: PlayerId; capital: CityId; refuge: CityId }
   | { type: 'TreatyActivated'; relation: Relation }
   | { type: 'TreatyEnded'; treaty_id: number; a: TeamId; b: TeamId; effective_turn: number; reason: string }
   | { type: 'BordersOpened'; a: TeamId; b: TeamId; effective_turn: number }

@@ -68,14 +68,13 @@ fn advance(state: &GameState, blocked: bool) -> GameState {
     }
     orders.insert(ME, ours);
     let (next, events) = resolve_turn(state, &orders);
-    // Other archived seats can hit old production orders: Byzantium's thin-levy cap and
-    // India's retired Rice Storehouse do not concern this seat's defender movement.
+    // Other archived seats can hit old production orders: India's retired Rice Storehouse does
+    // not concern this seat's defender movement.
     assert!(
         !events
             .iter()
             .any(|e| matches!(e, Event::OrderFailed { reason, .. }
-            if !reason.contains("Levies full")
-                && !reason.contains("No people can build the Rice Storehouse yet"))),
+            if !reason.contains("No people can build the Rice Storehouse yet"))),
         "{events:?}"
     );
     next

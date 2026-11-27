@@ -489,29 +489,54 @@ pub enum Event {
         item: ProductionItem,
         gold: i32,
     },
-    /// Byzantium hired a Mercenary Company (`company`): `gold` went to `seller`, and the unit
-    /// serves until the end of turn `until`.
-    CompanyHired {
+    /// Byzantium made an offer for a rival's city (`Order::BuyCity`, `buy_city`): `escrow` Gold
+    /// (the bid) is held and the city changes hands at the end of turn `ends_turn` unless the
+    /// offer is stopped. `price` is the city's price then (the bid is that or more). Seen by both
+    /// empires' teams and everyone who knows the city.
+    CityOfferMade {
         city: CityId,
-        owner: PlayerId,
+        buyer: PlayerId,
         seller: PlayerId,
-        unit: UnitKind,
-        gold: i32,
-        until: u32,
+        escrow: i32,
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        price: i32,
+        /// More armed units in or next to the city that would break the offer then
+        /// (`buy_city::guards_to_stop`).
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        guards_to_stop: i32,
+        ends_turn: u32,
     },
-    /// A Company's contract ended and it went home from `pos`.
-    CompanyDeparted {
-        unit: UnitKind,
-        owner: PlayerId,
-        origin: Option<Faction>,
-        pos: Hex,
+    /// An offer ended (`buy_city::process_offers`): sold (`paid` Gold to the seller), cancelled
+    /// (`refund` in full) or failed on a price rise (`refund` minus the lost `fee`). `reason` is
+    /// one public line. Seen like `CityOfferMade`.
+    CityOfferEnded {
+        city: CityId,
+        buyer: PlayerId,
+        seller: PlayerId,
+        outcome: crate::buy_city::OfferOutcome,
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        paid: i32,
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        refund: i32,
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        fee: i32,
+        reason: String,
     },
-    /// An unpaid Company turned barbarian where it stood, at `pos`.
-    CompanyTurned {
-        unit: UnitKind,
-        owner: PlayerId,
-        origin: Option<Faction>,
-        pos: Hex,
+    /// Public: the fall of Constantinople. `captor` took Byzantium `player`'s capital and with it
+    /// every city in `cities` (each also reported as its own capture or sack).
+    CapitalFell {
+        player: PlayerId,
+        captor: PlayerId,
+        capital: CityId,
+        cities: Vec<CityId>,
+    },
+    /// Public: `captor` took Byzantium `player`'s capital, but its Heir stood in `refuge`, which
+    /// became the capital; no other city fell.
+    HeirRefuge {
+        player: PlayerId,
+        captor: PlayerId,
+        capital: CityId,
+        refuge: CityId,
     },
     /// Byzantium's Heir was born in `city` (public: every empire is told, and his position is
     /// public from then on; whoever captures him scores his goal).

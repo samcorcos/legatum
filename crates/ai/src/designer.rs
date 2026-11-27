@@ -124,7 +124,7 @@ fn drop_purchases(orders: &mut Vec<Order>, endangered: &BTreeSet<CityId>) {
             item: ProductionItem::Unit { unit },
             ..
         } => legatum_core::data::is_aircraft(*unit),
-        Order::BuyItem { .. } | Order::HireCompany { .. } => false,
+        Order::BuyItem { .. } => false,
         _ => true,
     });
 }

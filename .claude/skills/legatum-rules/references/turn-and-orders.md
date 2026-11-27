@@ -13,9 +13,10 @@ diplomacy (`DeclareWar{against,breach}`, `BreakTreaty` = leave an Alliance,
 `ProposeTreaty`, `RespondToProposal`, `WithdrawProposal`); units (`SetAutomation`, `SetAutoFire`, `MoveUnit{to}`,
 `MoveUnitPath{to,path,stop_on_block}`, `SleepUnit{until_healed}`, `SkipUnit`,
 `FoundCity`, `DisbandUnit`, `RangedAttack`, `UpgradeUnit`, `UpgradeSiege`); aircraft (`AirStrike`, `AirRecon`, `Rebase`,
-`UpgradeAircraft`: Eras and technologies, "The air layer"); city (`SetProduction`, `SetProductionQueue`, `BuyItem`, `BuyTile{tile}`, `HireCompany`
+`UpgradeAircraft`: Eras and technologies, "The air layer"); city (`SetProduction`, `SetProductionQueue`, `BuyItem`, `BuyTile{tile}`
 (Byzantium only), `Raze`, `SetCityAutomation`); research (`SetResearch`, `SetResearchQueue`, `SetResearchGoal`,
 `SetScienceConversion` after the last technology);
+Byzantium's city offer (`BuyCity{city, gold}`, rules 66, `buy_city`: factions.md "Buy a city and the fall of Constantinople"; validated after the turn's city orders, resolved after city orders and actions, settled at the end of turn after diplomacy);
 and **one-time empire actions** through a single variant, `Action { action }` (`orders.rs::Action`,
 serde tag `"action"`: `{"type":"Action","action":{"action":"Sakoku","close":true}}`): `Swarm` (the Aztecs' New Fire),
 `Sakoku{close}` (Japan closes or reopens the country), `Tomb{build}` (Egypt starts or pauses work on the Royal Tomb, rules 54), `Broadcast`,
@@ -73,7 +74,7 @@ reinforce a city; a shooter that steps onto a hostile city is bounced (`rules/mo
 **Resolution phases** (`rules/mod.rs::resolve_turn`): 0) surprise wars at plain Peace take effect now; 1)
 barbarian planning, unit orders, then city orders, then empire actions; 2) ranged attacks incl. aircraft strikes and city-strike bombardment (`air::resolve_ranged_phase`; a ground unit's shot at a fallen, empty hostile city is held for phase 3, §4 "Held shots at a fallen city");
 3) movement rounds with combat (loops until nobody advances; inside a round a unit entering its own besieged, ungarrisoned city resolves first, see "Reinforcing your own city goes first" in §4); 4) barbarian camp clearing; 5) city
-founding; 6) elimination, heal/fortify, then Heal-order wake-ups (`units::wake_healed`); 7) city production/growth/Gold/upkeep, Company expiry, research, borders, roads (`roads::extend`, `extend_roadworks`) and the strategic-supply update; 8)
+founding; 6) elimination, heal/fortify, then Heal-order wake-ups (`units::wake_healed`); 7) city production/growth/Gold/upkeep, research, borders, roads (`roads::extend`, `extend_roadworks`) and the strategic-supply update; 8)
 scoring/victory, the diplomacy boundary (treaties, calls to arms, Peace), turn advances.
 
 **Automatic ranged garrison fire (2026-10-31, S13).** `Order::SetAutoFire` stores
