@@ -159,7 +159,7 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     const check = page.getByTestId('score-check');
     await expect(check).toBeVisible();
     const coach = check.getByTestId('score-coach');
-    await expect(coach).toContainText('each square is 1 victory point (VP).');
+    await expect(coach).toContainText('each small square is 1 victory point (VP); a wide one is 2.');
     await expect(coach).toContainText('by turn 500, the most VP then wins');
     await check.getByTestId('score-sheet').dispatchEvent('pointerdown');
     await page.waitForTimeout(800);

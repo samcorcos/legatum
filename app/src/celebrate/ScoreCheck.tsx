@@ -131,7 +131,7 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
           <div className="sc-kicker">{card.replay ? `The ${ageName(card.name)} · the score now · Turn ${card.turn}` : `The ${ageName(card.name)} begins · Turn ${card.turn}`}</div>
           <h2 className="sc-title">Score check</h2>
         </div>
-        <p className="sc-rule">{card.opener}<br />First to hold <b>{card.target} VP</b> for <b>10 turns</b> wins.</p>
+        <p className="sc-rule">{card.opener}{/* The advisor's note says it in full; never twice on one screen. */}{!coach && <><br />First to hold <b>{card.target} VP</b> for <b>10 turns</b> wins.</>}</p>
       </header>
 
       <section className="sc-panel sc-track" aria-label="Who is ahead" data-testid="score-track">
@@ -163,8 +163,8 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
         {coach ? <aside className="sc-coach" aria-label="Advisor" data-testid="score-coach">
           <h3>{myFaction && <FactionMark faction={myFaction} size={20} />}<span>How to win</span></h3>
           <ul>
-            <li>On your sheet, each square is 1 victory point (VP). Filled squares are yours.</li>
-            {card.lines.some((l) => l.fresh) && <li>The gold square is this Age’s new card. Do what it says to score 1 VP.</li>}
+            <li>On your sheet, each small square is 1 victory point (VP); a wide one is 2. Filled ones are yours.</li>
+            {card.lines.some((l) => l.fresh) && <li>The gold-outlined square is this Age’s new card. Do what it says to score 1 VP.</li>}
             <li>Hold <b>{card.target} VP</b> for <b>{HOLD_TURNS} turns</b> to win. If nobody does by turn {card.turnLimit}, the most VP then wins.</li>
           </ul>
         </aside> : <span />}

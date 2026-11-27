@@ -168,9 +168,11 @@ describe('the advisor on the score check', () => {
     useAdvisor.setState({ enabled: true, seen: ['welcome'] });
     const view = withScoreCheck(base);
     const coach = show(view);
-    expect(coach?.textContent).toContain('On your sheet, each square is 1 victory point (VP). Filled squares are yours.');
-    expect(coach?.textContent).toContain('The gold square is this Age’s new card.');
+    expect(coach?.textContent).toContain('On your sheet, each small square is 1 victory point (VP); a wide one is 2. Filled ones are yours.');
+    expect(coach?.textContent).toContain('The gold-outlined square is this Age’s new card.');
     expect(coach?.textContent).toContain('Hold 10 VP for 10 turns to win. If nobody does by turn 500, the most VP then wins.');
+    // The header's win line is not repeated while the note says it.
+    expect(host.querySelector('.sc-rule')?.textContent).not.toContain('First to hold');
     // The one primary is still Continue; showing the note counts it, however the check is closed.
     expect(host.querySelectorAll('[data-primary-action]')).toHaveLength(1);
     expect(useAdvisor.getState().seen).toContain('scoreHelp1');

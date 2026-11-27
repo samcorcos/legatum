@@ -133,6 +133,9 @@ for (const size of SIZES) test.describe(`advisor tips ${size.name}`, () => {
     await expect(card).toContainText('Get 10 victory points (VP) and keep them for 10 turns.');
     await expect(card).toContainText('Age cards, rival capitals, world wonders and your faction goal');
     await expect(page.getByTestId('advisor-ring')).toBeVisible();
+    // The ring is on the Victory race's rivals table.
+    const ring = (await page.getByTestId('advisor-ring').boundingBox())!, table = (await page.locator('.panel.vp .rivals').boundingBox())!;
+    expect(ring.x <= table.x && ring.y <= table.y && ring.x + ring.width >= table.x + table.width && ring.y + ring.height >= table.y + table.height).toBe(true);
     await park(page, size.height);
     await shot(page, size, '09-how-to-win');
     await card.getByRole('button', { name: 'Got it' }).click();
