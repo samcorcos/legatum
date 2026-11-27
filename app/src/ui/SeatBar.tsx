@@ -328,6 +328,9 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
         {empiresBelow > 0 && <button type="button" className="sidebar-more" data-testid="sidebar-more" onClick={() => sidebarScroll.current?.scrollBy({ top: sidebarScroll.current.clientHeight * 0.8, behavior: 'smooth' })}>+{empiresBelow} more {empiresBelow === 1 ? 'empire' : 'empires'}</button>}
       </div>
       <EndTurnConfirmation onConfirm={confirmEndTurn} />
+      {remote && !view.finished && net?.turnSecondsLeft != null && <div className="turn-countdown" role="timer">
+        {disconnected ? 'Timer unavailable · reconnecting' : `Turn ends in ${Math.floor(net.turnSecondsLeft / 60)}:${String(net.turnSecondsLeft % 60).padStart(2, '0')}`}
+      </div>}
       <button className={`cta ${cta.kind}${next?.kind === 'diplomacy' && view.diplomacy?.calls?.some((c) => c.id === next.id) ? ' cta-call' : ''}${stepped ? ' stepped' : ''}${cta.label === 'Choose production' ? ` cta-production${automationNeedsChoice ? ' cta-long' : ''}` : cta.sub.length > 32 || next?.kind === 'siege' ? ' cta-long' : ''}`} onClick={cta.onClick} disabled={!!busy || (view.finished && cta.kind !== 'todo') || disconnected || cta.disabled}>
         <span className="cta-label">{cta.label}</span>
         <span className="cta-sub">

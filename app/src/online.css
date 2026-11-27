@@ -646,3 +646,5 @@ div.seat {
 .title-actions .mp-doors + .btn.quiet:not(.big) {
   margin-top: 6px;
 }
+
+.turn-countdown { text-align: center; font-variant-numeric: tabular-nums; padding: 4px 8px; }

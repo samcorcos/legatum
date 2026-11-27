@@ -133,6 +133,7 @@ pub(crate) enum ServerMessage {
     },
     Seats {
         seats: Vec<SeatStatus>,
+        turn_seconds_left: Option<u32>,
     },
     Validation {
         errors: Vec<OrderError>,

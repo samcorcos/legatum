@@ -151,6 +151,9 @@ struct Game {
     /// Secret key for the hash sent with each turn report; see `credentials::masked_hash`.
     hash_key: (u64, u64),
     seats: Vec<Seat>,
+    turn_timer_seconds: u32,
+    turn_deadline: Option<f64>,
+    turn_seconds_left: Option<u32>,
 }
 
 impl Game {
@@ -188,6 +191,9 @@ impl Game {
                 session
             },
             seats,
+            turn_timer_seconds: 0,
+            turn_deadline: None,
+            turn_seconds_left: None,
         })
     }
 
@@ -504,6 +510,7 @@ impl Host {
     fn broadcast_seats(&self) {
         let snapshot: Arc<str> = serde_json::to_string(&ServerMessage::Seats {
             seats: self.game.as_ref().map_or_else(Vec::new, Game::seat_status),
+            turn_seconds_left: self.game.as_ref().and_then(|g| g.turn_seconds_left),
         })
         .expect("protocol serializes")
         .into();
@@ -918,6 +925,32 @@ impl Host {
         Ok(())
     }
 
+    /// The transport supplies the clock. Never advance more than one turn per tick,
+    /// including after a suspended browser wakes up. Wait for initial seat joins.
+    pub(crate) fn tick_turn_timer(&mut self, now: f64) {
+        if !now.is_finite() { return; }
+        let Some(game) = &mut self.game else { return; };
+        if game.turn_timer_seconds == 0 || game.session.state.finished { return; }
+        let active = game.seats.iter().any(|s| s.connection.is_some())
+            && game.seats.iter().all(|s| s.joined);
+        if !active {
+            game.turn_deadline = None;
+            if game.turn_seconds_left.take().is_some() { self.broadcast_seats(); }
+            return;
+        }
+        let deadline = *game.turn_deadline.get_or_insert(now + f64::from(game.turn_timer_seconds) * 1000.0);
+        let left = ((deadline - now).max(0.0) / 1000.0).ceil() as u32;
+        let changed = game.turn_seconds_left != Some(left);
+        game.turn_seconds_left = Some(left);
+        if left == 0 {
+            for seat in &mut game.seats { seat.ready = true; }
+            self.resolve_if_ready();
+            self.broadcast_seats();
+        } else if changed {
+            self.broadcast_seats();
+        }
+    }
+
     fn resolve_if_ready(&mut self) {
         let Some(game) = &mut self.game else { return };
         if !game.can_resolve() {
@@ -933,6 +966,8 @@ impl Host {
             orders.insert(seat.player, std::mem::take(&mut seat.orders));
             seat.ready = false;
         }
+        game.turn_deadline = None;
+        game.turn_seconds_left = None;
         let events = game.session.step(&orders);
         let state = &game.session.state;
         self.save = Some(game.session.save_json());
@@ -1053,6 +1088,7 @@ impl Host {
         let setup = room.setup();
         check_setup(&setup)?;
         let mut game = Game::from_session(Session::try_new(&setup, |_| BrainKind::Scripted)?)?;
+        game.turn_timer_seconds = room.config.turn_timer_seconds;
         // Bind every human seat before committing or notifying any socket. Even an absent
         // host stays reserved; only an explicit loopback reassignment can recover that seat.
         for (seat, slot) in game.seats.iter_mut().zip(room.player_slots()) {

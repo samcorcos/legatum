@@ -91,6 +91,8 @@ pub struct StagingConfig {
     pub height: i32,
     #[serde(default)]
     pub turn_limit: Option<u32>,
+    #[serde(default)]
+    pub turn_timer_seconds: u32,
     /// Barbarian camps; on unless the host turns them off.
     #[serde(default = "barbarians_on")]
     pub barbarians: bool,
@@ -113,6 +115,9 @@ fn barbarians_on() -> bool {
 
 impl StagingConfig {
     pub(crate) fn validate(&self) -> Result<(), String> {
+        if self.turn_timer_seconds != 0 && !(30..=600).contains(&self.turn_timer_seconds) {
+            return Err("Turn timer must be unlimited or 30–600 seconds".into());
+        }
         if !(2..=8).contains(&self.seats.len())
             || self.seats[0].kind != SeatKind::Host
             || self.seats[1..].iter().any(|s| s.kind == SeatKind::Host)
@@ -139,6 +144,8 @@ pub struct StagingSettings {
     pub width: i32,
     pub height: i32,
     pub turn_limit: Option<u32>,
+    #[serde(default)]
+    pub turn_timer_seconds: u32,
     pub barbarians: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub ai_alliances: bool,
@@ -242,6 +249,7 @@ impl Room {
                 width: self.config.width,
                 height: self.config.height,
                 turn_limit: self.config.turn_limit,
+                turn_timer_seconds: self.config.turn_timer_seconds,
                 barbarians: self.config.barbarians,
                 ai_alliances: self.config.ai_alliances,
                 deals: self.config.deals,
@@ -609,6 +617,7 @@ mod faction_tests {
                 width: 48,
                 height: 32,
                 turn_limit: None,
+                turn_timer_seconds: 0,
                 barbarians: true,
                 ai_alliances: false,
                 deals: false,

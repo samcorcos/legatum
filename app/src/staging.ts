@@ -35,6 +35,7 @@ export interface StagingConfig {
   width: number;
   height: number;
   turn_limit: number | null;
+  turn_timer_seconds?: number;
   /** Barbarian camps; servers from before barbarians omit it (read as on). */
   barbarians?: boolean;
   /** The AI-only teams start in Alliances of two; servers from before it omit it (read as off). */
@@ -91,6 +92,7 @@ export function configFromLobby(l: Lobby): StagingConfig {
     height: size.height,
     // Every new game ends at the default last turn with barbarians on (omitted: the server's default).
     turn_limit: null,
+    turn_timer_seconds: l.turnTimerSeconds ?? 0,
     // Deals are on in every new game, online too (the host's WASM passes it to the setup).
     deals: true,
     seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: s.kind === 'ai' ? l.difficulty : s.difficulty, ...(s.kind === 'ai' && levelOf(l) === 'Training' ? { search: true } : {}) })),
@@ -109,6 +111,7 @@ export function lobbyFromStaging(st: StagingState, includeOccupants = true): Lob
   const level = aiLevels.reduce<AiLevel>((hardest, current) => rank[current] > rank[hardest] ? current : hardest, aiLevels[0] ?? 'Hard');
   return setDifficulty({
     mode: 'host',
+    turnTimerSeconds: c.turn_timer_seconds ?? 0,
     preset: 'custom',
     seed: st.seed ?? 'Hidden',
     mapSize,
