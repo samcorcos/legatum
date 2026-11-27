@@ -222,7 +222,7 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1000, height: 600 }])
     // G17: the inbox closes; reopened, the card shows a ready line with Cancel.
     await expect(panel).toHaveCount(0);
     await page.evaluate(() => (window as unknown as { legatum: { getState(): { set(p: object): void } } }).legatum.getState().set({ diplomacyOpen: true }));
-    await expect(card.getByTestId('diplomacy-queued')).toContainText('Accept Alliance: happens when you end the turn.');
+    await expect(card.getByTestId('diplomacy-queued')).toContainText('Accept Alliance: you accept when you end the turn.');
     await expect(card.locator('.btn.primary')).toHaveCount(0);
     await expect(card.getByRole('button', { name: 'Decline instead', exact: true })).toBeVisible();
   });

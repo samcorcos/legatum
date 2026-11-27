@@ -541,7 +541,9 @@ function OfferCard({ p, view, forecastView, orders, current, ending }: {
       <div className="offer-answered">
         <QueuedDiplomacyLine name={queuedAccept ? `Accept ${treatyName(p)}` : `Decline ${treatyName(p)}`} testId="diplomacy-queued" focus={justAnswered}
           onCancel={() => useGame.getState().editOrders((o) => o.filter((x) => !sameDiplomaticAction(x, (queuedAccept ? accept : decline)!.order)))}>
-          happens when you end the turn.
+          {queuedAccept ? 'you accept' : 'you decline'} when you end the turn.{scope
+            ? queuedAccept ? ` When both teams agree, it ${scope.ending}.` : ' Your wars continue.'
+            : queuedAccept ? ` It ${p.kind === 'OpenBorders' ? 'start' : 'starts'} turn ${accept!.effective_turn}.` : ''}
         </QueuedDiplomacyLine>
         {queuedAccept ? decline && <OfferResponse p={p} action={decline} view={forecastView} demoted />
           : accept && !blocked && <OfferResponse p={p} action={accept} view={forecastView} demoted />}
@@ -616,7 +618,7 @@ function CallCard({ call, view, forecastView, orders, current }: { call: WarCall
       <div className="offer-answered">
         <QueuedDiplomacyLine name={queuedJoin ? `Join the war on ${target}` : 'Decline the call to arms'} testId="diplomacy-queued" focus={justAnswered}
           onCancel={() => useGame.getState().editOrders((o) => o.filter((x) => !sameDiplomaticAction(x, (queuedJoin ? join : decline)!.order)))}>
-          happens when you end the turn.
+          {queuedJoin ? 'you join' : 'you decline'} when you end the turn.
         </QueuedDiplomacyLine>
         {queuedJoin ? decline && <CallResponse call={call} action={decline} view={forecastView} demoted />
           : join && !join.blocked_reason && <CallResponse call={call} action={join} view={forecastView} demoted />}

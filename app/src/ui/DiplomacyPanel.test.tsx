@@ -96,7 +96,7 @@ it('counts only incoming offers, prioritizes responding, and makes Accept primar
   // Reopened, the card shows the answer as its state; the other choice is no longer a primary.
   act(() => useGame.setState({ diplomacyOpen: true }));
   const card = container.querySelector('.offer-card')!;
-  expect(card.querySelector('[data-testid=diplomacy-queued]')!.textContent?.trim()).toBe('Accept Alliance: happens when you end the turn. Cancel');
+  expect(card.querySelector('[data-testid=diplomacy-queued]')!.textContent?.trim()).toMatch(/^Accept Alliance: you accept when you end the turn\. It starts turn \d+\. Cancel$/);
   expect(card.querySelector('.diplomacy-queued-check')).not.toBeNull();
   expect(card.querySelector('.btn.primary')).toBeNull();
   expect([...card.querySelectorAll('.offer-answered button')].map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(['Cancel', 'Decline instead']);
