@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { purchasePreviews, tilePurchasePreview } from './productionPurchases';
 import { cityUpkeepForecast } from './cityUpkeepForecast';
 import { useGame } from '../store';
-import { AUTOMATION_NO_CHOICE, cityAutomationFocus, setCityAutomation } from '../automation';
+import { AUTOMATION_NO_CHOICE, cityAutomationFocus, cityAutomationPreview, setCityAutomation } from '../automation';
 import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem, ProductionOption, Resource, ImprovementKind, UnavailableOption } from '../types';
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
 import { PieceVsLine } from './PieceVs';
@@ -121,6 +121,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const [notice, setNotice] = useState<{ city: number; key: string; text: string; tone: 'good' | 'bad' } | null>(null);
   const orders = useGame((s) => s.orders[s.seat]);
   const buildFocus = cityAutomationFocus(city.id, view, orders);
+  const automationPlan = buildFocus ? cityAutomationPreview(view, orders) : null;
+  const plannedPick = automationPlan?.orders.findLast((o) => o.type === 'SetCityAutomation' && o.city === city.id);
+  const autoPick = plannedPick?.type === 'SetCityAutomation' ? plannedPick.picked : null;
   const errors = useGame((s) => s.errors[s.seat]);
   const client = useGame((s) => s.client);
   const editOrders = useGame((s) => s.editOrders);
@@ -1040,6 +1043,12 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         </div>}
       </div>
       {idleChoice && buyTile('row')}
+      {idleChoice && autoPick && <div className="cp-block cp-auto-note">
+        {itemName(autoPick, owner?.faction)}: {autoPick.kind === 'Project' && autoPick.project === 'Gold'
+          ? 'earn Gold while further investment would not pay back soon enough.'
+          : autoPick.kind === 'Project' ? 'grow sooner to work another tile.'
+            : 'invest in income and useful growth, allowing for build time.'}
+      </div>}
 
 
       {growOption && <><div className="cp-sub">Growth</div><div className="prod-list">{renderOption(growOption)}</div></>}

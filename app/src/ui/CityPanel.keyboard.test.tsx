@@ -6,6 +6,7 @@ import { FixtureClient } from '../test/fixtureEngine';
 import { turnFlowFixture } from '../test/turnFlowFixture';
 import { useGame } from '../store';
 import { CityPanel } from './CityPanel';
+import { loadWasmModule } from '../wasmClient';
 import { CityList } from './CityList';
 import type { Order } from '../types';
 
@@ -33,7 +34,8 @@ function choose(detail = 0, shiftKey = false) {
   act(() => { button.focus(); button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail, shiftKey })); });
 }
 
-it('toggles economic automation without replacing the current production order', () => {
+it('toggles economic automation without replacing the current production order', async () => {
+  await loadWasmModule();
   const toggle = host.querySelector<HTMLButtonElement>('button[aria-label^="Automate "]')!;
   act(() => toggle.click());
   expect(toggle.getAttribute('aria-pressed')).toBe('true');
@@ -45,6 +47,7 @@ it('toggles economic automation without replacing the current production order',
   // An automated idle city is not asking for a choice: the heading says when it chooses, and the control stays beside the gold line, in view.
   const title = host.querySelector('.cp-choose-title')!;
   expect(title.textContent).toBe('Chooses economic investments at Ready');
+  expect(host.querySelector('.cp-auto-note')?.textContent).toMatch(/earn Gold|grow sooner|invest in income/);
   expect(host.querySelector('.cp-automation-inline button[aria-label^="Automate "]')).not.toBeNull();
 });
 

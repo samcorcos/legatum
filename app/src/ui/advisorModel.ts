@@ -1,6 +1,6 @@
 /** The advisor explains one decision from a Hard plan made from this seat's own view. */
 import { create } from 'zustand';
-import { DISCOVERY_IDS, discoveriesUsed, discoverySuggestion } from './advisorDiscovery';
+import { DISCOVERY_IDS, discoverySuggestion } from './advisorDiscovery';
 import { advisorOrders } from '../automation';
 import { buildingStatsFor, effectiveTurnLimit, itemKey, itemName, TECH_NAME, wallsRepairing, wallsUpgradeName } from '../data';
 import { WALLS_HP_PER_LEVEL } from '../combat';
@@ -235,17 +235,6 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
-  // Let a newly learned control stay usable for the rest of this turn. This also
-  // covers the render before usePractice records the learning; routine Scout,
-  // build and research cards must not immediately replace the dismissed lesson.
-  const discoveryLearned = ctx.discoveryTurn === v.turn || discoveriesUsed(orders).some((id) => !seen.includes(id));
-  if (discoveryLearned) {
-    const urgent = decisions.find((d) => !['city', 'unit', 'research', 'air'].includes(d.kind)
-      && !skipped.includes(`answer:${d.kind}:${'id' in d ? d.id : ''}`));
-    if (!urgent) return null;
-    return { id: `answer:${urgent.kind}:${'id' in urgent ? urgent.id : ''}`, title: 'Answer this first', why: urgent.label, current: 0,
-      steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${ctx.turnLabel ?? urgent.label}.`, target: control('turn') }] };
-  }
   const choice = plan?.find((o): o is Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }> => o.type === 'SetResearch' || o.type === 'SetResearchQueue');
   const queue = effectiveResearchQueue(orders, v.research);
   const nextTech = v.research.available.find((option) => !queue.includes(option.tech))?.tech;

@@ -134,7 +134,16 @@ function usePractice() {
   const techOpen = useGame((s) => s.techOpen);
   const practise = useAdvisor((s) => s.practise);
   const markSeen = useAdvisor((s) => s.markSeen);
+  const citiesOpen = useGame((s) => s.citiesOpen);
+  const pings = useGame((s) => s.pings);
+  const overlays = useOverlays();
   const turn = view?.turn;
+  useEffect(() => {
+    if (!view) return;
+    if (citiesOpen) markSeen('cities', view.turn);
+    if (overlays.yields) markSeen('mapYields', view.turn);
+    if (pings.some((ping) => ping.from === view.me && ping.turn === view.turn)) markSeen('teamPing', view.turn);
+  }, [citiesOpen, overlays.yields, pings, view, markSeen]);
   useEffect(() => {
     if (!view || !orders?.length) return;
     const kinds = orders.filter((_, i) => !errors?.some((e) => e.index === i)).map((o) => practiceKind(o, view)).filter((k): k is PracticeKind => k !== null);
@@ -240,14 +249,15 @@ export function Advisor() {
           if (p) selectedTile = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
         }
         // Also keep clear of the map tools and the player's own cities with their banners (drawn above the tile).
+        const selectedControl = selection?.kind === 'city' ? document.querySelector('.city-panel [data-advisor="automate"]')?.getBoundingClientRect() ?? null : null;
         const tools = document.querySelector('.map-lenses')?.getBoundingClientRect() ?? null;
         // A city under offer also wears its countdown coin on the banner, so it is kept clear too, whoever owns it.
         const ownCities = (view?.cities ?? []).filter((c) => c.owner === view?.me || view?.city_offers?.some((o) => o.city === c.id)).map((c) => tileOnScreen(c.pos))
           .filter((p): p is NonNullable<typeof p> => !!p).map((p) => new DOMRect(p.x - 1.3 * p.radius, p.y - 2.3 * p.radius, 2.6 * p.radius, 3.3 * p.radius));
-        const blockers = [target, selectedTile, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
+        const blockers = [target, selectedTile, selectedControl, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
         const clearOf = (rects: DOMRect[]) => (top: number) => rects.every((r) => top + box.height + 8 <= r.top || top >= r.bottom + 8);
         // The step's target and the selection must stay visible; the rest is avoided when there is room.
-        const must = blockers.filter((r) => r === target || r === selectedTile);
+        const must = blockers.filter((r) => r === target || r === selectedTile || r === selectedControl);
         const home = 76;
         const floor = innerHeight - box.height - 8;
         // Prefer the usual slot, then just below a blocker, then just above one.
@@ -259,7 +269,7 @@ export function Advisor() {
         // No height clears every banner: slide to the map's left edge at the usual height when that does.
         let nextLeft: number | null = null;
         // Judged for the CSS slot (the centre), not the card's current place, so it cannot flip back and forth.
-        const every = [target, selectedTile, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0);
+        const every = [target, selectedTile, selectedControl, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0);
         const slot = innerWidth / 2 - box.width / 2;
         const atSlot = every.filter((r) => r.right > slot && r.left < slot + box.width);
         const slotOptions = [home, ...atSlot.map((r) => r.bottom + 12), ...atSlot.map((r) => r.top - 12 - box.height)].filter((top) => top >= 64 && top <= floor);

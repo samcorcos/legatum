@@ -5,11 +5,7 @@ use legatum_core::{
     Yields, data,
 };
 
-pub(crate) fn choose(
-    view: &PlayerView,
-    city: CityId,
-    planned: &[ProductionItem],
-) -> Option<ProductionItem> {
+pub(crate) fn choose(view: &PlayerView, city: CityId) -> Option<ProductionItem> {
     let city = view
         .cities
         .iter()
@@ -77,11 +73,11 @@ pub(crate) fn choose(
             }
     });
     let forgone_gold = gold.map_or(0, |o| (o.yields.total.gold - base.gold).max(0));
-    let investment = d.options
+    let investment = d
+        .options
         .iter()
         .filter_map(|o| {
             if o.turns < 0
-                || matches!(o.item, ProductionItem::Wonder { building, .. } if planned.iter().any(|p| matches!(p, ProductionItem::Wonder { building: other, .. } if *other == building)))
                 || o.resource_blocker.is_some()
                 || d.producing == Some(o.item)
                 || !view
@@ -91,7 +87,7 @@ pub(crate) fn choose(
                 return None;
             }
             let mut gain = match o.item {
-                ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
+                ProductionItem::Building { building } => {
                     let quoted = view
                         .research
                         .unlocks
@@ -103,9 +99,11 @@ pub(crate) fn choose(
                     // Sparse decision/test views use the canonical incremental building yields.
                     quoted.map_or_else(
                         || {
-                            raw_gain(view.rule_experiments
-                                .building_stats_for(faction, building)
-                                .yields)
+                            raw_gain(
+                                view.rule_experiments
+                                    .building_stats_for(faction, building)
+                                    .yields,
+                            )
                         },
                         |u| {
                             let y = u.yields_after.total;
@@ -127,28 +125,32 @@ pub(crate) fn choose(
                     };
                     // A strategic improvement can also bring an existing idle industry back online.
                     // Use its real incremental yields rather than a military supply score.
-                    if view.supply.iter().any(|s| s.resource == preview.resource && s.idle.len() == 1 && s.spare == -1)
-                    && let Some(idle) = d
+                    if view.supply.iter().any(|s| {
+                        s.resource == preview.resource && s.idle.len() == 1 && s.spare == -1
+                    }) && let Some(idle) = d
                         .idle_buildings
                         .iter()
                         .find(|b| b.resource == preview.resource)
                     {
-                        gain += raw_gain(view
-                            .rule_experiments
-                            .building_stats_for(faction, idle.building)
-                            .yields);
+                        gain += raw_gain(
+                            view.rule_experiments
+                                .building_stats_for(faction, idle.building)
+                                .yields,
+                        );
                     }
                     gain
                 }
                 _ => return None,
             };
-            if o.item == (ProductionItem::Building { building: legatum_core::BuildingKind::Market }) {
-                gain.gold += city.revenue_office_upkeep_savings.unwrap_or(0) + city.revenue_office_remittance_gain.unwrap_or(0);
+            if o.item
+                == (ProductionItem::Building {
+                    building: legatum_core::BuildingKind::Market,
+                })
+            {
+                gain.gold += city.revenue_office_upkeep_savings.unwrap_or(0)
+                    + city.revenue_office_remittance_gain.unwrap_or(0);
             }
-            let mut benefit = points(gain);
-            if let Some(wonder) = &o.wonder {
-                benefit -= points(wonder.lost);
-            }
+            let benefit = points(gain);
             let turns = o.turns.max(1);
             // Production invested now forgoes the Gold project. Reject investments that cannot
             // repay that income inside the bounded planning window; banked work is in o.turns.
@@ -242,6 +244,22 @@ mod tests {
         }
     }
     #[test]
+    fn wonder_placement_is_never_delegated_even_when_it_would_pay_back() {
+        let mut v = view();
+        only(&mut v, &[BuildingKind::Market]);
+        let d = v.cities[0].detail.as_mut().unwrap();
+        assert!(!d.options.is_empty());
+        for option in &mut d.options {
+            option.item = ProductionItem::Wonder {
+                building: BuildingKind::GreatLibrary,
+                tile: off(8, 8),
+            };
+            option.turns = 1;
+        }
+        assert_eq!(choose(&v, CityId(1)), None);
+    }
+
+    #[test]
     fn comparable_investments_favor_gold_then_science() {
         let mut v = view();
         only(
@@ -253,7 +271,7 @@ mod tests {
             ],
         );
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Building {
                 building: BuildingKind::Market
             })
@@ -265,7 +283,7 @@ mod tests {
                 }
         });
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Building {
                 building: BuildingKind::Library
             })
@@ -277,7 +295,7 @@ mod tests {
         only(&mut v, &[BuildingKind::Granary, BuildingKind::Market]);
         v.cities[0].detail.as_mut().unwrap().yields.total.food = 7;
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Building {
                 building: BuildingKind::Granary
             })
@@ -308,7 +326,7 @@ mod tests {
             .unwrap()
             .options
             .push(improvement);
-        assert_eq!(choose(&v, CityId(1), &[]), Some(mine));
+        assert_eq!(choose(&v, CityId(1)), Some(mine));
         v.cities[0]
             .detail
             .as_mut()
@@ -318,7 +336,7 @@ mod tests {
             .unwrap()
             .resource_blocker = Some("unavailable".into());
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Building {
                 building: BuildingKind::Market
             })
@@ -329,7 +347,7 @@ mod tests {
         let mut v = view();
         v.turn = 499;
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Project {
                 project: IndustryProject::Gold
             })
@@ -361,7 +379,7 @@ mod tests {
             worked: true,
         });
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Project {
                 project: IndustryProject::Grow
             })
@@ -375,7 +393,7 @@ mod tests {
             .unwrap()
             .worked = false;
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Project {
                 project: IndustryProject::Gold
             })
@@ -400,14 +418,14 @@ mod tests {
             .unwrap()
             .turns = 20;
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Building {
                 building: BuildingKind::Library
             })
         );
         v.cities[0].revenue_office_remittance_gain = Some(20);
         assert_eq!(
-            choose(&v, CityId(1), &[]),
+            choose(&v, CityId(1)),
             Some(ProductionItem::Building {
                 building: BuildingKind::Market
             })

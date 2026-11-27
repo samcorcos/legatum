@@ -7,7 +7,9 @@ import { itemKey } from '../data';
 import { useGame } from '../store';
 import type { PlayerView, UnitView } from '../types';
 import { Advisor, targetElement } from './Advisor';
-import { useAdvisor } from './advisorModel';
+import { readAdvisorPreferences, useAdvisor } from './advisorModel';
+import { setOverlay } from '../map/overlays';
+import { CitiesButton } from './CitiesOverview';
 import { CityPanel } from './CityPanel';
 import { UnitPanel } from './UnitPanel';
 import { TechTree } from './TechTree';
@@ -182,4 +184,33 @@ it('while a tile is being placed, shows only the tip that asked for it', () => {
   act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }], place: { city: city.id, building: null, intent: 'tile', pick: null } }));
   render(<Advisor />);
   expect(screen.queryByTestId('advisor')).toBeNull();
+});
+
+it('remembers Cities and Yields use after closing them, even with advice disabled', () => {
+  act(() => { useAdvisor.setState({ enabled: false, seen: [], discoveryTurn: -1 }); setOverlay('yields', false); });
+  const mounted = render(<><Advisor /><CitiesButton /></>);
+  fireEvent.click(screen.getByTestId('cities-button'));
+  expect(readAdvisorPreferences().seen).toContain('cities');
+  act(() => { useGame.setState({ citiesOpen: false }); setOverlay('yields', true); });
+  expect(readAdvisorPreferences().seen).toContain('mapYields');
+  act(() => setOverlay('yields', false));
+  mounted.unmount();
+  // Loading the saved preferences after remount retains learning even while closed.
+  act(() => useAdvisor.setState({ ...readAdvisorPreferences(), discoveryTurn: -1 }));
+  render(<Advisor />);
+  expect(useAdvisor.getState().seen).toEqual(expect.arrayContaining(['cities', 'mapYields']));
+});
+
+it('remembers an actually sent team ping, not entering ping mode or receiving a teammate ping', () => {
+  act(() => { useAdvisor.setState({ enabled: false, seen: [], discoveryTurn: -1 }); useGame.setState({ canPing: () => true }); });
+  render(<Advisor />);
+  act(() => useGame.getState().setPingMode(true));
+  expect(useAdvisor.getState().seen).not.toContain('teamPing');
+  const teammate = view.players.find((p) => p.id !== view.me)!;
+  act(() => useGame.setState({ pings: [{ from: teammate.id, team: view.team, hex: { q: 0, r: 0 }, turn: view.turn, seq: 1 }] }));
+  expect(useAdvisor.getState().seen).not.toContain('teamPing');
+  act(() => { expect(useGame.getState().sendPing({ q: 1, r: 1 })).toBe(true); });
+  expect(readAdvisorPreferences().seen).toContain('teamPing');
+  act(() => useGame.setState({ pings: [] }));
+  expect(readAdvisorPreferences().seen).toContain('teamPing');
 });

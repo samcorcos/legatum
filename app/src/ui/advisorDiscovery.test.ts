@@ -166,7 +166,7 @@ describe('feature discovery', () => {
     expect(discoverySuggestion(ctx, learned, [], {})).toBeNull();
   });
 
-  it('pauses legacy routine advice after learning Automate, but preserves urgent decisions', async () => {
+  it('preserves core unit and urgent teaching after learning Automate', async () => {
     const { ctx, view, city, scout } = await fixture();
     ctx.selection = { kind: 'city', id: city.id };
     city.detail!.producing = { kind: 'Building', building: 'Granary' };
@@ -176,12 +176,12 @@ describe('feature discovery', () => {
     expect(advisorSuggestion(ctx, learned, [])?.id).toBe(`unit:${scout.id}`);
     ctx.orders = [{ type: 'SetCityAutomation', city: city.id, focus: 'Economy' }];
     // The first render precedes the effect that remembers learning the control.
-    expect(advisorSuggestion(ctx, learned.filter((id) => id !== 'cityAutomation'), [])).toBeNull();
+    expect(advisorSuggestion(ctx, learned.filter((id) => id !== 'cityAutomation'), [])?.id).toBe(`unit:${scout.id}`);
     ctx.discoveryTurn = view.turn;
-    expect(advisorSuggestion(ctx, learned, [])).toBeNull();
-    // Toggling it off again must not bring a different card over the button.
+    expect(advisorSuggestion(ctx, learned, [])?.id).toBe(`unit:${scout.id}`);
+    // Toggling it off still leaves the basic unit guidance available.
     ctx.orders = [{ type: 'SetCityAutomation', city: city.id, focus: null }];
-    expect(advisorSuggestion(ctx, learned, [])).toBeNull();
+    expect(advisorSuggestion(ctx, learned, [])?.id).toBe(`unit:${scout.id}`);
     const previousActions = view.actions;
     view.actions = { ...view.actions, free_techs: { pending: 1, from: null, choices: [] } };
     expect(advisorSuggestion(ctx, learned, [])?.id).toBe('answer:freeTechs:');
