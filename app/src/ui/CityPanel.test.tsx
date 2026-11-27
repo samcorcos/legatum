@@ -194,7 +194,7 @@ it('shows an Indian Revenue Office upkeep saving inside its build card only when
   expect(card.querySelector('[data-testid="office-city-upkeep"]')?.textContent)
     .toBe('City upkeep: saves 2 Gold a turn');
   expect(card.querySelector('.prod-upkeep.gain')).not.toBeNull();
-  expect(card.querySelector('.production-more')?.textContent).not.toContain('city upkeep');
+  expect(card.querySelector('.production-more')?.textContent).not.toContain('saves');
   city.revenue_office_upkeep_savings = 0;
   act(() => root.render(<CityPanel city={city} view={view} />));
   expect(container.querySelector('[data-testid="office-city-upkeep"]')).toBeNull();
