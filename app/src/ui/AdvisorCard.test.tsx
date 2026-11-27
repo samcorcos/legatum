@@ -64,7 +64,7 @@ it('points at the recommended technology: its tree node first, else its era card
   const tech = view.research.available[0].tech;
   const pick = () => targetElement({ kind: 'control', name: 'tech', value: tech });
   const tree = render(<dialog className="tech-modal" open><TechTree view={view} faction={view.players.find((p) => p.id === view.me)!.faction} queue={[]} schedule={[]} goal={null} locked={false}
-    onResearchNow={() => {}} onQueue={() => {}} onGoal={() => {}} /></dialog>);
+    onResearchNow={() => {}} onQueue={() => {}} onRemove={() => {}} onGoal={() => {}} /></dialog>);
   expect(pick()?.classList.contains('tree-node')).toBe(true);
   expect(pick()?.dataset.tech).toBe(tech);
   tree.unmount();

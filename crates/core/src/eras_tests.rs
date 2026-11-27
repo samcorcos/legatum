@@ -274,7 +274,7 @@ fn set_research_and_queue_reject_other_eras_known_techs_and_duplicates() {
         (set_research(TechId::Mathematics), "already researched"),
         (
             queue(&[TechId::Feudalism]),
-            "finish the Classical era first",
+            "queue the rest of the Classical era before it",
         ),
         (queue(&[TechId::Masonry]), "already researched"),
         (
@@ -283,7 +283,7 @@ fn set_research_and_queue_reject_other_eras_known_techs_and_duplicates() {
         ),
         (
             queue(&[TechId::Engineering, TechId::Feudalism]),
-            "finish the Classical era first",
+            "queue the rest of the Classical era before it",
         ),
         (
             queue(&[TechId::Mathematics, TechId::Engineering]),

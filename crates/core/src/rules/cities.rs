@@ -294,7 +294,7 @@ fn check_order(
         }
         Order::SetResearchQueue { ref techs } => {
             let mut seen = BTreeSet::new();
-            for tech in techs {
+            for (i, tech) in techs.iter().enumerate() {
                 let name = data::tech_name(*tech);
                 if p.techs.contains(tech) {
                     return Err(format!("{name} is already researched"));
@@ -304,11 +304,11 @@ fn check_order(
                         "{name} appears more than once in the research queue"
                     ));
                 }
-                if !crate::eras::researchable(p, *tech) {
+                if let Some(open) = crate::eras::queue_gap(&p.techs, techs, i) {
                     return Err(format!(
-                        "{name} is in the {} era: finish the {} era first",
+                        "{name} is in the {} era: queue the rest of the {} era before it",
                         crate::eras::era_name(crate::eras::era_of_tech(*tech)),
-                        crate::eras::era_name(crate::eras::current_era(&p.techs))
+                        crate::eras::era_name(open)
                     ));
                 }
             }
@@ -1748,7 +1748,14 @@ fn normalize_research(state: &mut GameState, id: PlayerId) {
     let mut seen = BTreeSet::new();
     player
         .research_queue
-        .retain(|t| legal(t) && seen.insert(*t));
+        .retain(|t| !techs.contains(t) && seen.insert(*t));
+    // A queue may run on into later eras (each behind every technology of the eras before it),
+    // so it survives an era-up; it ends at the first technology that breaks the gate.
+    if let Some(cut) = (0..player.research_queue.len())
+        .find(|&i| crate::eras::queue_gap(&techs, &player.research_queue, i).is_some())
+    {
+        player.research_queue.truncate(cut);
+    }
     if player.researching.is_some_and(|t| !legal(&t)) {
         player.researching = player.research_queue.first().copied();
     }

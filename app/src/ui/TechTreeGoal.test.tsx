@@ -16,7 +16,7 @@ beforeEach(async () => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 const tree = (goal: TechId) => render(<TechTree view={view} faction={view.players.find((p) => p.id === view.me)!.faction} queue={[]} schedule={[]}
-  goal={goal} locked={false} onResearchNow={() => {}} onQueue={() => {}} onGoal={() => {}} />);
+  goal={goal} locked={false} onResearchNow={() => {}} onQueue={() => {}} onRemove={() => {}} onGoal={() => {}} />);
 
 it('a goal past the last turn at today’s Science says so instead of naming a turn the game never reaches', () => {
   const far = view.research.catalog[view.research.catalog.length - 1].tech;

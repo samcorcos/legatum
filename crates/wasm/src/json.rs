@@ -431,7 +431,7 @@ mod tests {
         // Walls add the optional `City::walls_damage`; a 61 save is refused and upgrades. Rules 63:
         // city upkeep; the save shape is unchanged, and a 62 save is refused. Rules 64: an upgrade
         // stops at the most advanced form its supply allows; the save shape is unchanged.
-        assert_eq!(legatum_core::RULES_VERSION, 64);
+        assert_eq!(legatum_core::RULES_VERSION, 65);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);

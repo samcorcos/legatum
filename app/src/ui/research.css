@@ -596,3 +596,19 @@
   /* The foot stays only as the advisor card's spacer, so the card never covers the tree's bottom row. */
   .tech-modal.tree-mode:not(:has(.advisor-card.in-dialog)) .modal-foot { display: none; }
 }
+/* Every unknown technology's own Queue button, at the bottom right of its card (a sibling of the card,
+ * since a button can't hold a button); the card's foot leaves room for it. */
+.tn-queue { position: absolute; z-index: 1; transform: translate(-100%, -100%); display: inline-flex; align-items: center; gap: 3px; height: 22px; padding: 0 8px; border: 1px solid var(--ink); background: var(--field); color: var(--ink); box-shadow: 1px 1px 0 var(--rule-2); cursor: pointer; font: 700 11px/1 var(--sans); white-space: nowrap; }
+.tn-queue:hover:not(:disabled) { background: var(--ink); color: var(--field); }
+.tn-queue:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tn-queue:disabled { opacity: .5; cursor: default; }
+.tn-queue.on { border-color: var(--rule-2); box-shadow: none; color: var(--ink-2); font-weight: 600; }
+.tree-node.has-q .tn-foot { padding-right: 70px; }
+.tech-tree.tight .tn-queue { height: 19px; padding: 0 6px; }
+/* A later technology picked too early: the technologies it waits for are red until the player answers. */
+.tree-node.needed, .tree-node.needed.available, .tree-node.needed.locked { border: 2px solid var(--bad); padding: 6px 8px 5px; background: color-mix(in srgb, var(--bad) 10%, var(--field)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 22%, transparent); }
+.tree-node.needed .tn-name { color: var(--bad); }
+.tree-node.asked { border: 2px solid var(--ink); padding: 6px 8px 5px; background: var(--field); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 22%, transparent); }
+.tree-ask { margin-left: auto; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 4px 4px 4px 10px; border: 2px solid var(--bad); background: color-mix(in srgb, var(--bad) 8%, var(--field)); color: var(--ink); font: 400 13px/1.25 var(--sans); }
+.tree-ask-text { flex: 1 1 260px; }
+.tree-ask .btn { min-height: 28px; white-space: nowrap; }

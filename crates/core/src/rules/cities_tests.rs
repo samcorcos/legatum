@@ -2351,6 +2351,32 @@ fn research_queue_validates_order_and_rejects_known_duplicate_and_out_of_era_tec
 }
 
 #[test]
+fn research_queue_runs_across_eras_behind_the_rest_of_each_era() {
+    use TechId::*;
+    let mut s = two_players();
+    let queue = |techs| Order::SetResearchQueue { techs };
+    // A Classical technology may be queued only behind every unknown Ancient one.
+    let short = queue(vec![Irrigation, Masonry, BronzeWorking, Currency, Mathematics, Writing]);
+    let err = validate_city_order(&s, P0, &short).unwrap_err();
+    assert!(err.contains("queue the rest of the Ancient era"), "{err}");
+    assert!(validate_city_order(&s, P0, &queue(vec![Mathematics, Irrigation])).is_err());
+    let path = vec![Irrigation, Masonry, BronzeWorking, Currency, Writing, Mathematics];
+    assert!(validate_city_order(&s, P0, &queue(path.clone())).is_ok());
+    apply_city_orders(&mut s, P0, &[queue(path.clone())], &mut Vec::new());
+    assert_eq!(s.player(P0).researching, Some(Irrigation));
+    // It survives the era-up and goes on into the Classical era.
+    s.player_mut(P0).science_stored = 100_000;
+    for _ in 0..5 {
+        process_research(&mut s, &mut Vec::new());
+    }
+    assert_eq!(crate::eras::current_era(&s.player(P0).techs), 1);
+    assert_eq!(s.player(P0).research_queue, vec![Mathematics]);
+    assert_eq!(s.player(P0).researching, Some(Mathematics));
+    process_research(&mut s, &mut Vec::new());
+    assert!(s.player(P0).techs.contains(&Mathematics));
+}
+
+#[test]
 fn research_queue_advances_once_per_turn_carries_science_and_emits_finished() {
     use TechId::*;
     let mut s = two_players();
