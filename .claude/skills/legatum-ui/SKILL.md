@@ -206,7 +206,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | interest | Swiss Gold earned from the treasury | treasury bonus |
 | Gold project, Science project, Food project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold, Science or Food; every empire since 2026-11-22 (Food: rules 55, not Egypt). The automation menu names its stream focuses by these project names | Industry project, Industry: Gold (a copy test bans "Industry project") |
 | Grow | Egypt's project that grows a city with its surplus Food instead of building (2026-11-21); "surplus Food" is Food beyond 2 per population | growth project, grow mode |
-| tribute | Byzantium buying peace | bribe, peace payment |
+| offer | Byzantium's bid for a rival's city, held in escrow for 3 turns ("Make an offer", "the owner gets all the Gold you offer"); the price is the lowest offer | bid (in player text), bribe, payment |
 | melee units | the Melee line class (Warrior, Spearman and their upgrades); "Melee line" in the class name | foot soldiers, infantry as a class (a copy test bans "foot soldier"; plain-language review 2026-11-25) |
 | level | a unit's promotion level ("level 4 or higher") | rank, promotion tier |
 | technology | in rules text; "tech diffusion" is the one fixed phrase | techs |
