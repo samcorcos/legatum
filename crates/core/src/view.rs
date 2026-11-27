@@ -744,6 +744,9 @@ pub struct CityView {
     /// Gold per turn this viewer saves by building a Revenue Office in their own city.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub revenue_office_upkeep_savings: Option<i32>,
+    /// Extra Gold per turn an own Indian non-capital city sends to the treasury once it builds a Revenue Office.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub revenue_office_remittance_gain: Option<i32>,
     pub walls: bool,
     /// Last observed completed Walls level (0 when unwalled).
     #[serde(default)]
@@ -826,6 +829,7 @@ impl CityView {
             greece_captive_tech: false,
             greece_captive_at_risk: false,
             revenue_office_upkeep_savings: None,
+            revenue_office_remittance_gain: None,
             walls: city.walls,
             walls_level: city.walls_level,
             walls_hp: combat::walls_hp(city.walls_level, city.walls_damage),
@@ -2063,6 +2067,9 @@ pub fn player_view_cached(
             observed.revenue_office_upkeep_savings = (c.owner == me)
                 .then(|| economy::revenue_office_upkeep_savings(state, c))
                 .filter(|savings| *savings > 0);
+            observed.revenue_office_remittance_gain = (c.owner == me)
+                .then(|| economy::revenue_office_remittance_gain(state, c))
+                .filter(|gain| *gain > 0);
             observed.walls_building = matches!(
                 c.producing,
                 Some(ProductionItem::Building {

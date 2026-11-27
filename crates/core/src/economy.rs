@@ -1008,6 +1008,26 @@ pub fn revenue_office_upkeep_savings(state: &GameState, city: &City) -> i32 {
     city_upkeep_total(state, cities, liable) - city_upkeep_total(state, cities, liable - 1)
 }
 
+/// Extra Gold per turn an Indian non-capital city would send to the treasury once it builds a
+/// Revenue Office now: the Gold its regional court keeps today (all of it, or half under the
+/// `india_office_full` ablation). The Office's own Gold is in its effect line, not here.
+pub fn revenue_office_remittance_gain(state: &GameState, city: &City) -> i32 {
+    let rules = &state.setup.rule_experiments;
+    if state.player(city.owner).faction != Faction::India
+        || city.is_capital
+        || rules.rule_off(FactionRule::IndiaRemittance)
+        || data::has_building(&city.buildings, BuildingKind::Market)
+    {
+        return 0;
+    }
+    let kept = city_totals(state, city).gold.max(0);
+    if rules.rule_off(FactionRule::IndiaOfficeFull) {
+        kept / 2
+    } else {
+        kept
+    }
+}
+
 /// Food a city needs to grow, less decadence (rounding down once).
 pub fn growth_threshold(state: &GameState, city: &City) -> Breakdown {
     let mut b = Breakdown::default();

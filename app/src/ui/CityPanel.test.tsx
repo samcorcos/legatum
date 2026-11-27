@@ -195,9 +195,16 @@ it('shows an Indian Revenue Office upkeep saving inside its build card only when
     .toBe('City upkeep: saves 2 Gold a turn');
   expect(card.querySelector('.prod-upkeep.gain')).not.toBeNull();
   expect(card.querySelector('.production-more')?.textContent).not.toContain('saves');
+  expect(card.querySelector('[data-testid="office-remittance"]')).toBeNull();
+  city.revenue_office_remittance_gain = 4;
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('.production-choice[data-item="b:Market"] [data-testid="office-remittance"]')?.textContent)
+    .toBe('Sends 4 more Gold a turn to your treasury');
   city.revenue_office_upkeep_savings = 0;
+  city.revenue_office_remittance_gain = undefined;
   act(() => root.render(<CityPanel city={city} view={view} />));
   expect(container.querySelector('[data-testid="office-city-upkeep"]')).toBeNull();
+  expect(container.querySelector('[data-testid="office-remittance"]')).toBeNull();
 });
 
 it('drops the claim from the territory bar when there is no free tile', async () => {
