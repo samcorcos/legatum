@@ -11,6 +11,7 @@ import { Amount } from './Amounts';
 import { PortraitRoundel } from './premium';
 import { GoldStepper } from './GoldStepper';
 import { GIFT_ARRIVES, freeGold } from '../deals';
+import { QueuedDiplomacyLine, useJustQueued } from './QueuedDiplomacyLine';
 
 /** The short rule, shown under the control. */
 export const GIVE_GOLD_RULE = `Give Gold to a teammate. ${GIFT_ARRIVES}`;
@@ -59,13 +60,14 @@ function GiftRow({ view, to, orders }: { view: PlayerView; to: PlayerId; orders:
 
 /**
  * The amount field, Give Gold button and forecast for one recipient: a teammate's row, or (deals,
- * rules 61) a met empire not at War in its empire detail. Queued, it shows the gift with Undo.
+ * rules 61) a met empire not at War in its empire detail. Queued, it shows a ready line.
  */
 export function GiftControl({ view, to, orders, defaultAmount = 50 }: { view: PlayerView; to: PlayerId; orders: Order[]; defaultAmount?: number }) {
   // Named as the empire rows and the report name it: "Aztecs" on the row, "the Aztecs" in a sentence.
   const empire = empireOfPlayer(view, to), inSentence = withThe(empire);
   const Cap = inSentence.charAt(0).toUpperCase() + inSentence.slice(1);
   const queued = orders.filter((o): o is Extract<Order, { type: 'GiveGold' }> => o.type === 'GiveGold' && o.to === to);
+  const justQueued = useJustQueued(queued.length > 0);
   const free = freeGold(view, orders);
   // Text, so clearing the field leaves it empty instead of snapping to 0.
   const [text, setText] = useState(() => String(Math.min(defaultAmount, Math.max(0, free))));
@@ -73,9 +75,9 @@ export function GiftControl({ view, to, orders, defaultAmount = 50 }: { view: Pl
   const valid = Number.isInteger(amount) && amount >= 1 && amount <= free;
   const f = giftForecast(view, to, valid ? amount : 0, orders);
   const give = () => { if (valid) useGame.getState().editOrders((os) => [...os, { type: 'GiveGold', to, amount }]); };
-  const undo = () => useGame.getState().editOrders((os) => os.filter((o) => !(o.type === 'GiveGold' && o.to === to)));
+  const cancel = () => useGame.getState().editOrders((os) => os.filter((o) => !(o.type === 'GiveGold' && o.to === to)));
   return queued.length > 0
-    ? <p data-testid="gift-queued">Queued: give <Amount n={queued.reduce((n, o) => n + o.amount, 0)} unit="Gold" /> to {inSentence}. <button className="link" onClick={undo}>Undo</button></p>
+    ? <QueuedDiplomacyLine name="Gift" onCancel={cancel} testId="gift-queued" focus={justQueued}>you give <Amount n={queued.reduce((n, o) => n + o.amount, 0)} unit="Gold" /> to {inSentence} when you end the turn.</QueuedDiplomacyLine>
     : <div className="gift-control">
         <GoldStepper value={text} onChange={setText} max={Math.max(1, free)} label={`Gold to give ${inSentence}`} />
         <button className="btn" disabled={!valid} onClick={give} data-testid="give-gold">Give Gold</button>

@@ -372,7 +372,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <div><dt>Shift + X</dt><dd>Disband the selected unit.</dd></div>
         <div><dt>Escape</dt><dd>Close a panel, cancel targeting, or deselect. On a coach question, Escape only hides the card. The Coach question button, or the Turn report (<kbd>L</kbd>), brings it back.</dd></div>
         <div><dt>A / D</dt><dd>With Diplomacy open: accept or decline the offer awaiting your reply. Diplomacy then moves to the next offer, or closes.</dd></div>
-        <div><dt>Z</dt><dd>Undo the answer you just gave, while its notice shows (Ctrl+Z or ⌘Z too). Afterwards, undo it from the offer card or the This Turn pending orders until you end the turn.</dd></div>
+        <div><dt>Z</dt><dd>Undo the answer you just gave, while its notice shows (Ctrl+Z or ⌘Z too). Afterwards, cancel it from its ready line on the offer card, or in This Turn, until you end the turn.</dd></div>
         <div><dt>D (Declare War?)</dt><dd>Cancel the declaration, like Escape. Declaring has no key: press its button.</dd></div>
         <div><dt>?</dt><dd>Open How to Play. Escape or ? returns to play.</dd></div>
       </dl>
