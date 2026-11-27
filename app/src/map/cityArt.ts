@@ -19,9 +19,10 @@ export const CITY_ERAS = ['ancient', 'classical', 'medieval', 'renaissance', 'in
 export const CITY_TIERS = ['hamlet', 'town', 'city', 'metropolis'] as const;
 export type CityTier = (typeof CITY_TIERS)[number];
 
-/** Scale of a detailed town's 512 px master. Far marks and wall images have separate geometry. */
+/** Scale of a detailed town's 512 px master. Far marks have separate geometry. */
 export function cityDrawScale(stem: string | null): number {
-  return cityScaleData.sprites[stem as keyof typeof cityScaleData.sprites]?.scale ?? 1;
+  const base = cityScaleData.sprites[stem as keyof typeof cityScaleData.sprites]?.scale;
+  return base === undefined ? 1 : base * cityScaleData.globalScaleFactor;
 }
 
 /** Keep the highest ordinary roof below the banner block, including a small gap. */
