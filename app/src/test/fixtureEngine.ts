@@ -215,7 +215,7 @@ export class FixtureClient extends WasmClient {
       this.fixtureSnapshot = current;
     }
   }
-  override view(player: number): PlayerView { this.sync(); return super.view(player); }
+  override view(player: number): PlayerView { this.sync(); return { ...super.view(player) }; }
   override validate(player: number, orders: Order[]): OrderError[] { this.sync(); return super.validate(player, orders); }
   override forecast(player: number, unit: number, target: Hex, mode: AttackMode): BattleForecast | null { this.sync(); return super.forecast(player, unit, target, mode); }
   override assault(player: number, unit: number, target: Hex, mode: AttackMode, alongside: AlongsideAttack[]): CityAssaultForecast | null { this.sync(); return super.assault(player, unit, target, mode, alongside); }
