@@ -223,7 +223,7 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   if (garrison && !seen.includes('garrisonLock') && !ctx.techOpen && !ctx.selection) {
     const city = occupiedCityName(v, garrison), people = ownerName(v, garrison.occupation_lock!);
     return { id: 'garrisonLock', title: `Your ${unitName(v, garrison)} holds ${city}`,
-      why: `Your military units in ${city} stay as its garrison until Peace with ${people}. ${city} builds nothing until then.`,
+      why: `Your military units in ${city} stay as its garrison until Peace with ${people} or their elimination. ${city} builds nothing until then.`,
       steps: [{ instruction: `Make Peace with ${people} in Diplomacy to free your garrison.`, target: control('diplomacy') }],
       current: 0, acknowledge: true };
   }

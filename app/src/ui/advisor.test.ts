@@ -40,7 +40,7 @@ describe('one decision at a time', () => {
     const name = itemName({ kind: 'Unit', unit: unit.kind }, view.players.find((p) => p.id === view.me)!.faction);
     expect(advisorSuggestion(ctx(), seen, [])).toEqual({
       id: 'garrisonLock', title: `Your ${name} holds ${city.name}`,
-      why: `Your military units in ${city.name} stay as its garrison until Peace with ${people}. ${city.name} builds nothing until then.`,
+      why: `Your military units in ${city.name} stay as its garrison until Peace with ${people} or their elimination. ${city.name} builds nothing until then.`,
       steps: [{ instruction: `Make Peace with ${people} in Diplomacy to free your garrison.`, target: { kind: 'control', name: 'diplomacy', value: undefined } }],
       current: 0, acknowledge: true,
     });

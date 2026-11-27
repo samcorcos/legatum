@@ -173,7 +173,7 @@ test.describe('locked garrison lesson 1000x600', () => {
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
     const card = page.locator('[data-testid="advisor"][data-advisor-id="garrisonLock"]');
     await expect(card).toBeVisible();
-    await expect(card).toContainText('Your military units in Vestige stay as its garrison until Peace with Switzerland. Vestige builds nothing until then.');
+    await expect(card).toContainText('Your military units in Vestige stay as its garrison until Peace with Switzerland or their elimination. Vestige builds nothing until then.');
     await expect(card).toContainText('Make Peace with Switzerland in Diplomacy to free your garrison.');
     const diplomacy = page.locator('.game .panel.vp .rivals-foot button');
     const ring = page.getByTestId('advisor-ring');
