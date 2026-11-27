@@ -44,7 +44,11 @@ Alliances cost per turn only (designer decision 2026-10-31). Each empire on both
 the pair's `relation_version`; `resolve_boundary` drops it when declined (`ProposalRejected`, 5-turn cooldown), withdrawn,
 accepted, expired, or when the pair's relation changed this turn: `ProposalInvalidated` with reason `diplomacy::WAR_ENDS_OFFERS`
 ("War was declared") when the pair is now at War (a surprise war at the start of resolution or a boundary declaration), else
-"Relationship changed" (an Alliance left, bought peace). So **declaring War on an empire withdraws every pending offer between
+"Relationship changed" (an Alliance left, bought peace). An Alliance offer that the turn's other diplomacy made impossible
+(say the proposer signed a guaranteed Peace with the receiver's enemy, so the Alliance would drag it back into that war) is
+also withdrawn at the boundary, `ProposalInvalidated` with the reason the accept would give (`check_alliance`), so it never
+waits in an inbox as an offer nobody can accept; the AI also skips an Alliance offer to a team at War with anyone whose Peace
+it accepts that turn (2026-11-27). So **declaring War on an empire withdraws every pending offer between
 the two**, and a declined offer never survives the turn. Core takes **one diplomatic order per other team per turn**
 (`validate_orders`: "One diplomatic order per other team per turn"; `resolve_boundary` keeps the first by PlayerId), so a
 decline plus a war toward the same empire is invalid: the war alone settles the offer. The client mirrors this: `queueDiplomacy`
@@ -179,8 +183,8 @@ says whether it is on.
   a red cost chip on each offer, "You ask" a green "+N if accepted" chip. With deals on an empire's detail runs: the
   Gold field, the offers, Give Gold (`RivalGift`, a met empire not at War, a gift to the team's first living member,
   same `GoldStepper`), Close borders or Leave the Alliance, then Declare War below a rule. Offer Open Borders shows at
-  Peace while closed ("If they accept, it starts on turn N."), Close borders while open. A queued action keeps its
-  button pressed with a "Queued: Offer Open Borders. You ask 40 Gold. Undo" line under it, as gifts do. An incoming
+  Peace while closed ("If they accept, it starts on turn N."), Close borders while open. A queued action replaces its
+  button with a ready line and Cancel ("Offer ready: it is sent when you end the turn. You ask 40 Gold if they accept. Cancel", `Action` in `DiplomacyPanel.tsx`, 2026-11-27), as gifts do, so a second click cannot silently take the order back. An incoming
   offer's headline carries its Gold ("Switzerland asks 40 Gold for Peace", "… offers Peace and 40 Gold") and its
   For-you terms say "You pay 40 Gold." or "You get 40 Gold."; the turn button and the advisor name it by kind
   (`turnFlow.ts::offerDecisionLabel`: "Open Borders with X: your units may enter each other’s land · asks 40 Gold ·

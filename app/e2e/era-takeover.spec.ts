@@ -16,12 +16,12 @@ type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex
 const SIZES = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }];
 const out = fileURLToPath(new URL('../../docs/design/era-art/in-game/', import.meta.url));
 
-async function load(page: Page, game: string, turn = 2) {
-  await page.addInitScript(({ game, turn }) => {
+async function load(page: Page, game: string, turn = 2, advisor = false) {
+  await page.addInitScript(({ game, turn, advisor }) => {
     if (!location.protocol.startsWith('http')) return;
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
-    localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
-  }, { game, turn });
+    localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: advisor, seen: advisor ? ['welcome', 'report', 'howToWin'] : [] }));
+  }, { game, turn, advisor });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Continue/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(turn));
@@ -149,6 +149,28 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await shot(page, size, 'age-score-check');
     await page.keyboard.press('Enter');
     await expect(check).toHaveCount(0);
+  });
+
+  test('with the advisor on, the score check says how to win and still fits whole', async ({ page }) => {
+    await load(page, eraUpState(), 2, true);
+    await stageScoreCheck(page);
+    await expect(takeover(page)).toBeVisible();
+    await page.keyboard.press('Enter');
+    const check = page.getByTestId('score-check');
+    await expect(check).toBeVisible();
+    const coach = check.getByTestId('score-coach');
+    await expect(coach).toContainText('each small square is 1 victory point (VP); a wide one is 2.');
+    await expect(coach).toContainText('by turn 500, the most VP then wins');
+    await check.getByTestId('score-sheet').dispatchEvent('pointerdown');
+    await page.waitForTimeout(800);
+    await expect(check.locator('[data-primary-action]')).toHaveCount(1);
+    const fit = async (part: string) => (await check.locator(part).boundingBox())!;
+    const [sheet, note, primary] = [await fit('.sc-sheet'), await fit('[data-testid=score-coach]'), await fit('[data-primary-action]')];
+    for (const b of [sheet, note, primary]) expect(b.y + b.height).toBeLessThanOrEqual(size.height + 0.5);
+    expect(note.y, 'the note sits below the sheet').toBeGreaterThanOrEqual(sheet.y + sheet.height);
+    expect(note.x + note.width, 'the note stays clear of Continue').toBeLessThanOrEqual(primary.x);
+    for (const panel of await check.locator('.sc-panel').all()) expect(await panel.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBe(true);
+    await shot(page, size, 'age-score-check-advisor');
   });
 
   test('its report line shows the card again, and the controls are on screen from the first moments', async ({ page }) => {

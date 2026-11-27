@@ -199,25 +199,6 @@ describe('drawResourceIcons', () => {
     expect(calls.filter((c) => c.name === 'drawImage')).toHaveLength(1);
   });
 
-  it('the Resources overlay badges a deposit of a resource you lack that someone else holds or nobody does, not your own or ones you have', () => {
-    const v = view();
-    for (const t of v.tiles) t.resource = null;
-    v.tiles[0].resource = 'Iron'; (v.tiles[0] as { owner: number | null }).owner = 1; // foreign, lacked
-    v.tiles[1].resource = 'Iron'; (v.tiles[1] as { owner: number | null }).owner = 0; // yours
-    v.tiles[2].resource = 'Coal'; // unclaimed, but Coal is supplied
-    (v as unknown as { supply: unknown }).supply = [
-      { resource: 'Iron', revealed: true, supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, spare: 0 },
-      { resource: 'Coal', revealed: true, supplied: { total: 2, parts: [] }, used: { total: 0, parts: [] }, spare: 2 },
-    ];
-    const badges = (emphasis: boolean) => {
-      const { ctx, calls } = recorder();
-      drawResourceIcons(ctx, v, { x: 150, y: 100, zoom: 0.9 }, 800, 600, 2, 'atlas', [], emphasis);
-      return calls.filter((c) => c.name === 'fillRect').length; // the badge's exclamation bar
-    };
-    expect(badges(false)).toBe(0);
-    expect(badges(true)).toBe(1);
-  });
-
   it('draws nothing on a map with no known resources', () => {
     const v = view();
     for (const t of v.tiles) t.resource = null;

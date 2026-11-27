@@ -20,6 +20,7 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bjoin the new game\b/i, reason: 'a hosted save carries on from its saved turn; it is not a new game (plain-language review, 2026-11-27)', instead: '"host this save online, then others join it"', source: true },
   { pattern: /\bpayer is short\b|\bis short of Gold\b/i, reason: 'vague: short of what, and when (plain-language review of deals, 2026-11-25)', instead: '"If the payer cannot pay then, the offer ends."', source: true },
   { pattern: /\bwar duties\b/i, reason: 'jargon (plain-language review of deals, 2026-11-25)', instead: 'say what the treaty does, or leave it out', source: true },
   { pattern: /\bEarliest activation\b/i, reason: 'mechanics-speak (UI review of deals, 2026-11-25)', instead: '"If they accept, it starts on turn 14."', source: true },

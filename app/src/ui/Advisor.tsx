@@ -23,7 +23,8 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'turn': return target.value === 'end'
       ? first('.seatbar .cta', '.phone-turn-dock button:last-of-type')
       : first('.seatbar .cta', '.phone-turn-dock button[aria-label^="Next decision"]');
-    case 'race': return first('.game .panel.vp', '.phone-vp-strip');
+    // The rivals table, not the whole panel: the panel's centre can sit under the turn button.
+    case 'race': return first('.game .panel.vp .rivals', '.phone-vp-strip');
     case 'found': return action(/^Found City/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);
     case 'skip': return action(/^Skip/i);
@@ -159,7 +160,8 @@ export function Advisor() {
   const hidden = paused || blockingOverlay || guideOpen || holding || !!celebration || !enabled || !view || view.finished;
   const turnLabel = document.querySelector<HTMLElement>('.seatbar .cta-label')?.textContent?.trim()
     ?? document.querySelector<HTMLElement>('.phone-turn-dock button[aria-label^="Next decision"]')?.textContent?.trim() ?? undefined;
-  const advice = view && enabled ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
+  // Nothing to plan while the card is hidden (a takeover, the Guide, a paused game): the plan runs the engine.
+  const advice = view && !hidden ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
     humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : [], practice, tips) : null;

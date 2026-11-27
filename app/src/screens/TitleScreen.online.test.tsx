@@ -70,7 +70,7 @@ it('the name field is prefilled, can be changed, and is saved and sent', async (
   act(() => root.render(<TitleScreen />));
   await flush();
   await act(async () => must(/^Multiplayer/).click());
-  const input = host.querySelector<HTMLInputElement>('.host-name input')!;
+  const input = host.querySelector<HTMLInputElement>('.mp-name input')!;
   expect(input.value).toBe('Ada');
   const start = hosting(async () => null);
   const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
@@ -136,16 +136,16 @@ it.each([
 });
 
 it('the name field never promises a game-list name: the list does not show typed names', async () => {
-  const input = host.querySelector<HTMLInputElement>('.host-name input')!;
+  const input = host.querySelector<HTMLInputElement>('.mp-name input')!;
   const type = async (v: string) => {
     await act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, v);
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
   };
-  const label = () => host.querySelector('.host-name:not(.host-code) > span')!;
+  const label = () => host.querySelector('.mp-name > span')!;
   expect(label().textContent).toBe('Your name');
   await type('Ada \u{1F600}');
   expect(label().textContent).toBe('Your name');
-  expect(host.querySelectorAll('.host-name:not(.host-code) > span').length).toBe(1);
+  expect(host.querySelectorAll('.mp-name > span').length).toBe(1);
 });

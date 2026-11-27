@@ -112,7 +112,7 @@ it('counts routine steps the player does, once per turn', () => {
 });
 
 it('logs a tip when it shows, and Not now puts it away for the turn', () => {
-  useAdvisor.setState({ seen: ['welcome', 'report', 'race'], tips: {} });
+  useAdvisor.setState({ seen: ['welcome', 'report', 'howToWin'], tips: {} });
   act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }] }));
   render(<Advisor />);
   expect(screen.getByTestId('advisor').dataset.advisorId).toBe('tip:gold');
@@ -141,7 +141,7 @@ it('rings the Make an offer button of a city purchase', () => {
 });
 
 it('while a tile is being placed, shows only the tip that asked for it', () => {
-  useAdvisor.setState({ seen: ['welcome', 'report', 'race'], tips: {} });
+  useAdvisor.setState({ seen: ['welcome', 'report', 'howToWin'], tips: {} });
   const city = view.cities.find((c) => c.owner === view.me)!;
   act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }], place: { city: city.id, building: null, intent: 'tile', pick: null } }));
   render(<Advisor />);

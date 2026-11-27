@@ -3,10 +3,11 @@ import { useGame } from '../store';
 import { typedJoinCode, JOIN_CODE_MAX } from '../net/joinCode';
 import { Icon } from './bits';
 
-/** A guest's box for the host's join code on a locked game. Typed once; the seat buttons wait for it. */
+/** A guest's box for the host's private code on a locked game. Typed once; the seat buttons wait for it. */
 export function JoinCodeField() {
   const text = useGame((s) => s.joinCodeText);
   const rejected = useGame((s) => s.joinCodeRejected);
+  const lockout = useGame((s) => s.joinCodeLockout);
   const setText = useGame((s) => s.setJoinCodeText);
   const input = useRef<HTMLInputElement>(null);
   // The host refused this exact code: say so until the player changes it.
@@ -18,7 +19,7 @@ export function JoinCodeField() {
   }, [wrong]);
   return (
     <div className={`join-code ${wrong ? 'wrong' : ''}`}>
-      <label className="join-code-label" htmlFor="join-code-input">Join code</label>
+      <label className="join-code-label" htmlFor="join-code-input">Private code</label>
       <input
         ref={input}
         id="join-code-input"
@@ -33,7 +34,7 @@ export function JoinCodeField() {
         onChange={(e) => setText(typedJoinCode(e.target.value))}
       />
       <span id="join-code-hint" className="join-code-hint" role={wrong ? 'alert' : undefined}>
-        {wrong ? <><Icon name="ui-alert" size={12} className="ui-mark" /> Wrong code. Check it with the host and try again.</> : text ? 'Now pick a seat.' : 'Type the code the host gave you, then pick a seat.'}
+        {wrong ? <><Icon name="ui-alert" size={12} className="ui-mark" /> {lockout ?? 'Wrong code. Check it with the host and try again.'}</> : text ? 'Now pick a seat.' : 'Type the code the host gave you, then pick a seat.'}
       </span>
     </div>
   );

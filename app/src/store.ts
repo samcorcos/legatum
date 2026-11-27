@@ -343,6 +343,8 @@ export interface State {
   joinCodeText: string;
   /** The join code the host last refused, so the code box can say it is wrong until the player changes it. */
   joinCodeRejected: string | null;
+  /** The host's message after too many wrong codes, shown in the code box until the player changes the code. */
+  joinCodeLockout: string | null;
   setJoinCodeText(text: string): void;
   /** Open an online game in this tab and go to its game room. `code` (4 to 12 letters or digits) locks the game. Resolves to an error message, or null. */
   hostOnline(name: string, code?: string): Promise<string | null>;
@@ -994,7 +996,7 @@ export const useGame = create<State>((set, get) => {
     setServerBase('');
     rememberRoom(null);
     setJoinCode('');
-    set({ net: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false, joinCodeText: '', joinCodeRejected: null });
+    set({ net: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false, joinCodeText: '', joinCodeRejected: null, joinCodeLockout: null });
   };
 
   const connectRemote = (seat: Seat, name: string, token?: string) => {
@@ -1071,9 +1073,9 @@ export const useGame = create<State>((set, get) => {
           if (!active()) set({ screen: 'join' });
         }
         if (code === 'join_code_needed' || code === 'wrong_join_code') setNet({ locked: true });
-        if (code === 'wrong_join_code') {
+        if (code === 'wrong_join_code' || code === 'too_many_codes') {
           // The code box says so beside the typed code; no second notice above the seats.
-          set({ joinCodeRejected: get().joinCodeText, error: null, busy: null });
+          set({ joinCodeRejected: get().joinCodeText, joinCodeLockout: code === 'too_many_codes' ? message : null, error: null, busy: null });
           return;
         }
         if (code === 'removed') {
@@ -1419,7 +1421,7 @@ export const useGame = create<State>((set, get) => {
 
     joinOnline: async (relay, room, locked = false) => {
       setJoinCode('');
-      set({ joinCodeText: '', joinCodeRejected: null });
+      set({ joinCodeText: '', joinCodeRejected: null, joinCodeLockout: null });
       const previous = serverBase();
       setServerBase(roomBase(relay, room));
       const status = await fetchStatus(undefined, undefined, 6000);
@@ -1450,6 +1452,7 @@ export const useGame = create<State>((set, get) => {
 
     joinCodeText: '',
     joinCodeRejected: null,
+    joinCodeLockout: null,
     setJoinCodeText: (text) => {
       setJoinCode(text);
       set({ joinCodeText: text });
@@ -1592,7 +1595,9 @@ export const useGame = create<State>((set, get) => {
         })),
         error: (message, code) => set((s) => ({
           // A wrong code is shown in the code box, not as a second notice.
-          ...(code === 'wrong_join_code' ? { joinCodeRejected: s.joinCodeText, error: null } : { error: message }),
+          ...(code === 'wrong_join_code' || code === 'too_many_codes'
+            ? { joinCodeRejected: s.joinCodeText, joinCodeLockout: code === 'too_many_codes' ? message : null, error: null }
+            : { error: message }),
           stagingSeat: staging?.seat ?? null,
           net: s.net && (code === 'join_code_needed' || code === 'wrong_join_code') ? { ...s.net, locked: true } : s.net,
         })),
@@ -1684,7 +1689,7 @@ export const useGame = create<State>((set, get) => {
           }
           throw new Error(olderRulesMessage(save.playtest));
         }
-        if (needsOnlineHost(save)) throw new Error('This game has other players. Open it from Multiplayer with Host from a save, and they rejoin online.');
+        if (needsOnlineHost(save)) throw new Error('This game has other players. Open Multiplayer and choose Host a saved game; they can then join the newly hosted game and take their former seats.');
         if (save.client !== 'wasm') throw new Error('This save used the retired TypeScript engine and cannot be loaded by the Rust engine.');
         const client = await createClient(save.client);
         measureTurn('loadClient', () => client.load(save.game));

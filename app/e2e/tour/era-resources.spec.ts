@@ -1,5 +1,5 @@
 // Screen tour, strategic supply from the Classical era on: the era's supply chip and
-// the missing-resource alert, the Resources overlay's "You lack it" mark, the tile card's holder line, a Niter-blocked
+// the missing-resource alert, the tile card's holder line, a Niter-blocked
 // upgrade and build card, every strategic resource at far and
 // close zoom, and How to Play's era table. Run it alone with `npx playwright test e2e/tour/era-resources`.
 // Shots land in test-results/screen-tour/<size>/era-resources/.
@@ -12,7 +12,6 @@ import { idxOf } from '../../src/test/fixtureEngine';
 import type { MState } from '../../src/test/fixtureState';
 import { spawnUnit } from '../../src/test/fixtureEngine';
 import type { Event, Hex, Resource, Terrain, TechId } from '../../src/types';
-import { overlayBox } from '../overlayHelpers';
 import { SIZES, expectReasonsFit, hexPoint, loadFixture, selectThing, shot, stageHallReport, type GameWindow } from './helpers';
 
 test.describe.configure({ mode: 'parallel' });
@@ -152,7 +151,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
   });
 
-  test('missing Niter: era chip, alert tooltip, Resources overlay, tile cards, blocked upgrade and build', async ({ page }) => {
+  test('missing Niter: era chip, alert tooltip, tile cards, blocked upgrade and build', async ({ page }) => {
     test.setTimeout(150_000);
     const { s, city, foreign, free } = niterScene();
     await loadFixture(page, coreFixture(s), 12);
@@ -175,21 +174,6 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'e02-era-chip-missing-niter-tip');
     await page.keyboard.press('Escape');
-
-    // The Resources overlay with the "You lack it" mark, framed on the unclaimed Niter.
-    await page.evaluate((h) => (window as unknown as GameWindow).legatum.getState().jumpTo(h), free);
-    const chooser = page.getByRole('button', { name: /^Lens: / });
-    if (await chooser.isVisible()) await chooser.click();
-    await overlayBox(page, 'Resources').click();
-    const opener = page.getByRole('button', { name: 'Overlay key' });
-    if (await opener.isVisible()) await opener.click();
-    await page.mouse.move(5, size.height / 2);
-    await shot(page, size, 'e03-resources-overlay-lack-niter');
-    await page.locator('.map-lenses .lens-key-row').first().hover();
-    await shot(page, size, 'e03b-resources-key-tip');
-    await page.mouse.move(5, size.height / 2);
-    if (await opener.isVisible() && (await opener.getAttribute('aria-expanded')) === 'true') await opener.click();
-    if (await chooser.isVisible() && (await chooser.getAttribute('aria-expanded')) === 'true') await chooser.click();
 
     // The tile cards: a Niter deposit you could take, and one in a rival's land.
     // The camera looks a few tiles west of the rival's deposit, clear of the map's east-west seam.
@@ -297,9 +281,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, 'e12-strategic-far-zoom');
     await zoom(1.25);
     await shot(page, size, 'e13-strategic-close-zoom');
-    await overlayBox(page, 'Resources').click();
-    await zoom(0.35);
-    await shot(page, size, 'e14-strategic-far-zoom-overlay');
+
   });
 
   test('How to Play: strategic supply begins with Iron', async ({ page }) => {

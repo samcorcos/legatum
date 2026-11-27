@@ -34,7 +34,22 @@ body,
   font-feature-settings: 'lnum' 1, 'tnum' 1;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  -webkit-user-select: none;
   user-select: none;
+}
+/* Game UI never highlights as text; typing fields stay selectable. Safari needs the prefix. */
+/* A modal dialog sits in the browser's top layer and Chrome resolves its user-select to text,
+   so the shell's none does not reach it: set it on every dialog and popover too. */
+dialog,
+[popover] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+[contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 button {
   font: inherit;
@@ -4008,7 +4023,7 @@ dialog.gameover::backdrop {
 .toast-message {
   min-width: 0;
   overflow-wrap: anywhere;
-  user-select: text;
+  -webkit-user-select: text; user-select: text;
 }
 .toast-close {
   flex: none;
