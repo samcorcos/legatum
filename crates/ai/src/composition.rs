@@ -129,45 +129,6 @@ pub fn quality(unit: UnitKind) -> i32 {
     }
 }
 
-/// The best unit of `unit`'s line that `buildable` says the empire can build now, or `None` when
-/// none can be (or `unit` is no fighting unit). The land classes read their ladder, so a city
-/// that lacks Iron for the newest melee unit still gets the best melee unit it can make; aircraft
-/// follow their own upgrade chain from `unit`. `buildable` is the caller's whole test: unlocked,
-/// open to the faction, and with the strategic resources in hand (a production option with no
-/// `resource_blocker`). Sam, 2026-11-22: a Military city builds "the most advanced military
-/// units we can support based on strategic resources available".
-pub fn best_buildable_in_line(
-    unit: UnitKind,
-    buildable: impl Fn(UnitKind) -> bool,
-) -> Option<UnitKind> {
-    let ladder: &[UnitKind] = match class(unit)? {
-        UnitClass::Melee => &MELEE_LADDER,
-        UnitClass::Ranged => &RANGED_LADDER,
-        UnitClass::Mounted => &MOUNTED_LADDER,
-        _ => {
-            let mut best = buildable(unit).then_some(unit);
-            let mut next = data::unit_stats(unit).upgrades_to;
-            while let Some(up) = next {
-                if buildable(up) {
-                    best = Some(up);
-                }
-                next = data::unit_stats(up).upgrades_to;
-            }
-            return best;
-        }
-    };
-    if !ladder.contains(&unit) {
-        return buildable(unit).then_some(unit);
-    }
-    ladder.iter().copied().find(|u| buildable(*u))
-}
-
-/// Whether a better unit of `unit`'s line can be built now (`best_buildable_in_line`), so
-/// training `unit` would be training an outdated unit.
-pub fn outdated_by_buildable(unit: UnitKind, buildable: impl Fn(UnitKind) -> bool) -> bool {
-    best_buildable_in_line(unit, buildable).is_some_and(|best| best != unit)
-}
-
 /// Whether a better unit of the same class replaces this one now: the unit's upgrade is unlocked
 /// (`known`). Melee units stay buildable after their upgrade because the better one needs Iron.
 pub fn obsolete(unit: UnitKind, known: impl Fn(legatum_core::TechId) -> bool) -> bool {
@@ -178,37 +139,4 @@ pub fn obsolete(unit: UnitKind, known: impl Fn(legatum_core::TechId) -> bool) ->
         .upgrades_to
         .and_then(|to| data::unit_stats(to).requires)
         .is_some_and(known)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn best_buildable_in_line_takes_the_newest_unit_the_resources_allow() {
-        use UnitKind::*;
-        let only = |set: &'static [UnitKind]| move |u: UnitKind| set.contains(&u);
-        // Iron in hand: Pikemen replace Spearmen, from either end of the line.
-        let iron = only(&[Spearman, Pikeman, Archer, Horseman]);
-        assert_eq!(best_buildable_in_line(Spearman, iron), Some(Pikeman));
-        assert_eq!(
-            best_buildable_in_line(MechanisedInfantry, iron),
-            Some(Pikeman)
-        );
-        assert!(outdated_by_buildable(Spearman, iron));
-        assert!(!outdated_by_buildable(Pikeman, iron));
-        // No Iron: the Spearman is the best melee unit left, so it is not outdated.
-        let no_iron = only(&[Spearman, Archer, Horseman]);
-        assert_eq!(best_buildable_in_line(Pikeman, no_iron), Some(Spearman));
-        assert!(!outdated_by_buildable(Spearman, no_iron));
-        // Lines don't mix, and units outside a line have none.
-        assert_eq!(best_buildable_in_line(Archer, iron), Some(Archer));
-        assert_eq!(best_buildable_in_line(Scout, |_| true), None);
-        assert_eq!(best_buildable_in_line(Knight, |_| false), None);
-        // Aircraft follow their own upgrade chain.
-        assert_eq!(
-            best_buildable_in_line(Biplane, only(&[Biplane, Fighter, Bomber])),
-            Some(Fighter)
-        );
-    }
 }

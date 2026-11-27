@@ -1,17 +1,15 @@
 import { expect, it } from 'vitest';
-import { addCityAutomatedOrders, AUTOMATION_NO_CHOICE, cityAutomationPreview, lastAutomationFocus, nextAutomationFocus, setCityAutomation } from './automation';
+import { addCityAutomatedOrders, AUTOMATION_NO_CHOICE, cityAutomationPreview, cityAutomationFocus, setCityAutomation } from './automation';
 import { loadWasmModule } from './wasmClient';
 import { FixtureClient } from './test/fixtureEngine';
 import { coreFixture } from './test/coreFixture';
 import { wallsFixture } from './test/wallsFixture';
 
-it('I uses the last chosen focus and Shift+I steps through the focuses', () => {
-  setCityAutomation([], 1, 'Military');
-  expect(lastAutomationFocus()).toBe('Military');
-  expect(nextAutomationFocus(null)).toBe('Military');
-  expect(nextAutomationFocus('Economy')).toBe('Military');
-  expect(nextAutomationFocus('Military')).toBe('Gold');
-  expect(nextAutomationFocus('Food')).toBe('Economy');
+it('automation is one economic toggle, including a saved legacy focus', () => {
+  const view = { cities: [{ id: 1, detail: { build_automation: 'Military' } }] } as unknown as import('./types').PlayerView;
+  expect(cityAutomationFocus(1, view, [])).toBe('Economy');
+  expect(cityAutomationFocus(1, view, setCityAutomation([], 1, null))).toBeNull();
+  expect(cityAutomationFocus(1, view, setCityAutomation([], 1, 'Economy'))).toBe('Economy');
 });
 
 it('uses the exact loaded chooser for preview and preserves a manual order when it cannot choose', async () => {

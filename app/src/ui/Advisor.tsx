@@ -8,6 +8,8 @@ import { loadWasmModule, loadedWasmModule } from '../wasmClient';
 import { FactionMark } from './bits';
 import { Kbd } from './index';
 import { useGuide } from './guideState';
+import { useOverlays } from '../map/overlays';
+import { discoveriesUsed } from './advisorDiscovery';
 import { pendingResearchQueue } from '../orders';
 import { advisorSuggestion, practiceKind, useAdvisor, type AdvisorTarget, type PracticeKind } from './advisorModel';
 import { useCoarsePointer } from './useCoarsePointer';
@@ -31,6 +33,20 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'fortify': return action(/^(Fortify|Wait)/i);
     case 'skip': return action(/^Skip/i);
     case 'explore': return action(/^Auto-explore/i);
+    case 'heal': return action(/^Heal/i);
+    case 'upgrade': return action(/^Upgrade to /i);
+    case 'siege': return action(/^Siege/i);
+    case 'cities': return first('[data-testid="cities-button"]');
+    case 'mapYields': return first('.map-lenses [data-overlay="yields"]', '.map-lenses .lens-toggle');
+    case 'airRecon': return action(/^Recon/i);
+    case 'ping': return first('[data-testid="ping-button"]');
+    case 'autoFire': return action(/^Auto-fire from city/i);
+    case 'automate': return first('.city-panel [data-advisor="automate"]');
+    case 'queueBuild': {
+      const card = [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')].find((e) => e.dataset.item === target.value);
+      const folded = card?.closest<HTMLDetailsElement>('details.unit-line');
+      return folded && !folded.open ? folded.querySelector<HTMLElement>('summary') : card?.querySelector<HTMLElement>('button.queue-add, button.upgrade-queue') ?? null;
+    }
     case 'ranged': return action(/^Ranged attack/i);
     case 'build': {
       const card = [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')].find((e) => e.dataset.item === target.value);
@@ -49,10 +65,9 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
       const cardButton = card && [...card.querySelectorAll<HTMLElement>('button')].find((el) => el.dataset.testid === 'queue-add' || el.textContent?.trim().startsWith('+ Queue'));
       if (cardButton) return cardButton;
       const node = [...(modal?.querySelectorAll<HTMLElement>('.tree-node') ?? [])].find((el) => el.dataset.tech === target.value && visible(el));
-      const nodeButton = node && [...node.querySelectorAll<HTMLElement>('button')].find((el) => el.textContent?.trim().startsWith('+ Queue'));
-      if (nodeButton) return nodeButton;
-      if (node && window.matchMedia?.('(pointer: coarse)').matches) return first('dialog.tech-modal[open] [data-testid="research-view-era"]');
-      return node ?? null;
+      if (node?.classList.contains('asked')) return first('dialog.tech-modal[open] [data-testid="tree-ask-queue"]');
+      return [...(modal?.querySelectorAll<HTMLButtonElement>('[data-testid="tree-queue"]') ?? [])]
+        .find((el) => el.dataset.tech === target.value && visible(el) && !el.disabled && !el.classList.contains('on')) ?? null;
     }
     // The tech tree's node for it, or on the This era view its card's Research now.
     case 'tech': return [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .tree-node')].find((e) => e.dataset.tech === target.value)
@@ -117,12 +132,25 @@ function usePractice() {
   const ready = useGame((s) => !!s.ready[s.seat]);
   const techOpen = useGame((s) => s.techOpen);
   const practise = useAdvisor((s) => s.practise);
+  const markSeen = useAdvisor((s) => s.markSeen);
+  const citiesOpen = useGame((s) => s.citiesOpen);
+  const pings = useGame((s) => s.pings);
+  const overlays = useOverlays();
   const turn = view?.turn;
+  useEffect(() => {
+    if (!view) return;
+    if (citiesOpen) markSeen('cities', view.turn);
+    if (overlays.yields) markSeen('mapYields', view.turn);
+    if (pings.some((ping) => ping.from === view.me && ping.turn === view.turn)) markSeen('teamPing', view.turn);
+  }, [citiesOpen, overlays.yields, pings, view, markSeen]);
   useEffect(() => {
     if (!view || !orders?.length) return;
     const kinds = orders.filter((_, i) => !errors?.some((e) => e.index === i)).map((o) => practiceKind(o, view)).filter((k): k is PracticeKind => k !== null);
     if (kinds.length) practise(kinds, view.turn);
-  }, [orders, errors, view, practise]);
+    for (const id of discoveriesUsed(orders.filter((_, i) => !errors?.some((e) => e.index === i)))) {
+      if (!useAdvisor.getState().seen.includes(id)) markSeen(id, view.turn);
+    }
+  }, [orders, errors, view, practise, markSeen]);
   const lastTurn = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (turn === undefined) return;
@@ -164,8 +192,9 @@ export function Advisor() {
   const placingTile = useGame((s) => (s.place?.intent === 'tile' ? s.place.city : null));
   const guideOpen = useGuide((s) => s.open);
   const { active: celebration, holding } = useCelebration();
-  const { enabled, seen, skipped, skippedTurn, practice, tips, locks, markSeen, skip, setEnabled, noteTip, observeLocks } = useAdvisor();
+  const { enabled, seen, skipped, skippedTurn, practice, tips, locks, discoveryTurn, markSeen, skip, setEnabled, noteTip, observeLocks } = useAdvisor();
   usePractice();
+  const overlays = useOverlays();
   useEffect(() => { if (view) observeLocks(view); }, [view, observeLocks]);
   const [, refreshPlan] = useState(0);
   useEffect(() => {
@@ -179,7 +208,7 @@ export function Advisor() {
     ?? document.querySelector<HTMLElement>('.phone-turn-dock button[aria-label^="Next decision"]')?.textContent?.trim() ?? undefined;
   // Nothing to plan while the card is hidden (a takeover, the Guide, a paused game): the plan runs the engine.
   const advice = view && !hidden ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
-    humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
+    humans: humans.length, remote: client?.kind === 'remote', canPing: useGame.getState().canPing(), discoveryTurn, yieldsVisible: overlays.yields, touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
     researchQueueDrained: report?.events[seat]?.some((event) => event.type === 'ResearchQueueAdvanced' && event.player === view.me && event.next === null),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : [], practice, tips, locks) : null;
@@ -219,14 +248,15 @@ export function Advisor() {
           if (p) selectedTile = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
         }
         // Also keep clear of the map tools and the player's own cities with their banners (drawn above the tile).
+        const selectedControl = selection?.kind === 'city' ? document.querySelector('.city-panel [data-advisor="automate"]')?.getBoundingClientRect() ?? null : null;
         const tools = document.querySelector('.map-lenses')?.getBoundingClientRect() ?? null;
         // A city under offer also wears its countdown coin on the banner, so it is kept clear too, whoever owns it.
         const ownCities = (view?.cities ?? []).filter((c) => c.owner === view?.me || view?.city_offers?.some((o) => o.city === c.id)).map((c) => tileOnScreen(c.pos))
           .filter((p): p is NonNullable<typeof p> => !!p).map((p) => new DOMRect(p.x - 1.3 * p.radius, p.y - 2.3 * p.radius, 2.6 * p.radius, 3.3 * p.radius));
-        const blockers = [target, selectedTile, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
+        const blockers = [target, selectedTile, selectedControl, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
         const clearOf = (rects: DOMRect[]) => (top: number) => rects.every((r) => top + box.height + 8 <= r.top || top >= r.bottom + 8);
         // The step's target and the selection must stay visible; the rest is avoided when there is room.
-        const must = blockers.filter((r) => r === target || r === selectedTile);
+        const must = blockers.filter((r) => r === target || r === selectedTile || r === selectedControl);
         const home = 76;
         const floor = innerHeight - box.height - 8;
         // Prefer the usual slot, then just below a blocker, then just above one.
@@ -238,7 +268,7 @@ export function Advisor() {
         // No height clears every banner: slide to the map's left edge at the usual height when that does.
         let nextLeft: number | null = null;
         // Judged for the CSS slot (the centre), not the card's current place, so it cannot flip back and forth.
-        const every = [target, selectedTile, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0);
+        const every = [target, selectedTile, selectedControl, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0);
         const slot = innerWidth / 2 - box.width / 2;
         const atSlot = every.filter((r) => r.right > slot && r.left < slot + box.width);
         const slotOptions = [home, ...atSlot.map((r) => r.bottom + 12), ...atSlot.map((r) => r.top - 12 - box.height)].filter((top) => top >= 64 && top <= floor);
@@ -290,7 +320,7 @@ export function Advisor() {
               // A ring is the call to action; dismissing it stays a quiet link.
               ? <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button>
               : <button className="btn primary" onClick={() => skip(suggestion.id, view!.turn)}>Got it</button>)
-            : lesson ? <button className="btn primary" onClick={() => markSeen(suggestion.id)}>Got it</button>
+            : lesson ? <button className="btn primary" onClick={() => markSeen(suggestion.id, view!.turn)}>Got it</button>
             : <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button>}
         <button className="advisor-link" onClick={() => setEnabled(false)}>Turn off</button>
       </div>

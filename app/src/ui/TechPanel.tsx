@@ -18,7 +18,7 @@ import { UnlockDetail } from './TechDetail';
 import { EraObjectivesResearch } from './EraObjectives';
 import { TechTree } from './TechTree';
 import { techCardUnlocks } from './techCardUnlocks';
-import { appendToQueue, costParts, currentEraTechs, diffusionLine, eraFirst, eraRows, eraName, eraNumeral, queueSchedule, researchCatalog, researchFirst, type QueueSlot } from './eraResearch';
+import { appendToQueue, queueThrough, removeFromQueue, costParts, currentEraTechs, diffusionLine, eraFirst, eraRows, eraName, eraNumeral, queueSchedule, researchCatalog, researchFirst, type QueueSlot } from './eraResearch';
 import './research.css';
 import { pendingSpend } from './productionPurchases';
 
@@ -158,7 +158,13 @@ export function TechPanel() {
     editQueue(view, appendToQueue(queue, tech));
     announce(tech);
   };
-  const remove = (tech: TechId) => editQueue(view, queue.filter((t) => t !== tech));
+  const remove = (tech: TechId) => editQueue(view, removeFromQueue(r, queue, tech));
+  // The tree's Queue: a later technology goes in behind every technology it waits for.
+  const queueOnTree = (tech: TechId) => {
+    if (view.finished || queue.includes(tech)) return;
+    editQueue(view, queueThrough(r, queue, tech));
+    announce(tech);
+  };
   const goalOrder = orders?.findLast((o) => o.type === 'SetResearchGoal');
   const goal = goalOrder?.type === 'SetResearchGoal' ? goalOrder.tech : r.goal ?? null;
   const setGoal = (tech: TechId | null) => {
@@ -197,7 +203,7 @@ export function TechPanel() {
         <div className="research-head-actions"><button ref={closeButton} className="btn quiet" onClick={() => set({ techOpen: false })} aria-label="Close research">Close <kbd>Esc</kbd></button></div>
       </div>
       <ResearchQueue view={view} orders={orders} slotCount={cards.filter((c) => c.researchable && !r.known.includes(c.tech)).length} landed={picked?.tech} />
-      {shown === 'tree' ? <TechTree view={view} faction={faction} queue={queue} schedule={schedule} goal={goal} locked={view.finished} open={visible} onResearchNow={researchNow} onQueue={addToQueue} onGoal={setGoal} /> :
+      {shown === 'tree' ? <TechTree view={view} faction={faction} queue={queue} schedule={schedule} goal={goal} locked={view.finished} open={visible} onResearchNow={researchNow} onQueue={queueOnTree} onRemove={remove} onGoal={setGoal} /> :
       <div className="research-scroll">
         {knownCount === catalog.length && <section className="science-conversion" aria-label="Science after research">
           <h3>After the last technology</h3>

@@ -8,6 +8,36 @@ import { UNIT_ACTIONS, orderUnit } from './orders';
 import type { Faction, Hex, Order, PlayerView, SettlementScore, SettlementSite, SiteBlocker, Terrain, UnitView, Yields } from './types';
 
 export const terrainYields = (faction: Faction, terrain: Terrain): Yields => ({ ...terrainYieldsFor(faction, terrain) });
+
+/** Instance methods on a live `WasmGame` that reuse Rust's cached `PlayerView` (`forecast_view`). */
+export interface LiveViewEngine {
+  player_settlement_sites?(player: number, unit: number, reserved: string): string;
+  player_settlement_site?(player: number, unit: number, q: number, r: number, reserved: string): string;
+  player_site_blockers?(player: number): string;
+  player_units_can_reach?(player: number, units: string, q: number, r: number): string;
+}
+
+interface LiveViewBinding {
+  player: number;
+  engine: LiveViewEngine;
+  isCurrent: () => boolean;
+}
+
+const liveViews = new WeakMap<PlayerView, LiveViewBinding>();
+
+/**
+ * Associate a `PlayerView` returned by `WasmClient.view(player)` with its live `WasmGame` instance so settlement
+ * and reach queries reuse Rust's cached `PlayerView` instead of serializing >1 MB of JSON back across WASM.
+ */
+export function registerLiveView(view: PlayerView, player: number, engine: LiveViewEngine, isCurrent: () => boolean) {
+  liveViews.set(view, { player, engine, isCurrent });
+}
+
+function liveEngineFor(view: PlayerView): { player: number; engine: LiveViewEngine } | null {
+  const binding = liveViews.get(view);
+  return binding && binding.isCurrent() ? { player: binding.player, engine: binding.engine } : null;
+}
+
 const siteBlockerTables = new WeakMap<PlayerView, (SiteBlocker | null)[]>();
 /**
  * Why a tile is not a legal city site (the core's rule). The engine answers for every tile in one call per view and
@@ -16,7 +46,15 @@ const siteBlockerTables = new WeakMap<PlayerView, (SiteBlocker | null)[]>();
  */
 export function siteBlocker(view: PlayerView, pos: Hex): SiteBlocker | null {
   let table = siteBlockerTables.get(view);
-  if (!table) siteBlockerTables.set(view, table = engineWork(() => JSON.parse(Game.site_blockers(JSON.stringify(view))) as (SiteBlocker | null)[]));
+  if (!table) {
+    const live = liveEngineFor(view);
+    table = engineWork(() => JSON.parse(
+      live?.engine.player_site_blockers
+        ? live.engine.player_site_blockers(live.player)
+        : Game.site_blockers(JSON.stringify(view)),
+    ) as (SiteBlocker | null)[]);
+    siteBlockerTables.set(view, table);
+  }
   return table[tileIndex(pos, view.width, view.height)] ?? null;
 }
 export const knownLegalSite = (view: PlayerView, pos: Hex): boolean => siteBlocker(view, pos) === null;
@@ -61,8 +99,26 @@ export function reservedSettlements(view: PlayerView, unit: number, orders: Orde
     return destination ? [destination] : [];
   });
 }
-export const settlementScores = (view: PlayerView, unit: UnitView, reserved: Hex[]): SettlementScore[] =>
-  engineWork(() => JSON.parse(Game.settlement_sites(JSON.stringify(view), unit.id, JSON.stringify(reserved))));
+
+const settlementScoresCache = new WeakMap<PlayerView, Map<string, SettlementScore[]>>();
+
+export function settlementScores(view: PlayerView, unit: UnitView, reserved: Hex[]): SettlementScore[] {
+  const reservedJson = JSON.stringify(reserved);
+  const key = `${unit.id}|${reservedJson}`;
+  let byKey = settlementScoresCache.get(view);
+  if (!byKey) settlementScoresCache.set(view, byKey = new Map());
+  const hit = byKey.get(key);
+  if (hit) return hit;
+  const live = liveEngineFor(view);
+  const scores = engineWork(() => JSON.parse(
+    live?.engine.player_settlement_sites
+      ? live.engine.player_settlement_sites(live.player, unit.id, reservedJson)
+      : Game.settlement_sites(JSON.stringify(view), unit.id, reservedJson),
+  ) as SettlementScore[]);
+  byKey.set(key, scores);
+  return scores;
+}
+
 const coloniaSiteCache = new WeakMap<PlayerView, boolean | null>();
 /**
  * Rome: whether any site this view knows founds the Colonia Victrix for its first founder. It is the Settle lens's own
@@ -79,11 +135,28 @@ export function coloniaSiteKnown(view: PlayerView): boolean | null {
   coloniaSiteCache.set(view, known);
   return known;
 }
-export const settlementSite = (view: PlayerView, unit: UnitView, pos: Hex, reserved: Hex[]): SettlementSite | null =>
-  engineWork(() => JSON.parse(Game.settlement_site(JSON.stringify(view), unit.id, pos.q, pos.r, JSON.stringify(reserved))));
+
+const settlementSiteCache = new WeakMap<PlayerView, Map<string, SettlementSite | null>>();
+
+export function settlementSite(view: PlayerView, unit: UnitView, pos: Hex, reserved: Hex[]): SettlementSite | null {
+  const reservedJson = JSON.stringify(reserved);
+  const key = `${unit.id}|${pos.q},${pos.r}|${reservedJson}`;
+  let byKey = settlementSiteCache.get(view);
+  if (!byKey) settlementSiteCache.set(view, byKey = new Map());
+  if (byKey.has(key)) return byKey.get(key)!;
+  const live = liveEngineFor(view);
+  const site = engineWork(() => JSON.parse(
+    live?.engine.player_settlement_site
+      ? live.engine.player_settlement_site(live.player, unit.id, pos.q, pos.r, reservedJson)
+      : Game.settlement_site(JSON.stringify(view), unit.id, pos.q, pos.r, reservedJson),
+  ) as SettlementSite | null);
+  byKey.set(key, site);
+  return site;
+}
+
 /** Detailed sites for tests and inspected advice; the live map uses the compact score list. */
 export const settlementSites = (view: PlayerView, unit: UnitView, reserved: Hex[] = [], only?: Hex): SettlementSite[] =>
-  only ? [settlementSite(view, unit, only, reserved)].filter((site): site is SettlementSite => site !== null)
+  only ? [engineWork(() => JSON.parse(Game.settlement_site(JSON.stringify(view), unit.id, only.q, only.r, JSON.stringify(reserved))) as SettlementSite | null)].filter((site): site is SettlementSite => site !== null)
     : engineWork(() => JSON.parse(Game.settlement_sites_full(JSON.stringify(view), unit.id, JSON.stringify(reserved))));
 const reachCache = new WeakMap<PlayerView, Map<string, Set<number>>>();
 /**
@@ -98,7 +171,13 @@ export function unitsCanReach(view: PlayerView, units: readonly UnitView[], pos:
   if (!cache) reachCache.set(view, cache = new Map());
   const hit = cache.get(key);
   if (hit) return hit;
-  const reach = new Set<number>(engineWork(() => JSON.parse(Game.units_can_reach(JSON.stringify(view), JSON.stringify(ids), pos.q, pos.r))));
+  const idsJson = JSON.stringify(ids);
+  const live = liveEngineFor(view);
+  const reach = new Set<number>(engineWork(() => JSON.parse(
+    live?.engine.player_units_can_reach
+      ? live.engine.player_units_can_reach(live.player, idsJson, pos.q, pos.r)
+      : Game.units_can_reach(JSON.stringify(view), idsJson, pos.q, pos.r),
+  )));
   cache.set(key, reach);
   return reach;
 }
