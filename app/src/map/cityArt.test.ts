@@ -1,9 +1,29 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CITY_ERAS, CITY_TIERS, cityArtArrivals, cityArtEpoch, cityImage, cityStem, cityTier, cityUrl, markStem, missingCityArt, ringEraOf, spriteSize, traceCityArt, wallStem, wallTierOf } from './cityArt';
+import { CITY_ERAS, CITY_GROUND, CITY_TIERS, WALLED_TOWN_SCALE, cityArtArrivals, cityArtEpoch, cityDrawDrop, cityDrawScale, cityImage, cityStem, cityTier, cityUrl, markStem, missingCityArt, ringEraOf, spriteSize, traceCityArt, wallDrawScale, wallStem, wallTierOf } from './cityArt';
+import cityScaleData from './cityScale.json';
+import { HEX_SIZE, HEX_W, BANNER_BOTTOM } from './grid';
+import { CITY_WORLD } from './terrain';
 
 const only = (...stems: string[]) => (stem: string, size: 64 | 128 | 512) => size === 512 && stems.includes(stem);
 
 describe('city art', () => {
+  it('normalizes representative house height while footprints grow by tier', () => {
+    expect(cityDrawScale(markStem('hamlet'))).toBe(1);
+    const bounds = [[0.5, 0.63], [0.69, 0.8], [0.9, 1.03], [1.15, 1.3]];
+    for (const era of CITY_ERAS) for (const [index, tier] of CITY_TIERS.entries()) {
+      const stem = `${era}-${tier}` as keyof typeof cityScaleData.sprites;
+      const { houseHeightPx, scale } = cityScaleData.sprites[stem];
+      expect(cityDrawScale(stem)).toBe(scale);
+      expect(houseHeightPx * scale, stem).toBeCloseTo(cityScaleData.targetHouseHeightPx, 1);
+      const width = (CITY_GROUND.x1 - CITY_GROUND.x0) * CITY_WORLD / 512 * scale / HEX_W;
+      expect(width, stem).toBeGreaterThanOrEqual(bounds[index][0]);
+      expect(width, stem).toBeLessThanOrEqual(bounds[index][1]);
+      expect(wallDrawScale(scale) * WALLED_TOWN_SCALE, stem).toBeCloseTo(scale);
+      // A conservative high roof (master y=60) ends below the banner's lower edge.
+      const roofY = cityDrawDrop(scale) - (CITY_GROUND.middle - 60) * CITY_WORLD / 512 * scale;
+      expect(roofY, stem).toBeGreaterThan(-BANNER_BOTTOM * HEX_SIZE);
+    }
+  });
   it('sizes follow the art bands: 1-3, 4-7, 8-12, 13+', () => {
     expect([1, 3, 4, 7, 8, 12, 13, 30].map(cityTier)).toEqual(['hamlet', 'hamlet', 'town', 'town', 'city', 'city', 'metropolis', 'metropolis']);
   });

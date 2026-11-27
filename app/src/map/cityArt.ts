@@ -11,12 +11,24 @@
 // era's; the Modern era (`contemporary`) has no sprites yet and falls back to the nearest finished era, the World War one.
 import type { CityView, PlayerView } from '../types';
 import { sitesOf } from './constructionSites';
+import cityScaleData from './cityScale.json';
 
 export { wallTierOf } from '../data';
 
 export const CITY_ERAS = ['ancient', 'classical', 'medieval', 'renaissance', 'industrial', 'machine', 'modern', 'contemporary', 'future'] as const;
 export const CITY_TIERS = ['hamlet', 'town', 'city', 'metropolis'] as const;
 export type CityTier = (typeof CITY_TIERS)[number];
+
+/** Scale of a detailed town's 512 px master. Far marks and wall images have separate geometry. */
+export function cityDrawScale(stem: string | null): number {
+  return cityScaleData.sprites[stem as keyof typeof cityScaleData.sprites]?.scale ?? 1;
+}
+
+/** Keep the highest ordinary roof below the banner block, including a small gap. */
+export function cityDrawDrop(scale: number): number {
+  // 50 rounds up the source y=60 roof offset in world units; -15 leaves 3 units below the banner bottom at -18.
+  return Math.max(18, 50 * scale - 15);
+}
 
 // Machine Age, World War, Modern and Future wall families added 2026-11-16; refresh the shared glob transform cache.
 const urls = import.meta.glob<string>('../assets/cities/**/*.png', { eager: true, query: '?url', import: 'default' });
@@ -185,6 +197,8 @@ export const CITY_GROUND = { x0: 18, x1: 493, bottom: 454, middle: 335 };
  * ring's back half is drawn first, then the town, then the front half (`WALL_CUT`). Every era's ring leaves this much room.
  */
 export const WALLED_TOWN_SCALE = 0.78;
+/** A wall and its enclosed town change size together; the town keeps its measured building scale. */
+export const wallDrawScale = (townScale: number) => townScale / WALLED_TOWN_SCALE;
 /** Where a wall ring is cut into back and front (canvas y): the ground oval's middle. */
 export const WALL_CUT = CITY_GROUND.middle;
 /**

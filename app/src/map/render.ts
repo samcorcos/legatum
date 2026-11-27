@@ -339,6 +339,13 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const reveal = moments && momentView ? revealAt(moments.plan, moments.t, view, momentView) : null;
   if (reveal?.improves) drawRevealed(ctx, dpr, w, h, reveal.improves, view, (v) => drawImprovements(ctx, v, cam, w, h, dpr, look));
   else drawImprovements(ctx, view, cam, w, h, dpr, look);
+  // Detailed towns overhang neighbouring tiles. Restore visible roofs above improvements painted in screen space.
+  if (!isFar(hexPx)) {
+    const besideImprovement = new Set(view.cities.map((c) => tileIndex(c.pos, view.width, view.height)).filter((tile) =>
+      tile >= 0 && [tile, ...Array.from({ length: 6 }, (_, e) => neighborIndex(tile, e, view.width, view.height))]
+        .some((near) => near >= 0 && view.tiles[near]?.improvement)));
+    if (besideImprovement.size) terrain.stampTowns(ctx, cam, w, h, dpr, (tile) => besideImprovement.has(tile) && view.tiles[tile]?.visible === true);
+  }
   // Constructed wonders stand on their chosen tile (landmarks.ts); one being built this turn waits for its construction.
   const building = moments && CONSTRUCTION_ANIMATION ? moments.plan.builds.filter((b) => b.wonder && moments.t < b.t + buildPhases(b).done) : [];
   drawLandmarks(ctx, view, toScreen, hexPx, w, h, dpr, building.length ? (l) => building.some((b) => b.city === l.city) : undefined, fixedLandmarkBoxes, (g, near) => terrain.stampTowns(g, cam, w, h, dpr, near));

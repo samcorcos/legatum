@@ -4,7 +4,7 @@
 // strokes, fills, clipped drawImage calls of art already on the map, and a one-off engraving of each sprite (`inkOf`),
 // so a turn with many moments stays cheap; nothing here uses filters, shadowBlur or per-frame canvases.
 import type { Faction, PlayerView } from '../types';
-import { cityImage, cityStem, cityTier, drawCityCanvas, markStem, spriteSize, walledTown, CITY_CANVAS, CITY_GROUND, WALL_CUT, WALLED_TOWN_SCALE } from './cityArt';
+import { cityDrawDrop, cityDrawScale, cityImage, cityStem, cityTier, drawCityCanvas, markStem, spriteSize, walledTown, wallDrawScale, CITY_CANVAS, CITY_GROUND, WALL_CUT } from './cityArt';
 import { CITY_DROP, CITY_WORLD } from './terrain';
 import { buildingIconName, itemName } from '../data';
 import { tintedIcon } from '../icons';
@@ -171,9 +171,9 @@ function sketch(ctx: CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanva
 }
 
 /** Where the terrain cache draws a town's sprite on screen (cityArt geometry), for a hex centre on screen; `scale` shrinks it about its ground centre (a walled town). */
-function townBox(c: Pt, zoom: number, scale = 1) {
+function townBox(c: Pt, zoom: number, scale = 1, drop = CITY_DROP) {
   const k = CITY_WORLD / CITY_CANVAS;
-  return { x: c.x - (CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k * zoom * scale, y: c.y + (-CITY_GROUND.middle * k * scale + CITY_DROP) * zoom, s: CITY_WORLD * zoom * scale };
+  return { x: c.x - (CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k * zoom * scale, y: c.y + (-CITY_GROUND.middle * k * scale + drop) * zoom, s: CITY_WORLD * zoom * scale };
 }
 
 function townSprite(era: number, pop: number, far: boolean, px: number): { img: HTMLImageElement; key: string } | null {
@@ -189,10 +189,11 @@ function townSprite(era: number, pop: number, far: boolean, px: number): { img: 
 function drawFound(ctx: CanvasRenderingContext2D, f: FxFound, t: number, v: MomentView) {
   const dt = t - f.t;
   if (dt < 0 || dt >= FOUND.done + LINGER) return;
-  const box = townBox(v.toScreen(worldOf(f.at)), v.zoom);
   const pop = v.city(f.city)?.population ?? 1;
   const stem = cityStem(v.eraOf(f.owner), cityTier(pop));
   if (!stem) return;
+  const scale = v.far ? 1 : cityDrawScale(stem);
+  const box = townBox(v.toScreen(worldOf(f.at)), v.zoom, scale, v.far ? CITY_DROP : cityDrawDrop(scale));
   const progress = clamp01(dt / FOUND.done);
   const phase = progress < .22 ? 1 : progress < .48 ? 2 : progress < .76 ? 3 : 4;
   const image = phase < 4 ? stageImage(stem, phase, box.s * v.dpr) : townSprite(v.eraOf(f.owner), pop, v.far, box.s * v.dpr)?.img;
@@ -288,17 +289,22 @@ function drawGrow(ctx: CanvasRenderingContext2D, g: FxGrow, t: number, v: Moment
   if (!city) return;
   const c = v.toScreen(worldOf(g.at));
   // A walled town grows inside its ring, as the terrain cache draws it, with the near wall kept in front.
-  const ring = !v.far && city.ring ? cityImage(city.ring, spriteSize(townBox(c, v.zoom).s * v.dpr)) : null;
-  const sprite = townSprite(v.eraOf(city.owner), city.population, v.far, townBox(c, v.zoom).s * v.dpr);
+  const stem = cityStem(v.eraOf(city.owner), cityTier(city.population));
+  const townScale = v.far ? 1 : cityDrawScale(stem);
+  const ringScale = wallDrawScale(townScale);
+  const drop = v.far ? CITY_DROP : cityDrawDrop(townScale);
+  const px = townBox(c, v.zoom, v.far ? 1 : ringScale).s * v.dpr;
+  const ring = !v.far && city.ring ? cityImage(city.ring, spriteSize(px)) : null;
+  const sprite = townSprite(v.eraOf(city.owner), city.population, v.far, px);
   if (!sprite) return;
   // Clipped to the ring's court like the cached town (`walledTown`, drawn in the ring's full frame); unclipped and scaled until the ring loads.
   const fitted = ring ? walledTown(sprite.img, ring) : null;
-  const box = townBox(c, v.zoom, city.ring && !v.far && !fitted ? WALLED_TOWN_SCALE : 1);
+  const box = townBox(c, v.zoom, fitted ? ringScale : townScale, drop);
   const k = Math.min(1, dt / GROW_MS);
   const s = 0.96 + 0.04 * easeOut(clamp01(k / 0.7));
   const bw = box.s * s, bx = c.x - (c.x - box.x) * s, by = box.y + box.s * (1 - s) * 0.85;
   sketch(ctx, fitted ?? sprite.img, fitted ? `${sprite.key}|${city.ring}` : sprite.key, bx, by, bw, bw, g.seed, clamp01(k / 0.55), clamp01((k - 0.25) / 0.7));
-  if (ring) { const r = townBox(c, v.zoom); drawCityCanvas(ctx, ring, r.x, r.y, r.s, 'front'); }
+  if (ring) { const r = townBox(c, v.zoom, ringScale, drop); drawCityCanvas(ctx, ring, r.x, r.y, r.s, 'front'); }
 }
 
 const WAX = '#8f2a1c';
@@ -441,7 +447,9 @@ function drawWalls(ctx: CanvasRenderingContext2D, x: FxWalls, t: number, v: Mome
   if (dt < 0 || dt > WALLS_MS || v.far) return;
   const city = v.city(x.city);
   if (!city?.ring) return;
-  const box = townBox(v.toScreen(worldOf(x.at)), v.zoom);
+  const stem = cityStem(v.eraOf(city.owner), cityTier(city.population));
+  const scale = wallDrawScale(cityDrawScale(stem));
+  const box = townBox(v.toScreen(worldOf(x.at)), v.zoom, scale, cityDrawDrop(cityDrawScale(stem)));
   const ring = cityImage(city.ring, spriteSize(box.s * v.dpr));
   if (!ring) return;
   const town = townSprite(v.eraOf(city.owner), city.population, false, box.s * v.dpr)?.img ?? null;
