@@ -35,14 +35,15 @@ def check(repo, tip):
     if git(repo, "cat-file", "-t", f"{tip}:tools/art/distinctness.py") is None:
         return []
     present = [p for p in PATHS if git(repo, "cat-file", "-t", f"{tip}:{p}")]
-    key = hashlib.sha1(" ".join((git(repo, "rev-parse", f"{tip}:{p}") or "").strip() for p in present).encode()).hexdigest()
+    renderer = os.environ.get('LEGATUM_ART_RENDERER', 'browser')
+    key = hashlib.sha1((renderer + " " + " ".join((git(repo, "rev-parse", f"{tip}:{p}") or "").strip() for p in present)).encode()).hexdigest()
     main = main_checkout(repo)
     cache_dir = os.path.join(main, ".progress", "merge-gates")
     ok = os.path.join(cache_dir, f"art-{key[:16]}.ok")
     if os.path.exists(ok):
         return []
     modules = os.environ.get("LEGATUM_ART_NODE_MODULES") or os.path.join(main, "app", "node_modules")
-    if not os.path.isdir(os.path.join(modules, "playwright")):
+    if os.environ.get('LEGATUM_ART_RENDERER') != 'offline' and not os.path.isdir(os.path.join(modules, "playwright")):
         return [f"[art] cannot render the art sets: no Playwright in {modules}; run `npm ci` in app/ of the main checkout"]
     tmp = tempfile.mkdtemp(prefix="legatum-art-gate-")
     try:
@@ -50,10 +51,16 @@ def check(repo, tip):
         if archive.returncode != 0:
             return [f"[art] git archive failed: {archive.stderr.decode()[:200]}"]
         subprocess.run(["tar", "-x", "-C", tmp], input=archive.stdout, check=True)
-        os.symlink(modules, os.path.join(tmp, "app", "node_modules"))
+        if os.path.isdir(modules):
+            os.symlink(modules, os.path.join(tmp, "app", "node_modules"))
         try:
-            r = subprocess.run(["python3", os.path.join(tmp, "tools", "art", "distinctness.py"), "--render", "--cache",
-                                os.path.join(tmp, "cache"), "--check"], capture_output=True, text=True, timeout=240)
+            command = ["python3", os.path.join(tmp, "tools", "art", "distinctness.py"), "--render", "--cache",
+                       os.path.join(tmp, "cache"), "--check"]
+            # The offline renderer is for restricted environments that cannot launch a browser. Its
+            # antialiasing differs from Chromium, so compare only the changed improvement set here.
+            if renderer == 'offline':
+                command.extend(["--set", "improvements"])
+            r = subprocess.run(command, capture_output=True, text=True, timeout=240)
         except subprocess.TimeoutExpired:
             return ["[art] the lookalike check timed out after 240 s"]
         if r.returncode == 0:

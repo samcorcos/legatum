@@ -25,7 +25,7 @@ The date range is the range of dates the repository's own records give (prompt h
 | Unlock art (buildings, improvements, effects on tech cards, city projects) | `app/src/assets/unlocks/` | Generated, keyed, resized | Partly: a few beside the files, the rest in `docs/design/unlock-art/` (`buildings.md`, `buildings-2.md`, `tiles-effects.md`, `masters/`) | 2026-10-11 to 2026-11-22 |
 | Landmark map copies | `app/src/assets/landmarks/` | The world wonders' and Great Works' unlock paintings as graded for the map (`tools/art/landmark-atlas-edit.py`, `wonder-art.py`); the card copies in `unlocks/` have that grade undone by `tools/art/card-grade.py` | As for unlock art | 2026-11-01; split 2026-11-22 |
 | Resource medallions | `app/src/assets/resources/` | Generated; Niter, Oil and Silicon were generated with the existing medallions as visual references | Only for Niter, Oil and Silicon (beside the PNGs). The six originals have none; their review sheets are in `docs/design/resource-art/` | 2026-10-10 (six originals chosen), 2026-10-24 |
-| Map improvements | `app/src/assets/improvements/` | Generated, cut out, resized to 128 and 64 px | No. Review notes in `docs/design/improvements-painted/` | Not recorded |
+| Map improvements | `app/src/assets/improvements/` | Generated, cut out, resized to 128 and 64 px. Lumber Mill, Fishing Boats and Trapping Camp were generated with Codex built-in image generation on 2026-11-27, then fitted and resized by `tools/art/improvement-art.py`; their masters are listed in `tools/art/sources-manifest.json` for archive upload | For the three land improvements, `docs/design/improvements-painted/land-improvements.prompt.txt`; older pieces have no prompt, only review notes in `docs/design/improvements-painted/` | 2026-10 to 2026-11-27 |
 | Camp and ruin sprites | `app/src/assets/map-features/` | Generated (direction B of three), with remembered variants at reduced opacity | Yes, in `docs/design/camp-ruin-art/README.md` | 2026-10-10 |
 | Terrain sprites | `app/public/terrain/` | Generated as sprite atlases, then sliced | One shared prompt: `docs/design/terrain-art/stylized-sprites.prompt.txt` | 2026-10-11 |
 | Natural wonders | `app/public/wonders/` | Generated; the black ground keyed to alpha by `tools/art/wonder-vignette-key.py` (vignettes) and an earlier cut-out (sprites) | Yes, in `docs/design/natural-wonders/README.md` | Not recorded; vignettes keyed 2026-11-21 |
@@ -38,5 +38,5 @@ The date range is the range of dates the repository's own records give (prompt h
 
 ## Gaps
 
-- No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
+- No prompt is stored for the older map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.

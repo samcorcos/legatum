@@ -54,6 +54,7 @@ const SETS = [
   { name: 'city-art', kind: 'colour', crop: 'full', sizes: [48], items: pick(join(A, 'cities'), /\.png$/).filter((i) => /^[a-z]+-(hamlet|town|city|metropolis)$/.test(i.id)) },
   { name: 'city-marks', kind: 'colour', crop: 'full', sizes: [24], items: pick(join(A, 'cities', 'marks'), /-64\.png$/) },
   { name: 'map-features', kind: 'colour', crop: 'full', sizes: [32], items: [...pick(join(A, 'map-features'), /-128\.png$/)].filter((i) => !i.id.includes('remembered')) },
+  { name: 'improvements', kind: 'colour', crop: 'full', sizes: [64], items: pick(join(A, 'improvements'), /-64\.png$/) },
   { name: 'natural-wonders', kind: 'colour', crop: 'full', sizes: [32, 48], items: pick(join(app, 'public', 'wonders'), /-b-128\.png$/) },
   { name: 'portraits-people', kind: 'colour', crop: 'full', sizes: [48], items: pick(join(A, 'art'), /-360\.jpg$/).filter((i) => i.id.startsWith('people-')) },
   { name: 'era-art', kind: 'colour', crop: 'full', sizes: [64], items: pick(join(A, 'eras'), /-1280\.jpg$/) },

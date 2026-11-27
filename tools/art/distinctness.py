@@ -587,8 +587,11 @@ def main(argv=None):
     args = ap.parse_args(argv)
     cfg = json.load(open(os.path.join(HERE, 'distinctness.json')))
     if args.render or not os.path.exists(os.path.join(args.cache, 'manifest.json')):
-        node = os.environ.get('LEGATUM_NODE', 'node')
-        subprocess.check_call([node, os.path.join(HERE, 'render-sets.mjs'), '--out', args.cache])
+        if os.environ.get('LEGATUM_ART_RENDERER') == 'offline':
+            subprocess.check_call([sys.executable, os.path.join(HERE, 'render-sets.py'), '--out', args.cache])
+        else:
+            node = os.environ.get('LEGATUM_NODE', 'node')
+            subprocess.check_call([node, os.path.join(HERE, 'render-sets.mjs'), '--out', args.cache])
     if args.montage:
         n, sz = args.montage.split('@')
         write_montage(args.out, args.cache, n, int(sz), args.scale, args.cols)

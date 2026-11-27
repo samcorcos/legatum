@@ -1077,6 +1077,21 @@
    "sha256": "cc66077c5d7af94e078dc6400f9c8013323a31e13de1a583b20e7aad6d38504c"
   },
   {
+   "path": "docs/design/improvements-painted/sources/fishing-boats-source.png",
+   "bytes": 2414663,
+   "sha256": "5560b691f351824af575472aa932569681e5a90a69a669a57c02d93034b6bff8"
+  },
+  {
+   "path": "docs/design/improvements-painted/sources/lumber-mill-source.png",
+   "bytes": 2630582,
+   "sha256": "fd863290a54a675b47d2dbbbd6379dad0612fa3fec1c4921536147254c106aee"
+  },
+  {
+   "path": "docs/design/improvements-painted/sources/trapping-camp-source.png",
+   "bytes": 2357896,
+   "sha256": "d17e35951a00890b1eb0e219038aff86dcdf3ac3cfee26d0d98a5b935afcaa81"
+  },
+  {
    "path": "docs/design/insignia/sparta-level-6-far-detail.png",
    "bytes": 76799,
    "sha256": "a11cd954a715ddf3d3c2d1be73294c0d80ddf3335babd396174894b083f63e92"

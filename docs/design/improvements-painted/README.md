@@ -19,3 +19,5 @@ The review images below are tight crops of Chromium captures of an actual WASM g
 | Quartz Mine · Hills | ![Quartz Mine beside city, normal zoom](quartz-mine-normal-detail.png) | Quartz Mine beside city, far zoom (archived outside the repository) |
 
 The code still calls the Quartz Mine `LithiumMine`, matching the current rules identifier. This art change does not alter resource or upgrade rules.
+
+The Lumber Mill (Forest), Fishing Boats (Coast) and Trapping Camp (Tundra) share this painted map scale. Their generated masters, prompts and rebuild command are recorded in `land-improvements.prompt.txt`; the 128 px and 64 px map assets are in `app/src/assets/improvements/`. The source masters are kept outside git and indexed in `tools/art/sources-manifest.json` for archive upload.
