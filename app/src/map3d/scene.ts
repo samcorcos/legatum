@@ -56,6 +56,8 @@ export interface Overlays {
   selected: Hex | null;
   /** What is selected (a unit or city id): a change plays the selection burst, even on the same tile. */
   selectedKey?: string;
+  /** The selected unit, ringed on its own base so it stands out from others on its tile. */
+  selectedUnit?: number | null;
   /** The planned route of the selected unit, tile by tile from its position. */
   route: Hex[];
 }
@@ -111,6 +113,8 @@ export class MapScene {
   private selHalo: THREE.Mesh;
   private selFill: THREE.Mesh;
   private selBurst: THREE.Mesh;
+  private selUnitRing: THREE.Mesh;
+  private selUnit: number | null = null;
   private selKey = '';
   private selAt = -Infinity;
   private route: THREE.Mesh;
@@ -142,7 +146,7 @@ export class MapScene {
     this.hoverRing = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: '#fbf1cf', transparent: true, opacity: 0.85, depthTest: false, side: THREE.DoubleSide }));
     this.selRing = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: SELECT_INK, transparent: true, depthTest: false, side: THREE.DoubleSide }));
     this.selHalo = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: SELECT_HALO, transparent: true, opacity: 0.85, depthTest: false, side: THREE.DoubleSide }));
-    this.selFill = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: SELECT_INK, transparent: true, opacity: 0.2, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+    this.selFill = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: SELECT_INK, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide }));
     // The burst: a flat hexagonal band round the origin, placed on the tile and scaled out.
     const band: number[] = [];
     for (let e = 0; e < 6; e++) {
@@ -151,9 +155,12 @@ export class MapScene {
     }
     this.selBurst = new THREE.Mesh(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(band, 3)),
       new THREE.MeshBasicMaterial({ color: SELECT_INK, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
-    this.selFill.renderOrder = 5; this.selHalo.renderOrder = 5;
+    this.selHalo.renderOrder = 5;
     for (const o of [this.selFill, this.selHalo, this.selBurst]) { o.visible = false; this.scene.add(o); }
     this.selBurst.renderOrder = 6;
+    this.selUnitRing = new THREE.Mesh(new THREE.RingGeometry(0.128, 0.152, 40).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: SELECT_INK, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+    this.selUnitRing.renderOrder = 7; this.selUnitRing.visible = false; this.scene.add(this.selUnitRing);
     this.route = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: '#f3dc8a', transparent: true, opacity: 0.9, depthTest: false, side: THREE.DoubleSide }));
     for (const o of [this.hoverRing, this.selRing, this.route]) { o.renderOrder = 6; o.visible = false; this.scene.add(o); }
   }
@@ -706,6 +713,7 @@ export class MapScene {
     ring(this.selHalo, o.selected, 0.038, 0.85, 0.985);
     ring(this.selRing, o.selected, 0.04, 0.885, 0.955);
     ring(this.selFill, o.selected, 0.036, 0, 0.87);
+    this.selUnit = o.selectedUnit ?? null;
     const key = o.selected ? o.selectedKey ?? `${o.selected.q},${o.selected.r}` : '';
     if (key !== this.selKey) { this.selKey = key; this.selAt = key ? performance.now() : -Infinity; }
     const si = o.selected ? tileIndexOf(o.selected, w, h) : -1;
@@ -1052,9 +1060,12 @@ export class MapScene {
 
   /** The selection mark's breathing and its burst (held still with motion off). */
   private stepSelection(now: number) {
+    const fig = this.selUnit != null ? this.unitGroups.get(this.selUnit) : undefined;
+    this.selUnitRing.visible = !!fig && this.selRing.visible;
+    if (fig) this.selUnitRing.position.set(fig.position.x, fig.position.y + 0.012, fig.position.z);
     if (!this.selRing.visible) { this.selBurst.visible = false; return; }
     const pulse = selectionBreath(this.uniforms.uTime.value * 1000, this.still);
-    (this.selFill.material as THREE.MeshBasicMaterial).opacity = 0.14 + 0.18 * pulse;
+    (this.selFill.material as THREE.MeshBasicMaterial).opacity = 0.08 + 0.12 * pulse;
     (this.selRing.material as THREE.MeshBasicMaterial).opacity = 0.8 + 0.2 * pulse;
     const burst = this.still ? null : selectionBurst(now - this.selAt);
     this.selBurst.visible = !!burst;

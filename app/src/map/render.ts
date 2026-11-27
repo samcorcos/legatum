@@ -1473,7 +1473,7 @@ function selectionReach(hexPx: number, bursting: boolean): number {
 }
 const selectionHalo = (hexPx: number) => Math.max(3, Math.min(6, hexPx * 0.2));
 
-/** The selection: a bright azure tile edge on a dark halo, a breathing wash, a ring round the token, and the burst when it changes (see selectionMark.ts). */
+/** The selection: a bright white tile edge on a dark halo, a breathing wash, a ring round the token, and the burst when it changes (see selectionMark.ts). */
 function drawSelection(ctx: CanvasRenderingContext2D, x: number, y: number, hexPx: number, pulse: number, burst: { scale: number; alpha: number } | null) {
   const r = selectionRadius(hexPx);
   const halo = selectionHalo(hexPx), line = halo * 0.5;

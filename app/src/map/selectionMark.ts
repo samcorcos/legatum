@@ -1,10 +1,10 @@
-// The selection mark, shared by the 2D and 3D maps: a bright azure tile edge on a dark halo, a breathing wash
-// inside it, and a ring that bursts out from the tile when the selection changes. Azure keeps it apart from the
-// advisor's gilt ring, the red route and enemy marks, and it reads for red-green colour blindness; the dark halo
-// keeps it visible on pale parchment, snow and sea alike.
+// The selection mark, shared by the 2D and 3D maps: a bright white tile edge on a dark halo, a breathing wash
+// inside it, a ring round the unit, and a ring that bursts out from the tile when the selection changes. White is
+// no empire's colour (they are all muted), stays apart from the advisor's gilt ring and the red route and enemy
+// marks, and needs no colour vision; the dark halo keeps it visible on pale parchment, snow and sea alike.
 
 /** The mark's bright ink. */
-export const SELECT_INK = '#2fb4ff';
+export const SELECT_INK = '#ffffff';
 /** The dark halo under the bright ink. */
 export const SELECT_HALO = '#0b1924';
 /** How long the burst lasts when the selection changes, in ms. */
