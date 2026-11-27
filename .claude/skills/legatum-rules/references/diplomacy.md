@@ -183,8 +183,8 @@ says whether it is on.
   a red cost chip on each offer, "You ask" a green "+N if accepted" chip. With deals on an empire's detail runs: the
   Gold field, the offers, Give Gold (`RivalGift`, a met empire not at War, a gift to the team's first living member,
   same `GoldStepper`), Close borders or Leave the Alliance, then Declare War below a rule. Offer Open Borders shows at
-  Peace while closed ("If they accept, it starts on turn N."), Close borders while open. A queued action keeps its
-  button pressed with a "Queued: Offer Open Borders. You ask 40 Gold. Undo" line under it, as gifts do. An incoming
+  Peace while closed ("If they accept, it starts on turn N."), Close borders while open. A queued action replaces its
+  button with a ready line and Cancel ("Offer ready: it is sent when you end the turn. You ask 40 Gold if they accept. Cancel", `Action` in `DiplomacyPanel.tsx`, 2026-11-27), as gifts do, so a second click cannot silently take the order back. An incoming
   offer's headline carries its Gold ("Switzerland asks 40 Gold for Peace", "… offers Peace and 40 Gold") and its
   For-you terms say "You pay 40 Gold." or "You get 40 Gold."; the turn button and the advisor name it by kind
   (`turnFlow.ts::offerDecisionLabel`: "Open Borders with X: your units may enter each other’s land · asks 40 Gold ·
