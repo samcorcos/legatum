@@ -272,6 +272,16 @@ export function buildCombatPlan(events: Event[], before: PlayerView | null, afte
     const t = impact.get(i)!;
     if (e.defender.kind === 'Unit') { const id = e.defender.unit; hpStep(`u${id}`, before?.units.find((u) => u.id === id)?.hp, t, e.defender_hp_after); }
     else { const id = e.defender.city; hpStep(`c${id}`, before?.cities.find((c) => c.id === id)?.hp, t, e.defender_hp_after); }
+    const a = attackerUnit(e.attacker);
+    if (a != null && !e.ranged) hpStep(`u${a}`, before?.units.find((u) => u.id === a)?.hp, t, e.attacker_hp_after);
+  });
+  // Projectiles can overtake one another: accumulate Walls loss in displayed impact order.
+  const cityHits = [...impact].filter(([i]) => {
+    const e = events[i]; return e.type === 'Battle' && e.defender.kind === 'City';
+  }).sort(([i, t], [j, u]) => t - u || i - j);
+  for (const [i, t] of cityHits) {
+    const e = events[i];
+    if (e.type !== 'Battle') continue;
     if (e.defender.kind === 'City') {
       const id = e.defender.city, old = before?.cities.find((c) => c.id === id);
       const tile = tileIndex(e.at, after.width, after.height);
@@ -287,9 +297,7 @@ export function buildCombatPlan(events: Event[], before: PlayerView | null, afte
         }
       }
     }
-    const a = attackerUnit(e.attacker);
-    if (a != null && !e.ranged) hpStep(`u${a}`, before?.units.find((u) => u.id === a)?.hp, t, e.attacker_hp_after);
-  });
+  }
   for (const list of hp.values()) list.sort((x, y) => x.t - y.t);
 
   // Losses: a unit falls when the blow that killed it lands.

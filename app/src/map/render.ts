@@ -21,7 +21,7 @@ import type { LookId } from '../brand/look';
 import { SELECT_HALO, SELECT_INK, selectionBreath, selectionBurst } from './selectionMark';
 import { MAP_STYLES, mapBorderColor, mapPlayerColor, type MapStyle } from './style';
 import { cityDrawDrop, cityDrawScale, cityStem, cityTier } from './cityArt';
-import { TerrainCache, TOWN_OVAL } from './terrain';
+import { CITY_DROP, TerrainCache, TOWN_OVAL } from './terrain';
 import { getBorderVariant } from './borderVariant';
 import { getTerrainVariant } from './terrainVariant';
 import { BANNER_BOTTOM, CITY_UNIT_DROP, HEX_SIZE, K, PIP_HALF, sealRadius, boundary, centerX, centerY, hexPath, isFar, neighborIndex, tokenHalf, tracePolylines } from './grid';
@@ -431,8 +431,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     if (repair && moments!.t >= repair.t) return refill!;
     return (fxNow ? hpAt(fxNow.plan, `w${c.id}`, fxNow.t) : undefined) ?? refill ?? c.walls_hp ?? 0;
   };
-  const cityBar = (c: CityView) => bannerBarOf(c, cityHp(c), cityWalls(c), Math.max(c.walls_max_hp ?? 0, fxNow?.plan.wallBars.get(c.id)?.max ?? 0));
   const cityHp = (c: CityView) => (fxNow ? hpAt(fxNow.plan, `c${c.id}`, fxNow.t) : undefined) ?? c.hp;
+  const cityBar = (c: CityView) => bannerBarOf(c, cityHp(c), cityWalls(c), Math.max(c.walls_max_hp ?? 0, fxNow?.plan.wallBars.get(c.id)?.max ?? 0));
   const idleView: IdleView | null = inp.idle ? { toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, far: isFar(hexPx), w, h, dpr } : null;
   const idleT = inp.idleT ?? inp.time;
   let idleLive = idleView ? drawWaterGlints(ctx, view, idleT, idleView) : 0;
@@ -1280,7 +1280,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
         if (!c) return null;
         const p = S2(c.pos), era = Math.max(0, (view.players.find((x) => x.id === c.owner)?.era ?? 1) - 1);
         // The same ground anchor used by the town/ring artwork, not the hex centre above the roofs.
-        return { x: p.x, y: p.y + cityDrawDrop(cityDrawScale(cityStem(era, cityTier(c.population)))) * z };
+        return { x: p.x, y: p.y + (far ? CITY_DROP : cityDrawDrop(cityDrawScale(cityStem(era, cityTier(c.population))))) * z };
       },
     }, (d) => deathPos(inp.fx!.plan, d));
     const fms = performance.now() - f0;

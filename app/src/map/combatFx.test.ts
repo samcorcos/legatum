@@ -244,6 +244,26 @@ describe('Walls playback', () => {
     expect(bannerBarOf(after.cities[0], after.cities[0].hp).walls).toBe(false);
   });
 
+  it.each([false, true])('keeps mixed-speed volley Walls damage monotonic (breach: %s)', (breach) => {
+    const old = walled();
+    old.players = old.players.map((p) => ({ ...p, era: 2 }));
+    old.units = old.units.map((u) => ({ ...u, owner: 2, siege: u.id === 7, kind: u.id === 7 ? 'Archer' : 'Crossbowman' }));
+    const slow = hit(breach ? 40 : 20), fast = { ...hit(25), attacker: 8 } as Event;
+    const after = { ...old, cities: [{ ...old.cities[0], walls_hp: breach ? 0 : 15, walls_max_hp: breach ? 0 : 100 }] };
+    const events: Event[] = [slow, fast];
+    if (breach) events.push({ type: 'WallsBreached', city: 1, owner: 2 });
+    const plan = buildCombatPlan(events, old, after)!;
+    const [slowTime, fastTime] = plan.shots.map((s) => s.launch + s.flight);
+    expect(fastTime).toBeLessThan(slowTime);
+    expect(plan.hp.get('w1')).toEqual([{ t: -Infinity, hp: 60 }, { t: fastTime, hp: 35 }, { t: slowTime, hp: breach ? 0 : 15 }]);
+    let previous = 60;
+    for (let t = 0; t <= slowTime + HP_DRAIN_MS; t += 10) {
+      const current = hpAt(plan, 'w1', t)!;
+      expect(current).toBeLessThanOrEqual(previous); previous = current;
+    }
+    expect(plan.breaches).toEqual(breach ? [{ city: 1, at: world(pos), t: slowTime }] : []);
+  });
+
   it('never reconstructs Walls damage or breach effects from a hidden city', () => {
     const old = walled(); old.cities[0].visible = false;
     const events: Event[] = [hit(80), { type: 'WallsBreached', city: 1, owner: 2 }];
