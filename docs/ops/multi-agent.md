@@ -171,12 +171,17 @@ Peer-review (<reviewer_agent> reviewing <author_agent>) at <full_head_sha>
 ### 4. Prevent concurrent merge races
 Before merging:
 1. Confirm the PR is not a draft, has no merge conflicts, and is up to date with `origin/master`.
-2. If `origin/master` moved since CI ran and both sides changed code, update the branch (`gh pr update-branch <N>`) and wait for `ci-ok` to go green on the new head SHA before merging (re-confirming the diff if conflict resolution occurred).
+2. If `origin/master` moved since CI ran, update the branch (`gh pr update-branch <N>`) and re-confirm the diff (and any conflict resolution) at the new head SHA.
 3. Merge cleanly with squash commit and delete the branch:
    ```sh
    gh pr merge <N> --squash --delete-branch
    ```
-4. Remove `needs-review` and `reviewing:<self>` labels (if GitHub did not auto-close them cleanly).
+   If the PR is **outside the human-only fence**, you have already posted an independent `PASS` verdict (`reviewer != author`) plus all required specialist verdicts at the **exact current head SHA**, and `ci-ok` is the only remaining check still running, you may arm GitHub Auto-Merge instead of handing off to wait for the next heartbeat:
+   ```sh
+   gh pr merge <N> --squash --delete-branch --auto
+   ```
+   **Never** arm `--auto` on your own model family's PR, an unreviewed or `changes-requested` PR, a fork/outside PR, or any human-only governance/security fence PR.
+4. Remove `needs-review` and `reviewing:<self>` labels once merged or once `--auto` is armed (if `ci-ok` fails, GitHub will not merge and Priority 2 picks up the failure).
 
 ### 5. Max 2 review rounds (no infinite ping-pong)
 - If blocking issues are found: swap `needs-review` + `reviewing:<self>` -> `changes-requested` and list concrete blockers.
