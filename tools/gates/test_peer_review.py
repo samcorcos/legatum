@@ -314,5 +314,219 @@ class EvaluationTests(unittest.TestCase):
         self.assertIs(gate.common.git, original)
 
 
+class MultiPRFakeAPI:
+    repository = REPOSITORY
+    comments = gate.GitHub.comments
+
+    def __init__(self, prs, comments_by_pr, commit_pulls=None):
+        self.prs = prs
+        self.comments_by_pr = comments_by_pr
+        self.commit_pulls = commit_pulls or {}
+        self.calls = []
+
+    def request(self, method, path, data=None):
+        self.calls.append((method, path, copy.deepcopy(data)))
+        if path.startswith("/pulls/"):
+            number = int(path.split("/")[2])
+            return copy.deepcopy(self.prs[number])
+        if path == "/check-runs":
+            return {"id": 456}
+        if path.startswith("/issues/"):
+            number = int(path.split("/")[2])
+            page = int(path.rsplit("=", 1)[1])
+            rows = self.comments_by_pr.get(number, [])
+            return copy.deepcopy(rows[(page - 1) * 100:page * 100])
+        if path.startswith("/commits/") and "/pulls" in path:
+            sha = path.split("/")[2]
+            return copy.deepcopy(self.commit_pulls.get(sha, []))
+        if method == "PATCH":
+            return {}
+        raise AssertionError((method, path))
+
+
+class MergeGroupTests(unittest.TestCase):
+    MG_HEAD = "d" * 40
+    PR1_HEAD = "1" * 40
+    PR2_HEAD = "2" * 40
+
+    def make_pr(self, number, sha, author="chatgpt", **overrides):
+        row = pr()
+        row["number"] = number
+        row["head"]["sha"] = sha
+        row["head"]["ref"] = f"{author}/task-{number}"
+        row["labels"] = [{"name": f"author:{author}"}]
+        row.update(overrides)
+        return row
+
+    def make_mg(self, head_sha=None, base_sha=BASE, head_ref=None):
+        return {
+            "head_sha": head_sha or self.MG_HEAD,
+            "base_sha": base_sha,
+            "base_ref": "refs/heads/master",
+            "head_ref": head_ref or f"refs/heads/gh-readonly-queue/master/pr-412-{BASE[:7]}",
+        }
+
+    def test_single_and_multi_pr_merge_group_success(self):
+        prs = {
+            411: self.make_pr(411, self.PR1_HEAD, author="claude"),
+            412: self.make_pr(412, self.PR2_HEAD, author="gemini"),
+        }
+        comments = {
+            411: [comment("claude", f"{DOCS}: PASS", number=1, sha=self.PR1_HEAD),
+                  comment("gemini", "peer: PASS", number=2, sha=self.PR1_HEAD)],
+            412: [comment("gemini", f"{DOCS}: PASS", number=3, sha=self.PR2_HEAD),
+                  comment("chatgpt", "peer: PASS", number=4, sha=self.PR2_HEAD)],
+        }
+        for queued in [[(412, self.PR2_HEAD)], [(412, self.PR2_HEAD), (411, self.PR1_HEAD)]]:
+            with self.subTest(queued=queued):
+                api = MultiPRFakeAPI(prs, comments)
+                ok = gate.run_merge_group(
+                    api, self.make_mg(),
+                    resolve_prs=lambda *_: queued,
+                    classify=lambda *_: {DOCS},
+                )
+                self.assertTrue(ok)
+                self.assertEqual(api.calls[0][1], "/check-runs")
+                self.assertEqual(api.calls[0][2]["head_sha"], self.MG_HEAD)
+                self.assertEqual(api.calls[0][2]["status"], "in_progress")
+                self.assertEqual(api.calls[-1][2]["conclusion"], "success")
+
+    def test_multi_pr_merge_group_fails_naming_failing_pr(self):
+        cases = [
+            ("missing_approval", lambda prs, comments: comments.__setitem__(411, [])),
+            ("stale_approval", lambda prs, comments: comments.__setitem__(
+                411, [comment("gemini", f"peer: PASS\n{DOCS}: PASS", number=1, sha=BASE)])),
+            ("fail_verdict", lambda prs, comments: comments[411].append(
+                comment("chatgpt", "peer: FAIL", number=9, sha=self.PR1_HEAD, day=2))),
+            ("changes_requested", lambda prs, comments: prs[411]["labels"].append({"name": "changes-requested"})),
+            ("head_sha_mismatch", lambda prs, comments: prs[411]["head"].__setitem__("sha", "9" * 40)),
+            ("closed_pr", lambda prs, comments: prs[411].__setitem__("state", "closed")),
+        ]
+        for name, mutate in cases:
+            with self.subTest(case=name):
+                prs = {
+                    411: self.make_pr(411, self.PR1_HEAD, author="claude"),
+                    412: self.make_pr(412, self.PR2_HEAD, author="gemini"),
+                }
+                comments = {
+                    411: [comment("gemini", f"peer: PASS\n{DOCS}: PASS", number=1, sha=self.PR1_HEAD)],
+                    412: [comment("chatgpt", f"peer: PASS\n{DOCS}: PASS", number=2, sha=self.PR2_HEAD)],
+                }
+                mutate(prs, comments)
+                api = MultiPRFakeAPI(prs, comments)
+                ok = gate.run_merge_group(
+                    api, self.make_mg(),
+                    resolve_prs=lambda *_: [(412, self.PR2_HEAD), (411, self.PR1_HEAD)],
+                    classify=lambda *_: {DOCS},
+                )
+                self.assertFalse(ok)
+                self.assertEqual(api.calls[-1][2]["conclusion"], "failure")
+                self.assertIn("PR #411", api.calls[-1][2]["output"]["summary"])
+
+    def test_empty_or_unresolvable_merge_group_fails_closed(self):
+        api = MultiPRFakeAPI({}, {})
+        with self.assertRaisesRegex(ValueError, "zero pull requests"):
+            gate.run_merge_group(api, self.make_mg(), resolve_prs=lambda *_: [])
+        self.assertEqual(api.calls[-1][2]["conclusion"], "failure")
+
+        api = MultiPRFakeAPI({}, {})
+        bad_mg = self.make_mg(head_ref="refs/heads/feature/not-a-queue")
+        with self.assertRaisesRegex(ValueError, "Invalid merge_group head_ref"):
+            gate.run_merge_group(api, bad_mg, resolve_prs=lambda *_: [(412, self.PR2_HEAD)])
+        self.assertEqual(api.calls[-1][2]["conclusion"], "failure")
+
+    def test_real_git_merge_group_prs_resolution_and_validation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source"
+            checkout = Path(directory) / "checkout"
+            def git(where, *args):
+                return subprocess.check_output(["git", "-C", str(where), *args], stderr=subprocess.DEVNULL, text=True).strip()
+            source.mkdir()
+            git(source, "init", "-b", "master")
+            git(source, "config", "user.name", "Test")
+            git(source, "config", "user.email", "test@example.com")
+            (source / "README.md").write_text("Base\n")
+            git(source, "add", ".")
+            git(source, "commit", "-m", "Base")
+            base_sha = git(source, "rev-parse", "HEAD")
+
+            # PR 411 branch
+            git(source, "checkout", "-b", "claude/pr-411", base_sha)
+            (source / "a.txt").write_text("pr 411\n")
+            git(source, "add", ".")
+            git(source, "commit", "-m", "PR 411")
+            pr1_sha = git(source, "rev-parse", "HEAD")
+
+            # PR 412 branch
+            git(source, "checkout", "-b", "gemini/pr-412", base_sha)
+            (source / "b.txt").write_text("pr 412\n")
+            git(source, "add", ".")
+            git(source, "commit", "-m", "PR 412")
+            pr2_sha = git(source, "rev-parse", "HEAD")
+
+            # Build merge-group branch with two 2-parent merge commits
+            mg_ref = f"refs/heads/gh-readonly-queue/master/pr-412-{base_sha[:7]}"
+            git(source, "checkout", "-b", "queue-build", base_sha)
+            git(source, "merge", "--no-ff", "-m", "Merge PR 411", pr1_sha)
+            git(source, "merge", "--no-ff", "-m", "Merge PR 412", pr2_sha)
+            mg_head = git(source, "rev-parse", "HEAD")
+            git(source, "update-ref", mg_ref, mg_head)
+            git(source, "checkout", "master")
+
+            subprocess.check_call(["git", "clone", "--quiet", "--branch", "master", str(source), str(checkout)])
+
+            commit_pulls = {
+                pr1_sha: [self.make_pr(411, pr1_sha, author="claude")],
+                pr2_sha: [self.make_pr(412, pr2_sha, author="gemini")],
+            }
+            api = MultiPRFakeAPI({}, {}, commit_pulls=commit_pulls)
+            mg = self.make_mg(head_sha=mg_head, base_sha=base_sha, head_ref=mg_ref)
+            resolved = gate.merge_group_prs(api, mg, repo=str(checkout))
+            self.assertEqual(resolved, [(412, pr2_sha), (411, pr1_sha)])
+            # Trusted master HEAD must never move
+            self.assertEqual(git(checkout, "rev-parse", "HEAD"), base_sha)
+
+            # Single-parent fast-forward merge group
+            ff_ref = f"refs/heads/gh-readonly-queue/master/pr-411-{base_sha[:7]}"
+            git(source, "update-ref", ff_ref, pr1_sha)
+            mg_ff = self.make_mg(head_sha=pr1_sha, base_sha=base_sha, head_ref=ff_ref)
+            self.assertEqual(gate.merge_group_prs(api, mg_ff, repo=str(checkout)), [(411, pr1_sha)])
+
+            # Named PR in head_ref missing from resolved set -> fail closed
+            wrong_ref = f"refs/heads/gh-readonly-queue/master/pr-999-{base_sha[:7]}"
+            git(source, "update-ref", wrong_ref, mg_head)
+            mg_wrong = self.make_mg(head_sha=mg_head, base_sha=base_sha, head_ref=wrong_ref)
+            with self.assertRaisesRegex(ValueError, "PR #999"):
+                gate.merge_group_prs(api, mg_wrong, repo=str(checkout))
+
+            # Zero commits (base_sha == head_sha) -> fail closed
+            empty_ref = f"refs/heads/gh-readonly-queue/master/pr-412-empty"
+            git(source, "update-ref", empty_ref, base_sha)
+            mg_empty = self.make_mg(head_sha=base_sha, base_sha=base_sha, head_ref=empty_ref)
+            with self.assertRaisesRegex(ValueError, "no commits"):
+                gate.merge_group_prs(api, mg_empty, repo=str(checkout))
+
+            # Unresolvable commit (no matching open PR) -> fail closed
+            api_missing = MultiPRFakeAPI({}, {}, commit_pulls={pr2_sha: [self.make_pr(412, pr2_sha, author="gemini")]})
+            with self.assertRaisesRegex(ValueError, "Cannot uniquely map"):
+                gate.merge_group_prs(api_missing, mg, repo=str(checkout))
+
+    def test_main_dispatches_merge_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            event = Path(directory) / "event.json"
+            event.write_text(json.dumps({"merge_group": self.make_mg()}))
+            env = {"GITHUB_EVENT_PATH": str(event), "GITHUB_EVENT_NAME": "merge_group",
+                   "GITHUB_REPOSITORY": REPOSITORY, "GITHUB_TOKEN": "test"}
+            prs = {412: self.make_pr(412, self.PR2_HEAD, author="gemini")}
+            comments = {412: [comment("chatgpt", "peer: PASS", number=1, sha=self.PR2_HEAD)]}
+            api = MultiPRFakeAPI(prs, comments)
+            run_mg = gate.run_merge_group
+            with patch.dict(os.environ, env), patch.object(gate, "GitHub", return_value=api), \
+                    patch.object(gate, "run_merge_group",
+                                 side_effect=lambda a, mg: run_mg(a, mg, resolve_prs=lambda *_: [(412, self.PR2_HEAD)], classify=lambda *_: set())):
+                self.assertEqual(gate.main(), 0)
+            self.assertEqual(api.calls[-1][2]["conclusion"], "success")
+
+
 if __name__ == "__main__":
     unittest.main()
