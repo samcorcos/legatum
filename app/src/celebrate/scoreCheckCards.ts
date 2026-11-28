@@ -69,6 +69,7 @@ const rowName = (r: { unmet: boolean; label: string }) => (r.unmet ? UNKNOWN_EMP
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const ord = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`;
 const and = (names: string[]) => names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+const or = (names: string[]) => names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** The score check for the viewer when Age `era` (1-based) begins, opened by `first`. */
@@ -171,7 +172,7 @@ function capitalLine(view: PlayerView, team: Set<PlayerId>): SheetLine {
   return { key: 'capitals', name: 'Rival capitals', terms: '1 VP each', boxes, how: left ? 'Take a rival’s original capital' : 'You hold them all', detail, open: left };
 }
 
-/** World wonders: 2 VP each while you hold its city. Your held ones, then the ones you could build now. */
+/** World wonders: 2 VP each while you hold its city. Your held ones, plus at most one open buildable slot until you complete your empire's wonder. */
 function wonderLine(view: PlayerView): SheetLine {
   const me = view.players.find((p) => p.id === view.me)!;
   const known = new Set(view.research.known);
@@ -182,23 +183,36 @@ function wonderLine(view: PlayerView): SheetLine {
   const ownWork = view.great_works?.find((g) => g.player === view.me);
   if (heldVp > heldKinds.length && ownWork?.completed && !heldKinds.includes(ownWork.completed)) heldKinds.push(ownWork.completed);
   const heldNames = heldKinds.map((b) => BUILDING_NAME[b]);
-  const open = GREAT_WORKS.filter((b) => known.has(BUILDING_STATS[b].requires as never) && !built(b));
-  const later = GREAT_WORKS.filter((b) => !known.has(BUILDING_STATS[b].requires as never) && !built(b));
+  const ownBuilt = !!ownWork?.completed;
+  const building = ownWork?.building && !ownBuilt ? ownWork : null;
+  const open = ownBuilt ? [] : GREAT_WORKS.filter((b) => known.has(BUILDING_STATS[b].requires as never) && !built(b));
+  const later = ownBuilt ? [] : GREAT_WORKS.filter((b) => !known.has(BUILDING_STATS[b].requires as never) && !built(b));
+  const openBox: Box | null = building
+    ? { state: 'open', span: 2, icon: buildingIconName(building.building!, me.faction), title: `${BUILDING_NAME[building.building!]}: under construction` }
+    : open.length === 1
+      ? { state: 'open', span: 2, icon: buildingIconName(open[0], me.faction), title: `${BUILDING_NAME[open[0]]}: nobody has built it yet` }
+      : open.length > 1
+        ? { state: 'open', span: 2, icon: GREAT_WORK_ICON, title: `Your world wonder: build the ${or(open.map((b) => BUILDING_NAME[b]))} (one per empire)` }
+        : null;
   const boxes: Box[] = [
     ...Array.from({ length: heldVp }, (_, i): Box => {
       const b = heldKinds[i];
       return { state: 'held', span: 2, icon: b ? buildingIconName(b, me.faction) : GREAT_WORK_ICON, title: `${b ? BUILDING_NAME[b] : 'A world wonder'}: yours while you hold its city` };
     }),
-    ...open.map((b): Box => ({ state: 'open', span: 2, icon: buildingIconName(b, me.faction), title: `${BUILDING_NAME[b]}: nobody has built it yet` })),
+    ...(openBox ? [openBox] : []),
   ];
-  const building = ownWork?.building && !ownWork.completed ? ownWork : null;
-  const how = building ? `Building the ${BUILDING_NAME[building.building!]}${building.turns != null ? `: ${plural(building.turns, 'turn')} left` : ''}`
-    : open.length ? `Build the ${and(open.slice(0, 2).map((b) => BUILDING_NAME[b]))}`
+  const how = ownBuilt ? 'Capture a rival’s wonder'
+    : building ? `Building the ${BUILDING_NAME[building.building!]}${building.turns != null ? `: ${plural(building.turns, 'turn')} left` : ''}`
+    : open.length ? `Build the ${or(open.slice(0, 2).map((b) => BUILDING_NAME[b]))}`
     : later.length ? `Next: the ${BUILDING_NAME[later[0]]} (needs ${TECH_NAME[BUILDING_STATS[later[0]].requires as never]})`
     : 'Every world wonder is built';
   const keep = heldNames.length ? `You hold the ${and(heldNames)}: lose its city and you lose its 2 VP.` : '';
-  const detail = keep || (open.length || later.length ? 'Only one of each can be built. Whoever holds its city scores 2 VP.' : 'Capture a wonder’s city to take its 2 VP.');
-  return { key: 'wonders', name: 'World wonders', terms: '2 VP each', boxes, how, detail, open: open.length * 2 };
+  const detail = ownBuilt
+    ? (keep ? `${keep} Each empire may build only one; capture others for more VP.` : 'Each empire may build only one world wonder. Capture a wonder’s city to score 2 VP.')
+    : (open.length || later.length)
+      ? (keep ? `${keep} You can still build one world wonder.` : 'Each empire may build one world wonder; only one of each exists. Whoever holds its city scores 2 VP.')
+      : (keep || 'Capture a wonder’s city to take its 2 VP.');
+  return { key: 'wonders', name: 'World wonders', terms: '2 VP each', boxes, how, detail, open: openBox ? 2 : 0 };
 }
 
 /** Your faction goal (and any rival's held goal you hold). None for a faction without a goal. */
