@@ -135,6 +135,19 @@ For an actual blocking decision/access problem or stuck review, finish every rev
 
 Remove `needs-human` when its action is resolved or a new revision invalidates merge readiness, and route back to the appropriate agent state. Restore it only when the current revision is decision-ready again. Reassess older labels using these criteria without repeating unchanged notifications.
 
+### Issue decisions use the same actionable inbox
+
+For issue tickets, `needs-human` also means a decision is ready now, after agent evaluation (maintainer, 2026-11-28). `needs-review` routes agent review; it is not a second human inbox. Resolve issues autonomously when existing authority and settled policy suffice. Do not escalate every suggestion simply because it is new.
+
+Before escalating a feature proposal, faction idea or other unresolved choice, inspect the relevant code, rules and settled design guidance, complete applicable reviews, and post a readable issue comment containing:
+- **Proposal/problem:** what is being requested and why it matters, in plain language.
+- **Agent recommendation and rationale:** implement, reject/close, revise, defer, or choose a specific option. Name the agent, explain the tradeoffs and evidence, and distinguish judgment from measured results. Include actual differing agent opinions when present; do not invent consensus or require multiple agents for every ticket.
+- **Decision needed:** the precise question only the maintainer can resolve, with options and a recommended next step. State missing evidence or inaccessible design context and how it limits the recommendation.
+
+For a proposed faction, assess its identity, distinctive rule, compensating drawback, strategic counters and fit with settled design. A plausible idea is not automatically a good addition; recommend rejection or revision when warranted, without claiming unrun balance simulations. The issue recommendation is about whether/how to proceed, not whether to merge code. Issue decisions do not require PR commit hashes or CI unless those are relevant to the decision.
+
+Once that preparation is complete, add `needs-human` and notify the maintainer. After a decision, remove the label and close, revise or route approved scoped work to `agent:ready` as appropriate. Record the maintainer's reasoning and corrections in the matching skill (and the design decision log when applicable), distinguishing their decision from the agent's earlier recommendation, so future autonomous decisions use the feedback. Recommendations should expose the agent's judgment for calibration, not merely repeat the proposal.
+
 ### Notify the maintainer directly
 
 When handing a PR to the maintainer, finish with a readable top-level conversation comment. Lead with what the change does for the game or workflow and the recommendation, not process jargon. Include:

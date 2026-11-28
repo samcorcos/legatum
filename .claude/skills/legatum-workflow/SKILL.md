@@ -11,6 +11,8 @@ Current rules only, one line each with the date and who. Detail, the user's full
 
 ## Source of truth, merging and gates
 
+- Issue decisions (user, 2026-11-28): apply the actionable `needs-human` inbox to issues too. Evaluate first against code, rules and settled design; summarize the proposal and give an attributed implement/reject/revise/defer recommendation with reasons, uncertainty and the exact human decision. `needs-review` remains agent routing. Resolve independently when authorized; after human feedback, record the reasoning in the matching skill/design log and route or close the issue. Recommendations make agent judgment visible and improve future decisions.
+
 - Actionable human inbox (user, 2026-11-28): `needs-human` means a concrete human action is ready now, not that a PR eventually needs a human merge. Governance PRs remain Draft/claimed, changes-requested or needs-review until implementation, current-head reviews, CI and a readable recommendation are ready. Genuine blocked decisions require all independently possible preparation plus explicit options/recommendation and remaining blocked checks. Remove the label when readiness is invalidated or the action resolved. The merge fence applies regardless of labels.
 
 - Human-review summaries (user, 2026-11-28): end a human handoff with a readable PR comment explaining what changes, each involved agent’s actual merge/request-changes/not-yet-reviewed recommendation, current-head checks and concerns, and the precise human action. Distinguish author opinion from independent review; never invent joint approval. Refresh on material changes, not to compete with bot comments. Canonical verdicts still apply.
