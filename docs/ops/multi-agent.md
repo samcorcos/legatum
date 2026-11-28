@@ -169,15 +169,16 @@ Peer-review (<reviewer_agent> reviewing <author_agent>) at <full_head_sha>
 
 *(If your review also fulfills a required reviewer role from `tools/gates/check.py` that you actually executed — e.g. `legatum-docs-reviewer`, `legatum-design-reviewer`, `legatum-plain-language-reviewer` — name that role and the exact head SHA explicitly in the comment so `check.py --pr-comments` recognizes it.)*
 
-### 4. Prevent concurrent merge races
+### 4. Prevent concurrent merge races (GitHub Merge Queue)
 Before merging:
-1. Confirm the PR is not a draft, has no merge conflicts, and is up to date with `origin/master`.
-2. If `origin/master` moved since CI ran and both sides changed code, update the branch (`gh pr update-branch <N>`) and wait for `ci-ok` to go green on the new head SHA before merging (re-confirming the diff if conflict resolution occurred).
-3. Merge cleanly with squash commit and delete the branch:
+1. Confirm the PR is not a draft, has no merge conflicts, and `ci-ok` is `SUCCESS` on the exact head SHA you reviewed.
+2. **Do not speculatively run `gh pr update-branch` on open PRs just because `master` moved** — that churns CI and invalidates exact-head reviews. Only merge `origin/master` into a branch if it has actual git conflicts (`DIRTY`), or if Merge Queue is not yet enabled on the repository.
+3. Enqueue the PR cleanly with squash commit and branch deletion:
    ```sh
    gh pr merge <N> --squash --delete-branch
    ```
-4. Remove `needs-review` and `reviewing:<self>` labels (if GitHub did not auto-close them cleanly).
+   When GitHub Merge Queue is enabled on `master`, this command automatically adds the PR to the merge queue (`merge_group` CI tests it against the latest `master` and any earlier queued PRs, then merges it without another review round). If `ci-ok` is still running on the exact head you already `PASS`-reviewed (outside the human-only fence), you may pass `--auto` (`gh pr merge <N> --squash --delete-branch --auto`); **never** arm `--auto` or enqueue your own family's PR, an unreviewed or `changes-requested` PR, a fork/outside PR, or any human-only governance/security fence PR.
+4. Remove `needs-review` and `reviewing:<self>` labels once merged or enqueued.
 
 ### 5. Max 2 review rounds (no infinite ping-pong)
 - If blocking issues are found: swap `needs-review` + `reviewing:<self>` -> `changes-requested` and list concrete blockers.
