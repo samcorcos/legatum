@@ -1,0 +1,166 @@
+{
+  "engine_base": "e15aa2da59628b8a41538082fc27e2c6feb0620c",
+  "games_per_arm": 2,
+  "turn_cap": 180,
+  "rows": [
+    {
+      "arm": "baseline",
+      "seed": 7101,
+      "seat": 3,
+      "faction": "Egypt",
+      "finished": false,
+      "won": false,
+      "end_turn": 181,
+      "lost": 0,
+      "vp_share": 0.4444444444444444,
+      "late_city_assaults": {
+        "episodes": [
+          {
+            "attacker_team": 4,
+            "city": 11,
+            "cohort": "visible_longer",
+            "end": 150,
+            "first_seen": 137,
+            "left_censored": false,
+            "outcome": "other_ownership_end",
+            "start": 150,
+            "unseen_attacker": false
+          }
+        ],
+        "from_turn": 120,
+        "losses_without_assault": [],
+        "version": 1
+      }
+    },
+    {
+      "arm": "candidate",
+      "seed": 7101,
+      "seat": 3,
+      "faction": "Egypt",
+      "finished": false,
+      "won": false,
+      "end_turn": 181,
+      "lost": 0,
+      "vp_share": 0.4444444444444444,
+      "late_city_assaults": {
+        "episodes": [],
+        "from_turn": 120,
+        "losses_without_assault": [],
+        "version": 1
+      }
+    },
+    {
+      "arm": "baseline",
+      "seed": 7102,
+      "seat": 4,
+      "faction": "Rome",
+      "finished": false,
+      "won": false,
+      "end_turn": 181,
+      "lost": 3,
+      "vp_share": 0.4117647058823529,
+      "late_city_assaults": {
+        "episodes": [
+          {
+            "attacker_team": 5,
+            "city": 29,
+            "cohort": "visible_longer",
+            "end": 139,
+            "first_seen": 113,
+            "left_censored": false,
+            "outcome": "lost_to_attacker",
+            "start": 127,
+            "unseen_attacker": false
+          },
+          {
+            "attacker_team": 1,
+            "city": 35,
+            "cohort": "visible_longer",
+            "end": 178,
+            "first_seen": 163,
+            "left_censored": false,
+            "outcome": "lost_to_attacker",
+            "start": 176,
+            "unseen_attacker": false
+          },
+          {
+            "attacker_team": 1,
+            "city": 5,
+            "cohort": "visible_within_two",
+            "end": 181,
+            "first_seen": 150,
+            "left_censored": false,
+            "outcome": "right_censored",
+            "start": 151,
+            "unseen_attacker": false
+          },
+          {
+            "attacker_team": 5,
+            "city": 33,
+            "cohort": "visible_within_two",
+            "end": 181,
+            "first_seen": 169,
+            "left_censored": false,
+            "outcome": "right_censored",
+            "start": 169,
+            "unseen_attacker": false
+          }
+        ],
+        "from_turn": 120,
+        "losses_without_assault": [],
+        "version": 1
+      }
+    },
+    {
+      "arm": "candidate",
+      "seed": 7102,
+      "seat": 4,
+      "faction": "Rome",
+      "finished": false,
+      "won": false,
+      "end_turn": 181,
+      "lost": 4,
+      "vp_share": 0.3888888888888889,
+      "late_city_assaults": {
+        "episodes": [
+          {
+            "attacker_team": 5,
+            "city": 29,
+            "cohort": "visible_longer",
+            "end": 144,
+            "first_seen": 113,
+            "left_censored": false,
+            "outcome": "lost_to_attacker",
+            "start": 127,
+            "unseen_attacker": false
+          },
+          {
+            "attacker_team": 5,
+            "city": 32,
+            "cohort": "visible_longer",
+            "end": 163,
+            "first_seen": 156,
+            "left_censored": false,
+            "outcome": "lost_to_attacker",
+            "start": 161,
+            "unseen_attacker": false
+          },
+          {
+            "attacker_team": 5,
+            "city": 36,
+            "cohort": "visible_within_two",
+            "end": 178,
+            "first_seen": 177,
+            "left_censored": false,
+            "outcome": "other_ownership_end",
+            "start": 178,
+            "unseen_attacker": false
+          }
+        ],
+        "from_turn": 120,
+        "losses_without_assault": [],
+        "version": 1
+      }
+    }
+  ]
+}

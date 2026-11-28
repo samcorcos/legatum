@@ -15,6 +15,8 @@
 //!   its cities, and whether other empires join the war on the rusher.
 //!
 //! Prints one JSON line per game and arm (to `--out` when given) and a summary per arm on stderr.
+//! `late_city_assaults` records planning-view warning and subsequent city losses; definitions
+//! and paired-analysis limits: docs/sim-results/ai-quality/visible-assaults/README.md.
 
 use legatum_ai::{AiParams, Brain, ScriptedBrain};
 use legatum_core::rng::{Rng, purpose};
@@ -24,6 +26,9 @@ use rayon::prelude::*;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::io::Write;
+
+#[path = "rush_ladder/visibility.rs"]
+mod visibility;
 
 const ARMY_AT: [u32; 7] = [10, 20, 30, 40, 50, 60, 75];
 
@@ -310,6 +315,7 @@ fn play(
     let trace = std::env::var("RL_TRACE").is_ok();
     let mut builds: Vec<String> = Vec::new();
     let mut last_item: BTreeMap<legatum_core::CityId, String> = BTreeMap::new();
+    let mut visibility = visibility::Visibility::default();
     while !state.finished && state.turn <= limit {
         if my_capital.is_none() {
             my_capital = state.capital_of(seat).map(|c| c.id);
@@ -347,6 +353,9 @@ fn play(
             .filter(|p| p.alive)
             .map(|p| {
                 let view = legatum_core::player_view(&state, p.id);
+                if p.id == seat {
+                    visibility.observe(&view);
+                }
                 (p.id, brains[p.id.0 as usize].orders(&view))
             })
             .collect();
@@ -364,6 +373,7 @@ fn play(
         }
         let turn = state.turn;
         let (next, events) = legatum_core::resolve_turn(&state, &orders);
+        visibility.resolve(&state, &next, &events, seat, args.handover.max(120));
         let before = state;
         state = next;
         if args.handover > 0 && turn >= args.handover {
@@ -516,6 +526,7 @@ fn play(
         "front": front,
         "armies": armies,
         "capital_takes": capital_takes,
+        "late_city_assaults": visibility.report(state.turn),
         "winners": state.players.iter().filter(|p| state.finished && Some(p.team) == state.winner).map(|p| p.id.0).collect::<Vec<_>>(),
     })
 }
