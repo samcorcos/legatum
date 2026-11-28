@@ -30,6 +30,8 @@ ROLES = frozenset(check.REVIEWERS.values()) | {"peer"}
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 HEADER = re.compile(r"Legatum review: (claude|chatgpt|gemini|human) at ([0-9a-f]{40})\Z")
 VERDICT = re.compile(r"([a-z-]+): (PASS|FAIL)\Z")
+MERGE_GROUP_REF = re.compile(r"refs/heads/gh-readonly-queue/master/[A-Za-z0-9][A-Za-z0-9._/-]*\Z")
+MERGE_GROUP_PR = re.compile(r"/pr-([1-9][0-9]{0,9})(?:-|\Z)")
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -203,6 +205,107 @@ def fingerprint(pr, comments):
     return json.dumps([metadata, current], sort_keys=True)
 
 
+def validate_merge_group(merge_group):
+    if not isinstance(merge_group, dict):
+        raise ValueError("Invalid merge_group payload")
+    head_sha = merge_group.get("head_sha")
+    base_sha = merge_group.get("base_sha")
+    head_ref = merge_group.get("head_ref")
+    base_ref = merge_group.get("base_ref")
+    if not isinstance(head_sha, str) or not SHA.fullmatch(head_sha):
+        raise ValueError("Invalid merge_group head_sha")
+    if not isinstance(base_sha, str) or not SHA.fullmatch(base_sha):
+        raise ValueError("Invalid merge_group base_sha")
+    if not isinstance(head_ref, str) or not MERGE_GROUP_REF.fullmatch(head_ref) or ".." in head_ref:
+        raise ValueError("Invalid merge_group head_ref")
+    if base_ref is not None and base_ref != "refs/heads/master":
+        raise ValueError("Only merge groups targeting master are supported")
+    return head_sha, base_sha, head_ref
+
+
+def merge_group_prs(api, merge_group, repo="."):
+    head_sha, base_sha, head_ref = validate_merge_group(merge_group)
+    ref = f"refs/peer-review/merge-group/{head_sha}"
+    strict_git(repo, "fetch", "--no-tags", "--no-recurse-submodules", "origin", f"+{head_ref}:{ref}")
+    if strict_git(repo, "rev-parse", ref).strip() != head_sha:
+        raise ValueError("Merge group head changed during fetch")
+    strict_git(repo, "merge-base", "--is-ancestor", base_sha, head_sha)
+    lines = [line for line in strict_git(repo, "rev-list", "--first-parent", "--parents",
+                                         f"{base_sha}..{head_sha}").splitlines() if line.strip()]
+    if not lines:
+        raise ValueError("Merge group contains no commits")
+    resolved = {}
+    for line in lines:
+        parts = line.split()
+        commit, parents = parts[0], parts[1:]
+        if len(parents) == 2:
+            target_sha = parents[1]
+            require_head_match = True
+        elif len(parents) == 1:
+            target_sha = commit
+            require_head_match = False
+        else:
+            raise ValueError(f"Unsupported commit parent count in merge group: {commit}")
+        if not SHA.fullmatch(target_sha):
+            raise ValueError("Invalid commit SHA in merge group")
+        pulls = api.request("GET", f"/commits/{target_sha}/pulls?per_page=100")
+        if not isinstance(pulls, list):
+            raise ValueError("Invalid commit pulls response")
+        matches = [
+            row for row in pulls
+            if row.get("state") == "open"
+            and (row.get("base") or {}).get("ref") == "master"
+            and ((row.get("base") or {}).get("repo") or {}).get("full_name") == api.repository
+            and (not require_head_match or (row.get("head") or {}).get("sha") == target_sha)
+        ]
+        if len(matches) != 1:
+            raise ValueError(f"Cannot uniquely map merge-group commit {target_sha} to an open PR")
+        number = matches[0].get("number")
+        if isinstance(number, bool) or not isinstance(number, int) or number < 1:
+            raise ValueError("Invalid pull request number in commit pulls response")
+        if number in resolved:
+            if require_head_match and resolved[number] != target_sha:
+                raise ValueError(f"Conflicting commits for PR #{number} in merge group")
+        else:
+            resolved[number] = target_sha
+    match = MERGE_GROUP_PR.search(head_ref)
+    if match and int(match[1]) not in resolved:
+        raise ValueError(f"Merge group ref names PR #{match[1]} which was not resolved from commits")
+    return list(resolved.items())
+
+
+def evaluate_pr(api, number, classify=required_roles, expected_sha=None, pr=None):
+    """Evaluate a single PR's approval requirements; returns (reasons, closed)."""
+    if pr is None:
+        pr = api.request("GET", f"/pulls/{number}")
+    if pr["state"] != "open":
+        return ["Pull request is not open"], True
+    sha = pr["head"]["sha"]
+    if not SHA.fullmatch(sha):
+        raise ValueError("Invalid PR head")
+    if expected_sha is not None and sha != expected_sha:
+        return [f"PR head {sha} does not match merge-group commit {expected_sha}"], False
+    authors = identity(pr, api.repository)
+    labels = {label["name"] for label in pr["labels"]}
+    comments = None
+    if pr["draft"]:
+        reasons = ["Pull request must be ready for review"]
+    elif "changes-requested" in labels:
+        reasons = ["changes-requested must be resolved before approval"]
+    else:
+        required = classify(pr, number)
+        comments = api.comments(number)
+        reasons = evaluate(comments, sha, authors, required)
+    # Recheck even when waiting for reviews, so a concurrent close never stamps a failure.
+    refreshed = api.request("GET", f"/pulls/{number}")
+    closed = refreshed["state"] != "open"
+    if not reasons and not closed:
+        refreshed_comments = api.comments(number)
+        if fingerprint(pr, comments) != fingerprint(refreshed, refreshed_comments):
+            reasons = ["PR head, metadata or comments changed during evaluation; rerun required"]
+    return reasons, closed
+
+
 def run(api, number, classify=required_roles):
     pr = api.request("GET", f"/pulls/{number}")
     if pr["state"] != "open":
@@ -217,23 +320,7 @@ def run(api, number, classify=required_roles):
     operational_error = None
     closed = False
     try:
-        authors = identity(pr, api.repository)
-        labels = {label["name"] for label in pr["labels"]}
-        if pr["draft"]:
-            reasons = ["Pull request must be ready for review"]
-        elif "changes-requested" in labels:
-            reasons = ["changes-requested must be resolved before approval"]
-        else:
-            required = classify(pr, number)
-            comments = api.comments(number)
-            reasons = evaluate(comments, sha, authors, required)
-        # Recheck even when waiting for reviews, so a concurrent close never stamps a failure.
-        refreshed = api.request("GET", f"/pulls/{number}")
-        closed = refreshed["state"] != "open"
-        if not reasons and not closed:
-            refreshed_comments = api.comments(number)
-            if fingerprint(pr, comments) != fingerprint(refreshed, refreshed_comments):
-                reasons = ["PR head, metadata or comments changed during evaluation; rerun required"]
+        reasons, closed = evaluate_pr(api, number, classify=classify, pr=pr)
     except Exception as error:
         operational_error = error
         reasons = [f"Review evaluation failed: {type(error).__name__}: {error}"]
@@ -251,9 +338,58 @@ def run(api, number, classify=required_roles):
     return success
 
 
+def run_merge_group(api, merge_group, resolve_prs=merge_group_prs, classify=required_roles):
+    if not isinstance(merge_group, dict):
+        raise ValueError("Invalid merge_group payload")
+    head_sha = merge_group.get("head_sha")
+    if not isinstance(head_sha, str) or not SHA.fullmatch(head_sha):
+        raise ValueError("Invalid merge_group head_sha")
+    check_run = api.request("POST", "/check-runs", {"name": "peer-review", "head_sha": head_sha,
+                           "status": "in_progress", "output": {"title": "Reviewing merge group approvals",
+                           "summary": "Checking exact-head peer and specialist verdicts for all queued pull requests."}})
+    reasons = []
+    operational_error = None
+    checked = []
+    try:
+        validate_merge_group(merge_group)
+        prs = resolve_prs(api, merge_group)
+        if not prs:
+            raise ValueError("Merge group resolved to zero pull requests")
+        for number, expected_sha in prs:
+            if isinstance(number, bool) or not isinstance(number, int) or number < 1:
+                raise ValueError(f"Invalid constituent PR number: {number!r}")
+            if not isinstance(expected_sha, str) or not SHA.fullmatch(expected_sha):
+                raise ValueError(f"Invalid expected SHA for PR #{number}")
+            pr_reasons, closed = evaluate_pr(api, number, classify=classify, expected_sha=expected_sha)
+            checked.append(f"#{number}")
+            if closed:
+                reasons.append(f"PR #{number}: Pull request is not open")
+            elif pr_reasons:
+                reasons.append(f"PR #{number}: " + "; ".join(pr_reasons))
+    except Exception as error:
+        operational_error = error
+        reasons = [f"Merge group review evaluation failed: {type(error).__name__}: {error}"]
+    success = not reasons
+    summary = ("\n".join(reasons) if reasons else
+               f"Required specialist verdicts and an eligible peer PASS match the exact reviewed head for all queued PRs ({', '.join(checked)}).")
+    api.request("PATCH", f"/check-runs/{check_run['id']}", {"status": "completed",
+                "conclusion": "success" if success else "failure", "output": {
+                    "title": "Merge group review requirements satisfied" if success else "Merge group review requirements not satisfied",
+                    "summary": summary[:60000]}})
+    print(summary)
+    if operational_error is not None:
+        raise operational_error
+    return success
+
+
 def main():
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
-    number = pr_number(os.environ["GITHUB_EVENT_NAME"], event, os.environ.get("INPUT_PR"))
+    event_name = os.environ["GITHUB_EVENT_NAME"]
+    if event_name == "merge_group":
+        api = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"])
+        run_merge_group(api, event.get("merge_group"))
+        return 0
+    number = pr_number(event_name, event, os.environ.get("INPUT_PR"))
     if number is None:
         return 0
     api = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"])
