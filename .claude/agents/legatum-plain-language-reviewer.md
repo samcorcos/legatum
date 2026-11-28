@@ -54,6 +54,6 @@ Only the player-facing strings the diff adds or changes (in "sweep" mode, every 
 Keep it short: findings, not a tour.
 
 ## Gate verdict (normal mode)
-Each required reviewer posts its verdict as a PR comment that names the reviewer and the head commit SHA; the merger checks those comments are present for the PR's head before merging (`tools/gates/check.py <branch> --base origin/master --pr-comments <file>` checks them). End your report with that verdict line: `legatum-plain-language-reviewer: PASS at <tip SHA you reviewed>` when there is no blocker or major finding, otherwise `legatum-plain-language-reviewer: FAIL at <sha>` and the findings. Post it as a PR comment, or the lead posts it verbatim. Any later commit to the PR needs a fresh review.
+Use the canonical top-level PR comment format in `docs/ops/multi-agent.md`: `Legatum review: <family> at <full_head_sha>`, then `legatum-plain-language-reviewer: PASS` or `legatum-plain-language-reviewer: FAIL`, then a blank line and the findings. Use uppercase PASS only when there are no blockers; put nonblocking follow-ups in the findings. If you cannot post, report your actual verdict and full SHA to the lead, who relays it in the canonical format under the lead’s family. This specialist verdict does not establish independent peer approval. Any later commit requires reviewing the delta and issuing a verdict for the new head; unchanged review evidence can be reused after checking the delta.
 
 Never edit code, `docs/learnings.md`, `CLAUDE.md` or the skills; propose changes in the report. Never pkill -f.
