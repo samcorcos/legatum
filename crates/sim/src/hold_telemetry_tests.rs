@@ -233,6 +233,7 @@ fn meta() -> RunMeta {
         brain: "mixed".into(),
         strategies: vec![],
         strategy_matchups: false,
+        all_factions: false,
         difficulty_rotation: None,
         proxy: None,
         proxy_version: None,

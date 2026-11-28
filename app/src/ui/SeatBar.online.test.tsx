@@ -34,10 +34,11 @@ it('waits for living online players and drops eliminated players from the waitin
     ready: [true], orders: [[]], errors: [[]],
     net: {
       status: { mode: 'server', has_game: true, turn: view.turn, seats, is_local: true },
-      seats, mySeat: 0, conn: 'open',
+      seats, mySeat: 0, conn: 'open', turnSecondsLeft: 75,
     },
   });
   act(() => root.render(<SeatBar />));
+  expect(container.querySelector('[role=timer]')?.textContent).toBe('Turn ends in 1:15');
   const label = () => container.querySelector('.cta-label')?.textContent;
   expect(label()).toBe(`Waiting for ${seats[1].name}, ${seats[2].name}…`);
   act(() => useGame.setState({
@@ -49,4 +50,8 @@ it('waits for living online players and drops eliminated players from the waitin
     net: { ...net, seats: seats.map((s) => s.seat === 2 ? { ...s, ready: true } : s) },
   }));
   expect(label()).toBe('Resolving…');
+  act(() => useGame.setState({ net: { ...useGame.getState().net!, conn: 'reconnecting' } }));
+  expect(container.querySelector('[role=timer]')?.textContent).toContain('Timer unavailable');
+  act(() => useGame.setState({ net: { ...useGame.getState().net!, turnSecondsLeft: null } }));
+  expect(container.querySelector('[role=timer]')).toBeNull();
 });

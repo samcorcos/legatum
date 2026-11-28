@@ -62,7 +62,7 @@ export type ServerMsg =
   | { type: 'seat_token'; seat: number; game_id: string; token: string }
   | { type: 'welcome'; seat: number; game_id: string; orders: Order[]; map_pings?: boolean }
   | { type: 'view'; view: PlayerView }
-  | { type: 'seats'; seats: SeatStatus[] }
+  | { type: 'seats'; seats: SeatStatus[]; turn_seconds_left?: number | null }
   | { type: 'validation'; errors: OrderError[] }
   | { type: 'turn'; turn: number; events: Event[]; hash: string; finished: boolean; winner: TeamId | null }
   | { type: 'forecast'; req_id: number; forecast: BattleForecast | null }
@@ -196,7 +196,7 @@ export type ConnState = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'tak
 export interface RemoteEvents {
   /** `resetOrders` also covers a game/turn change missed while disconnected, without a turn report. */
   view(view: PlayerView, turn: TurnResult | null, resetOrders: boolean): void;
-  seats(seats: SeatStatus[]): void;
+  seats(seats: SeatStatus[], secondsLeft?: number | null): void;
   validation(errors: OrderError[], orders?: Order[]): void;
   /** A forecast reply arrived (the cache changed). */
   forecast(): void;
@@ -581,7 +581,7 @@ export class RemoteClient implements GameClient {
         break;
       case 'seats':
         this.seatsStatus = msg.seats;
-        this.listeners.seats?.(msg.seats);
+        this.listeners.seats?.(msg.seats, msg.turn_seconds_left);
         break;
       case 'validation':
         this.errors = msg.errors;

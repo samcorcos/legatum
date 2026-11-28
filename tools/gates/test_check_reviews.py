@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -96,6 +97,105 @@ class Reviews(unittest.TestCase):
         design = dict(KINDS, code=["crates/core/src/rules/cities.rs"], copy=[], ui=[],
                       design=["crates/core/src/rules/cities.rs"])
         self.assertIn("legatum-design-reviewer", [r for _, r, _ in check.required_reviews(design)])
+
+    def test_prose_stops_at_closing_quotes(self):
+        # Object literals and short quoted identifiers must not match across a closing quote.
+        non_prose = [
+            "kind: 'Mountains', sprite, scale, tile: i",
+            "const a = 'Rome', b = 'Athens', c = 'Sparta', d = 'Carthage', e = 'Egypt';",
+            "name: \"Stone\", count: 1, tile: i, next: j",
+            "label: `Iron`, x: 1, y: 2, z: 3, w: 4",
+            "// Select a tile to found your new city here.",
+        ]
+        for line in non_prose:
+            self.assertFalse(check.adds_prose(({1: line}, {1})), f"unexpected PROSE match: {line}")
+
+        # Real 5+ word sentences inside quotes or JSX text must still match.
+        real_prose = [
+            "const msg = 'Select a tile to found your city.';",
+            "const msg = 'You don\\'t have enough gold to build this.';",
+            'const msg = "Move your settler to a fertile river valley.";',
+            'const msg = `Your city of ${name} has grown to size ${size}.`;',
+            "<p>Click any tile to inspect its yield.</p>",
+        ]
+        for line in real_prose:
+            self.assertTrue(check.adds_prose(({1: line}, {1})), f"expected PROSE match: {line}")
+
+    def test_readme_prose_edit_does_not_require_art_reviewer(self):
+        prose_lines = [
+            "Legatum is a historical 4X strategy game.",
+            '<p align="center"><b><a href="https://playlegatum.com">Play free in your browser</a></b></p>',
+            "There is no stable release yet; see [Status](#status).",
+        ]
+        with mock.patch.object(check, "diff_changed_lines", return_value=prose_lines):
+            kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
+        self.assertEqual(kinds["front"], ["README.md"])
+        self.assertEqual(kinds["frontmedia"], [])
+        self.assertEqual([r for _, r, _ in check.required_reviews(kinds)], ["legatum-docs-reviewer"])
+
+    def test_readme_media_ref_or_front_media_requires_art_reviewer(self):
+        for line in [
+            "![Banner](docs/media/banner.jpg)",
+            '<img src="app/public/og.jpg" alt="Legatum" />',
+            "Watch the clip at docs/media/intro.mp4",
+            '  <a href="https://playlegatum.com/media/legatum-teaser-v2.mp4">',
+            '  <a href="https://example.com/other-clip.webm">',
+            "[banner]: https://example.com/banner-v2.png",
+            "[banner]: https://cdn.example.com/hero",
+        ]:
+            with mock.patch.object(check, "diff_changed_lines", return_value=[line]):
+                kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
+            self.assertEqual(kinds["frontmedia"], ["README.md"], f"expected frontmedia for: {line}")
+            self.assertEqual([r for _, r, _ in check.required_reviews(kinds)],
+                             ["legatum-docs-reviewer", "legatum-art-reviewer"])
+
+        # Removed media references (including the real README teaser link) must also trigger art review.
+        removed_diff = (
+            "diff --git a/README.md b/README.md\n"
+            "--- a/README.md\n"
+            "+++ b/README.md\n"
+            "@@ -15 +14,0 @@\n"
+            '-  <a href="https://playlegatum.com/media/legatum-teaser.mp4">\n'
+        )
+        with mock.patch.object(check, "git", return_value=removed_diff):
+            kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
+        self.assertEqual(kinds["frontmedia"], ["README.md"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(kinds)],
+                         ["legatum-docs-reviewer", "legatum-art-reviewer"])
+
+        # Unreadable diff fails closed to art review.
+        with mock.patch.object(check, "diff_changed_lines", return_value=None):
+            kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
+        self.assertEqual(kinds["frontmedia"], ["README.md"])
+
+        og = check.classify(".", "HEAD", "HEAD", ["app/public/og.jpg"])
+        self.assertEqual(og["frontmedia"], ["app/public/og.jpg"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(og)],
+                         ["legatum-docs-reviewer", "legatum-ui-reviewer", "legatum-art-reviewer"])
+
+    def test_ci_art_distinct_selector_covers_runtime_and_workflow_inputs(self):
+        import re
+        ci_path = os.path.join(HERE, "..", "..", ".github", "workflows", "ci.yml")
+        with open(ci_path, encoding="utf-8") as f:
+            text = f.read()
+        m = re.search(r"grep -qE '([^']+)'[^\n]*\n\s+echo \"art=true\"", text)
+        self.assertIsNotNone(m, "art-distinct selector not found in ci.yml")
+        pat = re.compile(m.group(1))
+        for path in [
+            "app/src/assets/units/tank.png",
+            "app/public/wonders/pyramids.png",
+            "tools/art/distinctness.py",
+            "app/src/artDistinct.test.ts",
+            "app/package.json",
+            "app/package-lock.json",
+            "app/vite.config.ts",
+            "app/vitest.config.ts",
+            "app/src/test/setupWasm.ts",
+            ".github/workflows/ci.yml",
+        ]:
+            self.assertIsNotNone(pat.search(path), f"expected art-distinct to run for {path}")
+        for path in ["crates/core/src/lib.rs", "README.md", "app/src/ui/TopBar.tsx"]:
+            self.assertIsNone(pat.search(path), f"unexpected art-distinct match for {path}")
 
 
 if __name__ == "__main__":

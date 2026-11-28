@@ -41,7 +41,7 @@ def group_of(target, ai_tests):
         return "core"
     if pkg == AI:
         if kind == "lib":
-            return "ai-lib"
+            return "ai-tests-2"  # balances ai-tests-1 (which also holds examples/bins) without a 1-target runner
         if kind == "test":
             return f"ai-tests-{ai_tests.index(name) % AI_TEST_SPLIT + 1}"
         return "ai-tests-1"  # examples with tests, bins

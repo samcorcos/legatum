@@ -26,6 +26,8 @@ fn germany() -> (PlayerView, ScriptedBrain) {
     brain.decisions.march_past_reach = 0;
     // The archived decision also predates threat-aware production valuation.
     brain.decisions.production_threat_agreement = 0;
+    // The recorded order also predates army retirement.
+    brain.decisions.modern_army = 0;
     let memory: Option<crate::OpponentMemory> = load(include_bytes!(
         "../fixtures/japan-1026/T185-p2.memory.json.gz"
     ));

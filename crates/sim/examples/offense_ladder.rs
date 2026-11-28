@@ -1,11 +1,12 @@
 //! Offense ladder: how hard does one Hard empire rush and conquer its neighbours?
 //!
 //! offense_ladder --arm LABEL[:gene=v,...] [--arm ...] [--games N] [--seed S] [--players 6]
-//!                [--turns T] [--faction Sparta] [--tape TAPE.json] [--out FILE]
+//!                [--turns T] [--faction Sparta] [--tape TAPE.json] [--all-seats] [--out FILE]
 //!
 //! Game `i` uses seed `S + i`; factions are a seeded draw, the observed seat is `seed % players`
 //! and, with `--faction`, that seat is swapped to the named faction. Only the seat plays the
-//! arm's genes; every other seat plays the built-in Hard AI, so arms are paired game for game.
+//! arm's genes unless `--all-seats` is set; otherwise every other seat plays the built-in Hard
+//! AI. Arms are paired game for game. Every checkpoint records per-seat unit era lag.
 //! With `--tape` the recorded map and lobby are used (the human seat is observed, every seat
 //! Hard) and `--games` salts the dice and brain seeds.
 //!
@@ -22,7 +23,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::io::Write;
 
-const AT: [u32; 8] = [20, 30, 40, 50, 75, 100, 125, 150];
+const AT: [u32; 9] = [20, 30, 40, 50, 75, 100, 125, 150, 200];
 
 struct Args {
     arms: Vec<(String, AiParams)>,
@@ -33,6 +34,7 @@ struct Args {
     faction: Option<Faction>,
     out: Option<String>,
     tape: Option<GameSetup>,
+    all_seats: bool,
 }
 
 fn arm(spec: &str) -> (String, AiParams) {
@@ -68,6 +70,7 @@ fn parse_args() -> Args {
         faction: None,
         out: None,
         tape: None,
+        all_seats: false,
     };
     while let Some(flag) = it.next() {
         let mut v = || it.next().unwrap_or_else(|| panic!("{flag} needs a value"));
@@ -92,6 +95,7 @@ fn parse_args() -> Args {
                 let tape = legatum_wasm::tape::Tape::from_json(&text).expect("tape");
                 a.tape = Some(tape.setup);
             }
+            "--all-seats" => a.all_seats = true,
             other => panic!("unknown argument {other}"),
         }
     }
@@ -143,6 +147,34 @@ fn army(state: &legatum_core::GameState, p: PlayerId) -> usize {
         .count()
 }
 
+fn era_lag(state: &legatum_core::GameState, p: PlayerId) -> Value {
+    let era = legatum_core::eras::era_of(state, p);
+    let tiers: Vec<_> = state
+        .units_of(p)
+        .filter(|u| is_military(u.kind) && u.kind != UnitKind::Scout)
+        .map(|u| legatum_core::data::unit_era_tier(u.kind))
+        .collect();
+    let n = tiers.len();
+    let lag: i32 = tiers
+        .iter()
+        .map(|&tier| i32::from(era) - i32::from(tier))
+        .sum();
+    let behind = tiers
+        .iter()
+        .filter(|&&tier| i32::from(era) - i32::from(tier) >= 2)
+        .count();
+    let ancient = tiers.iter().filter(|&&tier| tier == 0).count();
+    json!({
+        "era": era,
+        "combat_units": n,
+        "lag_sum": lag,
+        "era_lag_x100": (lag * 100).checked_div(n as i32).unwrap_or(0),
+        "behind_2": behind,
+        "behind_2_share_x100": (behind * 100).checked_div(n).unwrap_or(0),
+        "ancient_units": ancient,
+    })
+}
+
 fn play(args: &Args, params: &AiParams, index: u64) -> Value {
     let game_seed = args.seed + index;
     let (setup, seat_index) = setup(args, game_seed);
@@ -169,7 +201,11 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
                 seed,
                 id,
                 AiDifficulty::Hard,
-                if id == seat { params } else { &master },
+                if args.all_seats || id == seat {
+                    params
+                } else {
+                    &master
+                },
             ));
             brain
         })
@@ -196,6 +232,7 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
     let mut pop_at = BTreeMap::new();
     let mut gold_at = BTreeMap::new();
     let mut techs_at = BTreeMap::new();
+    let mut era_lag_at = BTreeMap::new();
     let mut first_declare = None::<u32>;
     let mut declares: Vec<u32> = Vec::new();
     let mut first_war = None::<u32>;
@@ -216,6 +253,15 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
             );
             gold_at.insert(state.turn, state.player(seat).gold);
             techs_at.insert(state.turn, state.player(seat).techs.len());
+            era_lag_at.insert(
+                state.turn,
+                state
+                    .players
+                    .iter()
+                    .filter(|p| !p.id.is_barbarian())
+                    .map(|p| era_lag(&state, p.id))
+                    .collect::<Vec<_>>(),
+            );
         }
         let orders: BTreeMap<_, _> = state
             .players
@@ -377,6 +423,8 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         "pop_at": pop_at,
         "gold_at": gold_at,
         "techs_at": techs_at,
+        "era_lag_at": era_lag_at,
+        "all_seats": args.all_seats,
         "cities_end": state.cities_of(seat).count(),
     })
 }

@@ -1,0 +1,17 @@
+Renaissance era film: shots from the Gemini API (model gemini-omni-1.2-flash, Interactions API, 16:9, 720p, 8 s, with generated sound), 2026-11-27. The film uses shot 1 v2 (trimmed and cropped) and shot 2.
+
+Shot 1 v1 had rooftop satellite dishes and a made-up cluster of domes. v2 fixed the cathedral, but its first 4.5 s still had dishes, TV aerials and skylights on the rooftops, so it was trimmed and cropped:
+  ffmpeg -ss 4.5 -i shot1-city.mp4 -vf "crop=1120:630:160:0,scale=1280:720:flags=lanczos,setsar=1" -c:v libx264 -crf 16 -c:a aac -b:a 192k s1.mp4
+Cut (s1.mp4 is 3.54 s long):
+  ffmpeg -i s1.mp4 -i shot2-piazza.mp4 -filter_complex "[0:v]fade=t=in:st=0:d=0.6,settb=AVTB[v0];[1:v]settb=AVTB[v1];[v0][v1]xfade=transition=fade:duration=0.6:offset=2.942,fade=t=out:st=10.042:d=0.9,format=yuv420p[v];[0:a][1:a]acrossfade=d=0.6,afade=t=in:d=0.6,afade=t=out:st=9.842:d=1.1[a]" -map "[v]" -map "[a]" -c:v libx264 -crf 25 -movflags +faststart -c:a aac -b:a 96k cut.mp4
+  ffmpeg -i cut.mp4 -c:v libx264 -preset slow -crf 27 -movflags +faststart -c:a copy renaissance.mp4
+The 720p shot masters are archived outside git.
+
+Shot 1 (shot1-city.mp4):
+Cinematic opening shot, a prosperous 15th-century Italian city at golden morning light under a soft blue sky. The camera glides slowly over terracotta rooftops and narrow stone streets toward an elegant domed brick cathedral with a white marble lantern, civic palazzi with towers, and a river with arched stone bridges, distant green hills and a stone aqueduct beyond. Swallows wheel past; church bells ring. Historically grounded Renaissance architecture, epic and hopeful, painterly natural light. No text, no letters, no modern objects.
+
+Shot 2 (shot2-piazza.mp4):
+Cinematic closing shot, the same 15th-century Italian city in golden morning light. In an open guild courtyard, artisans in period tunics and caps work a wooden printing press and lift a freshly printed sheet; architects lean over drawings beside a carefully built wooden model of a dome. The camera tracks past them into a great sunlit piazza full of merchants and citizens in Renaissance dress, then cranes up to reveal the real domed cathedral and the distant hills, leaving open sky in the upper third. Historically grounded, celebratory and triumphant, painterly natural light. No text, no readable letters, no famous identifiable person, no modern objects.
+
+Shot 1 v2 (shot1-city.mp4, 2026-11-27; v1 kept as shot1-city-v1.mp4):
+Cinematic opening shot, a prosperous 15th-century Florence-like Italian city at golden morning light under a soft blue sky. The camera glides slowly and steadily over terracotta tiled rooftops and narrow stone streets toward ONE great octagonal red-brick cathedral dome with white marble ribs and a small white marble lantern on top, beside a slender stone bell tower; civic palazzi with crenellated towers, a river with arched stone bridges, distant green hills and a stone aqueduct. The dome is a single, solid, unchanging building that stays in view the whole shot; buildings never change shape or appear. Swallows wheel past; church bells ring. Historically grounded 1400s architecture only: plain clay roof tiles, wooden shutters, chimneys. No satellite dishes, no antennas, no wires, no solar panels, no modern objects, no text, no letters. Epic and hopeful, painterly natural light.

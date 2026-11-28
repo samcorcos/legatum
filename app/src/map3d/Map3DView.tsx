@@ -33,6 +33,7 @@ import { useMapLens } from '../map/useMapLens';
 import { LensSwitcher } from '../map/LensSwitcher';
 import { CompassRose } from '../map/CompassRose';
 import { compassCovered, COMPASS_R } from '../map/compass';
+import { observeHudLayout } from '../map/hudObserver';
 import { drawLens, lensWash } from '../map/drawLens';
 import { drawYieldIcons } from '../map/yieldIcons';
 import { isColoniaFounder } from '../goalCities';
@@ -46,6 +47,8 @@ import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
 import type { CityView } from '../types';
 import { PX } from './world';
+import { iconEpoch } from '../icons';
+import { fontEpoch } from '../map/sprites';
 import './map3d.css';
 
 export default function Map3DView() {
@@ -64,7 +67,11 @@ export default function Map3DView() {
   const still = motionStill(useReducedMotion(), useCombatFx((s) => s.enabled));
   const stillRef = useRef(still);
   stillRef.current = still;
-  useEffect(() => { if (sceneRef.current) sceneRef.current.still = still; }, [still]);
+  const marksDirty = useRef(true);
+  useEffect(() => {
+    if (sceneRef.current) { sceneRef.current.still = still; sceneRef.current.markDirty(); }
+    marksDirty.current = true;
+  }, [still]);
   const anim = useGame((s) => s.anim);
   useEffect(() => {
     if (!anim?.plan || still) return;
@@ -82,23 +89,29 @@ export default function Map3DView() {
   // unit selected), a "2D map" chip sits beside the Lens control instead, so the switch is always one click away.
   const [flatChip, setFlatChip] = useState<{ left: number; bottom: number } | null>(null);
   useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const selector = '.game .panel, .game .vp, .game .report, .left-dock > *, .unit-panel, .seatbar, .minimap, .map-lenses, .advisor-card, .topbar';
     const sample = () => {
-      const wrap = wrapRef.current;
-      if (!wrap) return;
       const o = wrap.getBoundingClientRect();
       const tab = document.querySelector('.minimap .map-view-toggle')?.getBoundingClientRect();
       const shown = !!tab && tab.width > 0 && tab.bottom <= window.innerHeight && tab.top >= 0;
       const lensBox = wrap.querySelector('.map-lenses')?.getBoundingClientRect();
       const next = shown || !lensBox ? null : { left: Math.round(lensBox.right - o.left + 8), bottom: Math.round(o.bottom - lensBox.bottom) };
       setFlatChip((old) => (old?.left === next?.left && old?.bottom === next?.bottom ? old : next));
-      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .left-dock > *, .unit-panel, .seatbar, .minimap, .map-lenses, .advisor-card, .topbar')].map((e) => {
+      const nextPanels = [...document.querySelectorAll(selector)].map((e) => {
         const r = e.getBoundingClientRect();
         return { left: r.left - o.left, top: r.top - o.top, right: r.right - o.left, bottom: r.bottom - o.top };
       });
+      const prev = panels.current;
+      const changed = nextPanels.length !== prev.length || nextPanels.some((p, i) =>
+        p.left !== prev[i].left || p.top !== prev[i].top || p.right !== prev[i].right || p.bottom !== prev[i].bottom);
+      if (changed) {
+        panels.current = nextPanels;
+        marksDirty.current = true;
+      }
     };
-    sample();
-    const t = window.setInterval(sample, 250);
-    return () => window.clearInterval(t);
+    return observeHudLayout(wrap, selector, sample);
   }, []);
   // The tile card waits a moment, so it doesn't flicker while the mouse sweeps (as on the 2D map).
   const [tileHoverReady, setTileHoverReady] = useState(false);
@@ -128,7 +141,7 @@ export default function Map3DView() {
     sceneRef.current = sc;
     // Tests and local shot scripts reach the scene here (the 2D map exposes `legatumMap` the same way).
     (window as unknown as { legatumMap3d?: MapScene }).legatumMap3d = sc;
-    const size = () => { sc.resize(canvas.clientWidth, canvas.clientHeight); sc.placeCamera(); notifyMapCamera(); };
+    const size = () => { sc.resize(canvas.clientWidth, canvas.clientHeight); sc.placeCamera(); marksDirty.current = true; notifyMapCamera(); };
     size();
     const ro = new ResizeObserver(size);
     ro.observe(canvas);
@@ -139,7 +152,7 @@ export default function Map3DView() {
         return { x: sc.target.x * PX, y: sc.target.z * PX, zoom: w / Math.max(1, ground * PX), w, h };
       },
       focusSeq: () => appliedSeq.current,
-      center: (x, y) => { sc.target.set(x / PX, 0, y / PX); sc.clampTarget(); sc.placeCamera(); notifyMapCamera(); },
+      center: (x, y) => { sc.target.set(x / PX, 0, y / PX); sc.clampTarget(); sc.placeCamera(); marksDirty.current = true; notifyMapCamera(); },
     });
     setMapProjector((hex) => {
       const p = sc.project(hex);
@@ -148,9 +161,16 @@ export default function Map3DView() {
       return { x: r.left + p.x, y: r.top + p.y, radius: p.radius };
     });
     let raf = 0;
+    let lastEpoch = -1;
     const loop = () => {
-      sc.frame();
-      drawMarks();
+      const moved = sc.frame();
+      const epoch = iconEpoch() + fontEpoch();
+      if (epoch !== lastEpoch) { lastEpoch = epoch; marksDirty.current = true; }
+      const routeAnim = !!routeRef.current && !stillRef.current;
+      if (moved || marksDirty.current || routeAnim) {
+        marksDirty.current = false;
+        drawMarks();
+      }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -278,6 +298,9 @@ export default function Map3DView() {
   const tileBuys = useQueuedBuys(view, orders);
   const pickRef = useRef({ improveOverlay, placeOverlay, airOverlay, tileBuys });
   pickRef.current = { improveOverlay, placeOverlay, airOverlay, tileBuys };
+  useEffect(() => {
+    marksDirty.current = true;
+  }, [view, orders, orderErrors, cityAlarms, selection, lens, lensTiles, overlayTiles.yields, improveOverlay, placeOverlay, airOverlay, tileBuys, pathInfo, previewTarget, ownSel]);
   const drawMarks = () => {
     const sc = sceneRef.current, cv = marksRef.current, data = marksData.current;
     const v = useGame.getState().views?.[useGame.getState().seat];

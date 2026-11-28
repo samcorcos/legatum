@@ -9,7 +9,7 @@ import { YieldIcon, Icon, signed } from './bits';
 import { ItemArt } from './ItemArt';
 import { closeTips, Tip } from './Tip';
 import type { CityBuildFocus, Faction } from '../types';
-import { FOCUS_CYCLE, focusLabel, setCityAutomation } from '../automation';
+import { setCityAutomation } from '../automation';
 import { cityRows, DEFAULT_CITY_SORT, nextSort, sortRows, type CityRow, type CitySort, type CitySortKey } from '../citiesOverview';
 import { TOMB_CITY_NOTE, tombOnAfterOrders, tombShort } from '../goalCities';
 import './citiesOverview.css';
@@ -42,7 +42,7 @@ const COLUMNS: { key: CitySortKey; label: string; yield?: 'food' | 'production' 
 function BuildCell({ row, faction, tomb }: { row: CityRow; faction?: Faction; tomb?: boolean }) {
   // Egypt's Royal Tomb work stops every city: the row says so rather than "Idle".
   if (tomb) return <Tip content={TOMB_CITY_NOTE}><span className="co-building co-tomb" data-testid="city-tomb"><span className="co-build-top"><Icon name="goal-royal-tomb" size={14} /><span className="co-build-name">Royal Tomb</span></span><span className="co-sub">{row.build ? `${row.build.name} waits` : 'Nothing queued'}</span></span></Tip>;
-  if (row.focus && !row.build) return <span className="co-building" data-testid="city-auto-wait">Choosing at Ready<span className="co-sub">{focusLabel(row.focus, faction)}</span></span>;
+  if (row.focus && !row.build) return <span className="co-building" data-testid="city-auto-wait">Choosing at Ready</span>;
   if (row.idle || !row.build) {
     return <span className="co-idle" data-testid="city-idle"><span className="co-idle-mark" aria-hidden="true">!</span><b>Idle</b><span className="co-sub">choose what it builds</span></span>;
   }
@@ -70,7 +70,6 @@ export function CitiesOverview() {
   const set = useGame((s) => s.set);
   const [sort, setSort] = useState<CitySort>(loadSort);
   const [selected, setSelected] = useState<number[]>([]);
-  const [focus, setFocus] = useState<CityBuildFocus>('Economy');
   const editOrders = useGame((s) => s.editOrders);
   const dialog = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -128,10 +127,7 @@ export function CitiesOverview() {
       </header>
       <div className="co-automation" aria-label="Automate selected cities">
         <span>{chosen.length ? `${chosen.length} selected` : 'Select cities to automate'}</span>
-        <select aria-label="Building focus for selected cities" value={focus} onChange={(e) => setFocus(e.target.value as CityBuildFocus)}>
-          {FOCUS_CYCLE.map((f) => <option key={f} value={f}>{focusLabel(f, faction)}</option>)}
-        </select>
-        <button type="button" className={`btn${chosen.length ? ' primary' : ''}`} disabled={!chosen.length} onClick={() => apply(focus)}>Automate</button>
+        <button type="button" className={`btn${chosen.length ? ' primary' : ''}`} disabled={!chosen.length} onClick={() => apply('Economy')}>Automate</button>
         <button type="button" className="btn" disabled={!chosen.length} onClick={() => apply(null)}>Stop automating</button>
       </div>
       <div className="co-scroll" tabIndex={-1}>
@@ -164,7 +160,7 @@ export function CitiesOverview() {
                       {row.isCapital && <span className="co-capital" title="Capital"><Star size={9} /></span>}
                       {row.name}
                     </button>
-                    {row.focus && <span className="co-auto-badge">{focusLabel(row.focus, faction)}</span>}
+                    {row.focus && <span className="co-auto-badge">Automated</span>}
                   </th>
                   <td className="co-pop"><b>{row.population}</b><span className={`co-sub${row.growthBad ? ' bad' : ''}`}>{row.growthText}</span></td>
                   <td className="co-num"><span className={row.foodNet < 0 ? 'bad' : undefined}>{signed(row.foodNet)}</span><span className="co-sub" title={`${row.food} Food from tiles, ${row.food - row.foodNet} eaten by its population`}>{row.food} grown</span></td>

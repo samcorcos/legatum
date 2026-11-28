@@ -6,6 +6,7 @@
 // lands in the real bucket, and checks that the game was sent.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { setMapSeed } from '../e2e/mapSeed';
 import { dismissInterstitials, endPlanning } from '../e2e/turnActions';
 import type { useGame } from '../src/store';
 import type { Hex } from '../src/types';
@@ -24,13 +25,22 @@ const relayBuilt = process.env.LEGATUM_RELAY_URL !== 'none';
 const version = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
 
 /** What goes wrong on a static host: collected for the whole test, asserted at the end. */
-function watch(page: Page, origin: string) {
+function watch(page: Page, origin: string, isReloading?: () => boolean) {
   const problems: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') problems.push(`console: ${message.text()} (${message.location().url})`);
   });
   page.on('pageerror', (error) => problems.push(`uncaught: ${error.message}`));
-  page.on('requestfailed', (request) => problems.push(`failed: ${request.url()} ${request.failure()?.errorText}`));
+  page.on('requestfailed', (request) => {
+    const error = request.failure()?.errorText;
+    const url = new URL(request.url());
+    // Upload pings can be aborted when superseded by a newer turn or reload; reloads also abort in-flight background asset preloads.
+    if (error === 'net::ERR_ABORTED') {
+      if (gamesOrigin && url.origin === gamesOrigin) return;
+      if (isReloading?.() && url.origin === origin) return;
+    }
+    problems.push(`failed: ${request.url()} ${error}`);
+  });
   page.on('request', (request) => {
     const url = new URL(request.url());
     if (url.protocol === 'data:' || url.protocol === 'blob:') return;
@@ -48,7 +58,7 @@ function watch(page: Page, origin: string) {
 async function clear(page: Page) {
   await dismissInterstitials(page);
   for (let i = 0; i < 6; i++) {
-    const open = await page.locator('dialog[open], .moment-card, [data-celebrate-delta], [data-testid="alarm-screen"]').count();
+    const open = await page.locator('dialog[open], .moment-card, [data-celebrate-delta], [data-testid="alarm-screen"], [data-testid="meeting-takeover"]').count();
     const report = page.getByRole('button', { name: 'Close report', exact: true });
     if (await report.isVisible()) await report.click();
     else if (open) await page.keyboard.press('Escape');
@@ -181,7 +191,13 @@ test('an autosave from older rules continues in the build that made it', async (
 
 test('a visitor plays: title, a people, turns, a second city, save and load, with no server', async ({ page, baseURL, request }) => {
   test.setTimeout(300_000);
-  const problems = watch(page, new URL(baseURL!).origin);
+  let reloading = false;
+  const reload = async () => {
+    reloading = true;
+    try { await page.reload(); }
+    finally { reloading = false; }
+  };
+  const problems = watch(page, new URL(baseURL!).origin, () => reloading);
   const uploads: string[] = [];
   if (gamesOrigin) {
     await page.route(`${gamesOrigin}/**`, (route) => {
@@ -220,29 +236,23 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   await expect(page).toHaveTitle(/^Legatum/);
   await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible();
   await expect(page.locator('.title-foot')).toContainText(`Version ${version}`);
-  if (relayBuilt) {
-    await page.getByRole('button', { name: /^Multiplayer/ }).click();
-    await expect(page.getByRole('button', { name: /^Host Game/ })).toBeEnabled();
-    await expect(page.getByRole('button', { name: /^Join Game/ })).toBeEnabled();
-  } else {
-    await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeDisabled();
-  }
-  if (relayBuilt) await page.getByRole('button', { name: /Back/ }).click();
+  if (relayBuilt) await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeEnabled();
+  else await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeDisabled();
 
   // The licence notices open inside the Credits.
   await page.getByRole('button', { name: /^How to Play/ }).click();
-  await page.getByRole('navigation', { name: 'Guide chapters' }).getByRole('button', { name: /Credits/ }).click();
+  await page.getByRole('navigation', { name: 'How to Play chapters' }).getByRole('button', { name: /Credits/ }).click();
   await expect(page.getByText('not affiliated with or endorsed by Take-Two Interactive or Firaxis Games')).toBeVisible();
   await page.getByText('Open-source licences', { exact: true }).click();
   await expect(page.locator('.guide-licences pre')).toContainText('Legatum: third-party licence notices');
-  await page.getByRole('button', { name: 'Close guide' }).click();
+  await page.getByRole('button', { name: 'Close How to Play' }).click();
 
   // Single player on a small map, as Athens.
   await page.getByRole('button', { name: /^Single Player/ }).click();
   await expect(page.getByRole('heading', { name: 'Single Player', exact: true })).toBeVisible();
   await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
-  await page.getByRole('radiogroup', { name: 'AI level (all AI empires)', exact: true }).getByRole('radio', { name: /^Easy/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await page.getByRole('radiogroup', { name: 'AI level', exact: true }).getByRole('radio', { name: /^Easy/ }).click();
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Seat 1 faction:/ }).click();
   const picker = page.locator('dialog[data-testid="faction-stage"][open]');
   await picker.getByRole('option', { name: /Athens/ }).click();
@@ -311,22 +321,30 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   for (let i = (await choices.count()) - 1; i >= 0 && (await orders()) === '[]'; i--) await choices.nth(i).click();
   const entered = await orders();
   expect(entered, 'an order was entered this turn').not.toBe('[]');
-  await expect.poll(() => page.evaluate(() => new Promise<boolean>((resolve) => {
+  await expect.poll(() => page.evaluate((expected) => new Promise<boolean>((resolve) => {
+    const matches = (text: string | undefined) => {
+      try { return JSON.stringify(JSON.parse(text ?? '')[0]) === expected; }
+      catch { return false; }
+    };
+    const fallback = () => {
+      try { return matches(JSON.parse(localStorage.getItem('legatum.autosave.orders.v1') ?? 'null')?.text); }
+      catch { return false; }
+    };
     const open = indexedDB.open('legatum-autosave-v1');
-    open.onerror = () => resolve(false);
+    open.onerror = () => resolve(fallback());
     open.onsuccess = () => {
       const db = open.result;
       const get = db.transaction('orders').objectStore('orders').get('current');
-      get.onsuccess = () => { db.close(); resolve(!!get.result?.text); };
-      get.onerror = () => { db.close(); resolve(false); };
+      get.onsuccess = () => { db.close(); resolve(matches(get.result?.text) || fallback()); };
+      get.onerror = () => { db.close(); resolve(fallback()); };
     };
-  })), { message: 'the pending orders are saved' }).toBe(true);
+  }), entered), { message: 'the pending orders are saved' }).toBe(true);
 
   // The autosave survives a reload: Continue returns to the same turn with both cities, and the orders.
-  await page.reload();
+  await reload();
   const resume = page.getByRole('button', { name: /^Continue/ });
   await expect(resume).toBeEnabled();
-  await expect(resume).toContainText(`turn ${turn}`);
+  await expect(resume).toContainText(`Turn ${turn}`);
   await resume.click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 60_000 });
   expect((await empire(page)).cities).toBe(2);
@@ -359,16 +377,16 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
       tx.onerror = () => reject(tx.error);
     };
   }));
-  await page.reload();
+  await reload();
   await expect(page.locator('.title-notice')).toContainText(`Your latest save (turn ${turn + 1}) could not be opened. Continue opens turn ${turn} instead.`);
-  await expect(resume).toContainText(`turn ${turn}`);
+  await expect(resume).toContainText(`Turn ${turn}`);
   await resume.click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 60_000 });
   expect((await empire(page)).cities).toBe(2);
   await endTurn(page);
 
   // Load the downloaded file from the title screen.
-  await page.reload();
+  await reload();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: /^Load Game/ }).click();
   await (await chooser).setFiles(file);

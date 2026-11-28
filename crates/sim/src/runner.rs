@@ -206,6 +206,11 @@ impl RunOpts {
     }
 }
 
+/// Seats in an `--all-factions` census game.
+pub const CENSUS_SEATS: usize = 8;
+/// Games in one full `--all-factions` cycle: every window in every seat rotation.
+pub const CENSUS_CYCLE: usize = CENSUS_SEATS * legatum_core::Faction::ALL.len();
+
 pub fn setup_for(seed: u64, opts: &RunOpts) -> GameSetup {
     setup_for_game(seed, 0, opts)
 }
@@ -226,10 +231,22 @@ fn setup_for_game(seed: u64, index: usize, opts: &RunOpts) -> GameSetup {
         let j = rng.range(0, i as i64) as usize;
         factions.swap(i, j);
     }
-    let mut factions = opts
-        .lobby
-        .factions
-        .unwrap_or_else(|| std::array::from_fn(|i| factions[i]));
+    let mut factions = opts.lobby.factions.unwrap_or_else(|| {
+        if opts.lobby.all_factions {
+            // The census rosters: the eleven cyclic windows of eight over `Faction::ALL`, one
+            // window per eight games, turned one seat per game. Every 88 games each faction
+            // plays 64 seats, 8 in each seat position. Opt-in, so the nine-faction draw above
+            // and every pinned roster stay as they are.
+            let all = legatum_core::Faction::ALL;
+            let window = index / CENSUS_SEATS % all.len();
+            let mut roster: [legatum_core::Faction; CENSUS_SEATS] =
+                std::array::from_fn(|seat| all[(window + seat) % all.len()]);
+            roster.rotate_right(index % CENSUS_SEATS);
+            std::array::from_fn(|i| roster[i])
+        } else {
+            std::array::from_fn(|i| factions[i])
+        }
+    });
     if opts.lobby.rotate_factions {
         factions[..opts.lobby.players].rotate_right(index % opts.lobby.players);
     }
@@ -1351,6 +1368,42 @@ mod tests {
         for seat in 0..8 {
             let setup = setup_for_game(42, seat, &opts);
             assert_eq!(setup.players[seat].faction, Faction::Rome);
+        }
+    }
+
+    #[test]
+    fn all_factions_plays_every_faction_equally_in_every_seat_and_leaves_the_default_draw() {
+        use super::*;
+        use legatum_core::Faction;
+        let mut opts = opening_opts();
+        opts.lobby.players = CENSUS_SEATS;
+        let default_rosters: Vec<_> = (0..CENSUS_CYCLE as u64)
+            .map(|seed| setup_for(seed, &opts))
+            .collect();
+        opts.lobby.all_factions = true;
+        let mut seats = std::collections::BTreeMap::new();
+        for index in 0..CENSUS_CYCLE {
+            let setup = setup_for_game(7 + index as u64, index, &opts);
+            assert_eq!(setup, setup_for_game(7 + index as u64, index, &opts));
+            let roster: std::collections::BTreeSet<_> =
+                setup.players.iter().map(|p| p.faction).collect();
+            assert_eq!(roster.len(), CENSUS_SEATS, "eight distinct factions");
+            for (seat, player) in setup.players.iter().enumerate() {
+                *seats.entry((player.faction, seat)).or_insert(0u32) += 1;
+            }
+        }
+        assert_eq!(seats.len(), Faction::ALL.len() * CENSUS_SEATS);
+        assert!(seats.values().all(|&n| n == 8), "{seats:?}");
+        opts.lobby.all_factions = false;
+        for (seed, before) in default_rosters.iter().enumerate() {
+            let setup = setup_for(seed as u64, &opts);
+            assert_eq!(&setup, before);
+            assert!(
+                setup
+                    .players
+                    .iter()
+                    .all(|p| !matches!(p.faction, Faction::Rome | Faction::Egypt))
+            );
         }
     }
 

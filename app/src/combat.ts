@@ -4,7 +4,29 @@ import { RULES, siegeBonusOf } from './data';
 import { engineWork } from './frameTelemetry';
 import { Game } from './wasm-pkg/legatum.js';
 
-const projection = <T>(query: Record<string, unknown>): T => engineWork(() => JSON.parse(Game.combat_projection(JSON.stringify(query))) as T);
+const PROJECTION_CACHE_LIMIT = 2048;
+const projectionCache = new Map<string, unknown>();
+
+function cloneProjection<T>(value: T): T {
+  if (value === null || typeof value !== 'object') return value;
+  if ('parts' in (value as Record<string, unknown>) && Array.isArray((value as unknown as Breakdown).parts)) {
+    const b = value as unknown as Breakdown;
+    return { total: b.total, parts: b.parts.map(([label, amount]) => [label, amount] as [string, number]) } as unknown as T;
+  }
+  return { ...(value as Record<string, unknown>) } as T;
+}
+
+const projection = <T>(query: Record<string, unknown>): T => {
+  const key = JSON.stringify(query);
+  if (projectionCache.has(key)) return cloneProjection(projectionCache.get(key) as T);
+  const parsed = engineWork(() => JSON.parse(Game.combat_projection(key)) as T);
+  if (projectionCache.size >= PROJECTION_CACHE_LIMIT) {
+    const oldest = projectionCache.keys().next().value;
+    if (oldest !== undefined) projectionCache.delete(oldest);
+  }
+  projectionCache.set(key, parsed);
+  return cloneProjection(parsed);
+};
 
 export const CITY_HP = RULES.cityHp;
 /** The Walls bar: level I and each level above it (core `combat::walls_max_hp`). */

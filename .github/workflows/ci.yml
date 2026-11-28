@@ -8,6 +8,7 @@ on:
   push:
     branches: [master]
   pull_request:
+  merge_group:
 
 permissions:
   contents: read
@@ -26,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.diff.outputs.code }}
+      art: ${{ steps.diff.outputs.art }}
       rust-groups: ${{ steps.groups.outputs.names }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -34,14 +36,29 @@ jobs:
           persist-credentials: false
       - id: diff
         run: |
-          if [ "${{ github.event_name }}" = pull_request ]; then base="origin/${{ github.base_ref }}"; else base="${{ github.event.before }}"; fi
-          if ! git rev-parse -q --verify "$base^{commit}" >/dev/null; then echo "code=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            base="origin/${{ github.base_ref }}"
+          elif [ "${{ github.event_name }}" = merge_group ]; then
+            base="${{ github.event.merge_group.base_sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          if ! git rev-parse -q --verify "$base^{commit}" >/dev/null; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "art=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           files="$(git diff --name-only "$base"...HEAD)"
           echo "$files"
           if [ -n "$files" ] && ! echo "$files" | grep -vqE '^(docs|plans|\.claude)/.*\.md$|^[^/]+\.md$'; then
             echo "code=false" >> "$GITHUB_OUTPUT"
           else
             echo "code=true" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$files" | grep -qE '^(app/src/assets/|app/public/wonders/|tools/art/|app/src/artDistinct\.test\.ts$|app/package(-lock)?\.json$|app/(vite|vitest)\.config\.|app/src/test/|\.github/workflows/ci\.yml$)'; then
+            echo "art=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "art=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Rust test groups
         # Every test target lands in exactly one group (checked here), so new tests and crates are never skipped.
@@ -52,18 +69,23 @@ jobs:
 
   gates:
     # The static pre-merge gates (tools/gates/check.py): secrets, personal data, saves, large binaries,
-    # engine invariants. Reviewer verdicts (PR comments naming the head SHA) and the art check stay with the lead before merging.
-    if: github.event_name == 'pull_request'
+    # engine invariants. The separate peer-review check verifies current-commit reviewer verdicts;
+    # the lead still runs specialist reviews and the art check before merging.
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Review gate regression tests
+        run: python3 -m unittest discover -s tools/gates -p 'test_*.py'
       - name: Pre-merge gates
         # fetch-depth 0 already brings origin/<base>; a second fetch would need the credentials we don't keep.
         run: |
-          python3 tools/gates/check.py HEAD --base "origin/${{ github.base_ref }}" --checks-only --skip art
+          base="origin/${{ github.base_ref }}"
+          if [ "${{ github.event_name }}" = merge_group ]; then base="${{ github.event.merge_group.base_sha }}"; fi
+          python3 tools/gates/check.py HEAD --base "$base" --checks-only --skip art
 
   lint:
     needs: changes
@@ -173,11 +195,36 @@ jobs:
       - name: Install app dependencies
         run: npm ci
         working-directory: app
+      - name: App tests (shard ${{ matrix.shard }} of 3)
+        run: npm test -- --shard=${{ matrix.shard }}/3 --exclude src/artDistinct.test.ts
+        working-directory: app
+
+  art-distinct:
+    # Headless Chromium art distinctness check; runs when art assets, wonders, art tools, app test/dep config, or CI change.
+    needs: [changes, wasm]
+    if: needs.changes.outputs.art == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wasm-pkg
+          path: app/src/wasm-pkg
+      - name: Install app dependencies
+        run: npm ci
+        working-directory: app
       - name: Install Chromium for the art render tests
         run: npx playwright install --with-deps chromium
         working-directory: app
-      - name: App tests (shard ${{ matrix.shard }} of 3)
-        run: npm test -- --shard=${{ matrix.shard }}/3
+      - name: Art distinctness tests
+        run: npm test -- src/artDistinct.test.ts
         working-directory: app
 
   app-build:
@@ -252,7 +299,7 @@ jobs:
   ci-ok:
     # One check to require in branch protection: green when every job passed or was skipped for a docs-only change.
     if: always()
-    needs: [changes, gates, lint, rust-test, wasm, app-test, app-build, e2e-smoke]
+    needs: [changes, gates, lint, rust-test, wasm, app-test, art-distinct, app-build, e2e-smoke]
     runs-on: ubuntu-latest
     steps:
       - run: |

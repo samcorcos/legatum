@@ -12,8 +12,9 @@ import type { PlayerView } from './types';
 const AT_ONCE = 4;
 let started = false;
 const diplomacyWarmed = new Set<string>();
-/** Kept so the browser does not drop a fetch whose image nobody holds. */
-const held: HTMLImageElement[] = [];
+/** Kept while in flight so the browser does not drop a fetch whose image nobody holds; released on settle so decoded bitmaps can be GC'd. */
+const held = new Set<HTMLImageElement>();
+export const inFlightWarmCount = () => held.size;
 
 type Idle = (cb: () => void) => void;
 
@@ -31,9 +32,14 @@ export function warmImages(urls: string[], idle: Idle = (globalThis as { request
       const url = queue.shift()!;
       running++;
       const img = new Image();
-      held.push(img);
+      held.add(img);
       img.decoding = 'async';
-      img.onload = img.onerror = () => { running--; idle(next); };
+      img.onload = img.onerror = () => {
+        img.onload = img.onerror = null;
+        held.delete(img);
+        running--;
+        idle(next);
+      };
       img.src = url;
     };
     idle(() => { for (let i = 0; i < AT_ONCE; i++) next(); });
