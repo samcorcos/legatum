@@ -1,4 +1,4 @@
-import { test as baseTest, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { newestAutosave, newestGameState } from './autosave';
 import { test, expect } from './fixtures';
 import { dismissInterstitials, endPlanning } from './turnActions';
@@ -216,7 +216,7 @@ async function mountInterstitialQueue(page: Page, queue: QueuedCard[]) {
   }, queue);
 }
 
-baseTest('dismissInterstitials drains consecutive meetings and era/score-to-meeting queues', async ({ page }) => {
+test('dismissInterstitials drains consecutive meetings and era/score-to-meeting queues', async ({ page }) => {
   await mountInterstitialQueue(page, [
     { testId: 'meeting-takeover', people: 'rome', label: 'You meet Rome' },
     { testId: 'meeting-takeover', people: 'sparta', label: 'You meet Sparta' },
