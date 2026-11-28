@@ -8,6 +8,7 @@ on:
   push:
     branches: [master]
   pull_request:
+  merge_group:
 
 permissions:
   contents: read
@@ -34,7 +35,13 @@ jobs:
           persist-credentials: false
       - id: diff
         run: |
-          if [ "${{ github.event_name }}" = pull_request ]; then base="origin/${{ github.base_ref }}"; else base="${{ github.event.before }}"; fi
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            base="origin/${{ github.base_ref }}"
+          elif [ "${{ github.event_name }}" = merge_group ]; then
+            base="${{ github.event.merge_group.base_sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
           if ! git rev-parse -q --verify "$base^{commit}" >/dev/null; then echo "code=true" >> "$GITHUB_OUTPUT"; exit 0; fi
           files="$(git diff --name-only "$base"...HEAD)"
           echo "$files"
@@ -54,7 +61,7 @@ jobs:
     # The static pre-merge gates (tools/gates/check.py): secrets, personal data, saves, large binaries,
     # engine invariants. The separate peer-review check verifies current-commit reviewer verdicts;
     # the lead still runs specialist reviews and the art check before merging.
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -66,7 +73,9 @@ jobs:
       - name: Pre-merge gates
         # fetch-depth 0 already brings origin/<base>; a second fetch would need the credentials we don't keep.
         run: |
-          python3 tools/gates/check.py HEAD --base "origin/${{ github.base_ref }}" --checks-only --skip art
+          base="origin/${{ github.base_ref }}"
+          if [ "${{ github.event_name }}" = merge_group ]; then base="${{ github.event.merge_group.base_sha }}"; fi
+          python3 tools/gates/check.py HEAD --base "$base" --checks-only --skip art
 
   lint:
     needs: changes

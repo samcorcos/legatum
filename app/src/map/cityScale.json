@@ -1,7 +1,7 @@
 {
-  "method": "Manual roof-to-base height of a representative ordinary building, read from each 512 px master with PIL; approximate to 2-4 px. Monumental towers and trees are excluded. Draw scale is base scale times globalScaleFactor; the median metropolis width measured from alpha >= 128 at map scale is about 1.30 hex widths. No hamlet floor adjustment is needed.",
+  "method": "Manual roof-to-base height of a representative ordinary building, read from each 512 px master with PIL; approximate to 2-4 px. Monumental towers and trees are excluded. Draw scale is base scale times globalScaleFactor; the median metropolis width measured from alpha >= 128 at map scale is about 1.46 hex widths (hamlet ~0.67, town ~0.86, city ~1.15). No hamlet floor adjustment is needed.",
   "targetHouseHeightPx": 34,
-  "globalScaleFactor": 1.04,
+  "globalScaleFactor": 1.16,
   "sprites": {
     "ancient-hamlet": {
       "houseHeightPx": 85,
