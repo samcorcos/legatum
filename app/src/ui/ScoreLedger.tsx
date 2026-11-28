@@ -147,7 +147,7 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
     const building = s.facts.filter((f) => f.label && !s.owners.includes(f.id));
     return <div className="sl-detail">
       <p className="sl-detail-rule">{s.rule}</p>
-      <p className="sl-detail-note">Each world wonder can be completed only once. Its tile holder scores 2 VP. Capture the city or claim the tile to take those points.{building.length ? ` Known builders: ${building.map((f) => `${model.empires.find((e) => e.id === f.id)?.name} (${f.label})`).join(', ')}.` : ' No known wonder is under construction.'}</p>
+      <p className="sl-detail-note">Each world wonder can be completed only once, and each empire may build only one. Its tile holder scores 2 VP. Capture the city or claim the tile to take those points.{building.length ? ` Known builders: ${building.map((f) => `${model.empires.find((e) => e.id === f.id)?.name} (${f.label})`).join(', ')}.` : ' No known wonder is under construction.'}</p>
     </div>;
   }
   const info = s.era!;

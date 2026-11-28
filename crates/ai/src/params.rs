@@ -321,7 +321,7 @@ decision_params! {
     rome_drill_rotation: 0, 0, 1, "Hard Rome (with roman_founders; `rome_drill.rs`): sieges are fought for first promotions (3 XP a city hit, 10 XP to every attacker in the stage that breaks it, 16 to found): at each visible at-war city with HP a fit level-0 melee unit under 6 XP takes a hit each turn while the hits cannot break the city, then every fit recruit beside it charges in one stage; ready recruits and veterans hold meanwhile, veterans join only when the recruits fall short, a veteran leaves the opening siege to found once two recruits stand in its wing, and adjacent favourable fights (barbarians included) are taken during the opening march";
     rome_opening_finish: 1, 0, 1, "Hard Rome (with rome_opening_march; `rome_finish.rs`): the opening eliminates its victim. The first target is the softest reachable rival (few known cities, no Walls under way, then distance; Egypt and Sparta only from turn 25 and at a heavy handicap) and may change until the war starts; once at war only that rival's cities, nearest open one first, through turn 50 or its elimination, with no Peace with it, no razing of its cities and a search of its land when none of its cities is in sight. Units stage two hexes out where the land is open, every fit melee unit that can hit the open city does so each turn, a fallen city's garrison is fought only by hits that outpace its healing, wounded units rest at the siege instead of walking home, and veterans stay on the campaign while the victim's open city stands. The capital trains a fourth melee unit before the war and a fifth during it, and a peaceful neighbour near the capital holds the garrison without recalling the march";
     rome_walled_peace: 1, 0, 1, "Hard Rome (with rome_opening_finish): after taking a city from its opening victim, if every remaining known victim city has observed completed Walls, seek and accept Peace before turn 51; the defender still decides normally. On this stalled front, the existing second-war plan may start before turn 51";
-    rome_second_war: 1, 0, 1, "Hard Rome after T50: with four fit melee and no reachable open city of the opening victim, declare on the softest reachable neighbour, keep that war while an open city remains, march its melee and repeat safe hits on that war only";
+    rome_second_war: 1, 0, 1, "Hard Rome after T50 (and Sparta with sparta_rome_opening): for Hard Rome, once the T50 opening ends, hand a living opening victim's reachable open city straight to this pass (even below four fit melee); otherwise with four fit melee pick the softest reachable neighbour, stage at least two fit melee within four hexes before declaring war (Rome), keep that war while an open city remains, march its melee and repeat safe hits on that war only";
     rome_colonia: 0, 0, 1, "Hard Rome (with roman_founders; Rules 54 goal, 2026-11-22; `goal_colonia.rs`; off by default since 2026-11-23: no Hard Rome seat reached level 3 in 400 games, so reserving founders only cost cities): while the Colonia Victrix is open, a level-3 melee veteran is never spent on an ordinary city: it founds the Colonia on the most defensible reachable site beside a rival's border (near Rome's own army and cities, away from rival armies), or waits as a soldier until one opens; while no unit is level 3 the most experienced level-2 melee unit is kept from founding; the founded Colonia is garrisoned, walled and defended first like the Courier Hall's city (0: veterans found ordinary cities as before and the Colonia comes only by chance)";
     egypt_tomb: 1, 0, 1, "Egypt (Rules 54 goal, 2026-11-22; `goal_tomb.rs`): start the royal tomb when its 2 VP take the team to the target with time to hold them or the game is 60% gone, the approaches are clear and the would-be tomb city is garrisoned; pause it while an enemy army is near a city (unless two turn ends from standing) and resume when it clears; guard the tomb city first like the Courier Hall's city (0: the tomb is never started)";
     goal_city_capture: 100, 0, 300, "Every empire (Rules 54 goals, 2026-11-22; `goal_cities.rs`): percent weight on the 2 VP a public Colonia Victrix or royal tomb city swings when captured (the Courier Hall's valuation, its founder's retake higher), on a working Egypt's cities that build nothing until the tomb stands, and on the city its tomb will stand in (priced as a Great Work under construction) (0: these cities are priced as ordinary cities)";
@@ -599,7 +599,6 @@ pub const BUILTIN_FACTION_DECISIONS: &[(Faction, &str, i32)] = &[
     (Faction::Sparta, "march_ignores_second_war", 1),
     (Faction::Sparta, "chain_press", 1),
     (Faction::Sparta, "open_followup", 1),
-    (Faction::Sparta, "assault_wing", 1),
     (Faction::Sparta, "walled_prize", 1),
     (Faction::Sparta, "engaged_assault_keep", 1),
     (Faction::Sparta, "early_prize_opening", 1),
@@ -767,7 +766,6 @@ pub const BUILTIN_FACTION_DECISIONS: &[(Faction, &str, i32)] = &[
     (Faction::Switzerland, "peace_lean", 32),
     (Faction::Switzerland, "production_building_percent", 96),
     (Faction::Switzerland, "production_military_percent", 114),
-    (Faction::Switzerland, "production_settler_percent", 85),
     (Faction::Switzerland, "recover_hp", 54),
     (Faction::Switzerland, "relative_city_percent", 95),
     (Faction::Switzerland, "research_economy_percent", 78),
@@ -777,9 +775,7 @@ pub const BUILTIN_FACTION_DECISIONS: &[(Faction, &str, i32)] = &[
     (Faction::Switzerland, "rush_window_turn", 162),
     (Faction::Switzerland, "scout_find", 514),
     (Faction::Switzerland, "second_front_temperament", -15),
-    (Faction::Switzerland, "settler_chain_priority", 0),
     (Faction::Switzerland, "settler_max_site_distance", 12),
-    (Faction::Switzerland, "settler_min_site_score", 84),
     (Faction::Switzerland, "siege_window", 2),
     (Faction::Switzerland, "staging_damage_percent", 113),
     (Faction::Switzerland, "strike_eagerness", -44),

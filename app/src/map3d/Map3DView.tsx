@@ -33,6 +33,7 @@ import { useMapLens } from '../map/useMapLens';
 import { LensSwitcher } from '../map/LensSwitcher';
 import { CompassRose } from '../map/CompassRose';
 import { compassCovered, COMPASS_R } from '../map/compass';
+import { observeHudLayout } from '../map/hudObserver';
 import { drawLens, lensWash } from '../map/drawLens';
 import { drawYieldIcons } from '../map/yieldIcons';
 import { isColoniaFounder } from '../goalCities';
@@ -88,16 +89,17 @@ export default function Map3DView() {
   // unit selected), a "2D map" chip sits beside the Lens control instead, so the switch is always one click away.
   const [flatChip, setFlatChip] = useState<{ left: number; bottom: number } | null>(null);
   useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const selector = '.game .panel, .game .vp, .game .report, .left-dock > *, .unit-panel, .seatbar, .minimap, .map-lenses, .advisor-card, .topbar';
     const sample = () => {
-      const wrap = wrapRef.current;
-      if (!wrap) return;
       const o = wrap.getBoundingClientRect();
       const tab = document.querySelector('.minimap .map-view-toggle')?.getBoundingClientRect();
       const shown = !!tab && tab.width > 0 && tab.bottom <= window.innerHeight && tab.top >= 0;
       const lensBox = wrap.querySelector('.map-lenses')?.getBoundingClientRect();
       const next = shown || !lensBox ? null : { left: Math.round(lensBox.right - o.left + 8), bottom: Math.round(o.bottom - lensBox.bottom) };
       setFlatChip((old) => (old?.left === next?.left && old?.bottom === next?.bottom ? old : next));
-      const nextPanels = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .left-dock > *, .unit-panel, .seatbar, .minimap, .map-lenses, .advisor-card, .topbar')].map((e) => {
+      const nextPanels = [...document.querySelectorAll(selector)].map((e) => {
         const r = e.getBoundingClientRect();
         return { left: r.left - o.left, top: r.top - o.top, right: r.right - o.left, bottom: r.bottom - o.top };
       });
@@ -109,9 +111,7 @@ export default function Map3DView() {
         marksDirty.current = true;
       }
     };
-    sample();
-    const t = window.setInterval(sample, 250);
-    return () => window.clearInterval(t);
+    return observeHudLayout(wrap, selector, sample);
   }, []);
   // The tile card waits a moment, so it doesn't flicker while the mouse sweeps (as on the 2D map).
   const [tileHoverReady, setTileHoverReady] = useState(false);

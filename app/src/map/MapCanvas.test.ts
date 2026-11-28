@@ -287,12 +287,13 @@ it.each(['unit', 'city'] as const)('phone taps select a %s without a tile card; 
 });
 
 it('defers map resize writes until the next frame and ignores unchanged canvas dimensions', () => {
-  let notify: ResizeObserverCallback | undefined;
+  const notifies: ResizeObserverCallback[] = [];
   vi.stubGlobal('ResizeObserver', class {
     constructor(private callback: ResizeObserverCallback) {}
-    observe(el: Element) { if (el.matches('.map-wrap')) notify = this.callback; }
+    observe(el: Element) { if (el.matches('.map-wrap')) notifies.push(this.callback); }
     disconnect() {}
   });
+  const notifyAll = () => { for (const notify of notifies) notify([], {} as ResizeObserver); };
   let height = 600;
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
     return this.matches('.map-wrap') ? new DOMRect(0, 0, 800, height) : new DOMRect();
@@ -302,12 +303,12 @@ it('defers map resize writes until the next frame and ignores unchanged canvas d
   const before = canvas.height;
   const writes = vi.spyOn(canvas, 'height', 'set');
   height = 420;
-  act(() => { notify!([], {} as ResizeObserver); notify!([], {} as ResizeObserver); });
+  act(() => { notifyAll(); notifyAll(); });
   expect(canvas.height).toBe(before); // No writes inside observer delivery.
   frame(performance.now());
   expect(canvas.style.height).toBe('420px');
   expect(writes).toHaveBeenCalledTimes(1);
-  act(() => notify!([], {} as ResizeObserver));
+  act(() => notifyAll());
   frame(performance.now());
   expect(writes).toHaveBeenCalledTimes(1);
 });
