@@ -142,29 +142,42 @@ impl Planner<'_> {
             .iter()
             .filter(|unit| self.rome_second_fit(unit))
             .count();
-        if fit < 4 && self.campaigns.rome_second_enemy.is_none() {
-            return;
-        }
         let soft: Vec<_> = v
             .cities
             .iter()
             .filter(|city| self.rome_second_soft(city))
             .collect();
         // Finish a reachable open city of the opening victim before choosing a new war.
-        if self.campaigns.rome_victim.is_some_and(|victim| {
-            v.players.iter().any(|p| p.id == victim && p.alive)
-                && soft.iter().any(|city| city.owner == victim)
-        }) {
+        // While the opening is still active it owns that siege; once the opening window ends
+        // (turn 51+), hand the living victim's open city straight to the second-war pass
+        // instead of dropping it.
+        let unfinished_victim = self.campaigns.rome_victim.and_then(|victim| {
+            v.players
+                .iter()
+                .any(|p| p.id == victim && p.alive)
+                .then(|| {
+                    soft.iter()
+                        .copied()
+                        .filter(|city| city.owner == victim)
+                        .min_by_key(|city| self.rome_second_score(city))
+                })
+                .flatten()
+        });
+        if unfinished_victim.is_some() && self.rome_opening_active() {
             self.campaigns.rome_second_target = None;
             self.campaigns.rome_second_enemy = None;
             return;
         }
+        if fit < 4 && self.campaigns.rome_second_enemy.is_none() && unfinished_victim.is_none() {
+            return;
+        }
         let prior_enemy = self.campaigns.rome_second_enemy;
-        let committed = soft
-            .iter()
-            .copied()
-            .filter(|city| prior_enemy == Some(v.team_of(city.owner)))
-            .min_by_key(|city| self.rome_second_score(city));
+        let committed = unfinished_victim.or_else(|| {
+            soft.iter()
+                .copied()
+                .filter(|city| prior_enemy == Some(v.team_of(city.owner)))
+                .min_by_key(|city| self.rome_second_score(city))
+        });
         let chosen = if fit >= 4 {
             committed
                 .or_else(|| {
@@ -236,6 +249,17 @@ impl Planner<'_> {
         let against = v.team_of(city.owner);
         if v.teams_at_war(v.team, against) {
             return None;
+        }
+        if self.faction == Faction::Rome {
+            let staged = self
+                .ctx
+                .own_units
+                .iter()
+                .filter(|unit| self.rome_second_fit(unit) && unit.pos.distance(city.pos) <= 4)
+                .count();
+            if staged < 2 {
+                return None;
+            }
         }
         v.diplomacy
             .actions
@@ -399,7 +423,17 @@ mod tests {
 
     #[test]
     fn second_war_uses_four_fit_melee_and_defers_sparta() {
-        let v = view();
+        let mut v = view();
+        let mut p = planner(&v, 9);
+        p.difficulty = AiDifficulty::Hard;
+        p.decisions.rome_second_war = 1;
+        p.choose_rome_second_war();
+        assert_eq!(p.campaigns.rome_second_target, Some(CityId(2)));
+        // Units are 5 hexes away: Rome stages before declaring war.
+        assert_eq!(p.rome_second_declaration(), None);
+        for id in [1, 2] {
+            v.units.iter_mut().find(|u| u.id.0 == id).unwrap().pos = off(9, 8);
+        }
         let mut p = planner(&v, 9);
         p.difficulty = AiDifficulty::Hard;
         p.decisions.rome_second_war = 1;
@@ -476,5 +510,35 @@ mod tests {
         p.decisions.rome_second_war = 1;
         p.choose_rome_second_war();
         assert!(!p.rome_second_refuses_peace(TeamId(2)));
+    }
+
+    #[test]
+    fn turn_51_hands_unfinished_opening_victim_to_second_war() {
+        let mut v = view();
+        v.turn = 51;
+        // Leave only 2 fit melee (below the 4-unit fresh-war threshold) at war with the opening victim.
+        v.units.retain(|u| u.id.0 <= 2);
+        v.diplomacy.relations.push(Relation {
+            a: TeamId(0),
+            b: TeamId(2),
+            state: RelationState::War,
+            effective_turn: 20,
+            guarantee_until: 0,
+            version: 1,
+            security: None,
+            war_id: None,
+            declarers: vec![],
+        });
+        let mut p = planner(&v, 9);
+        p.difficulty = AiDifficulty::Hard;
+        p.decisions.rome_opening_march = 1;
+        p.decisions.rome_opening_finish = 1;
+        p.decisions.rome_second_war = 1;
+        p.campaigns.rome_victim = Some(PlayerId(2));
+        p.choose_rome_opening();
+        p.choose_rome_second_war();
+        assert_eq!(p.campaigns.rome_second_target, Some(CityId(2)));
+        assert_eq!(p.campaigns.rome_second_enemy, Some(TeamId(2)));
+        assert!(p.rome_second_refuses_peace(TeamId(2)));
     }
 }

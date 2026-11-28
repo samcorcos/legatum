@@ -37,7 +37,11 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| data::unit_class(u.kind) == Some(UnitClass::Melee) && u.hp > 0)
+            .filter(|u| {
+                data::unit_class(u.kind) == Some(UnitClass::Melee)
+                    && u.hp > 0
+                    && (self.faction != Faction::Rome || u.occupation_lock.is_none())
+            })
             .collect()
     }
 
@@ -77,19 +81,20 @@ impl Planner<'_> {
                 >= need.min(2)
     }
 
-    /// Gene `sparta_opening_search`: Sparta's opening has no victim in sight yet.
+    /// Hard Rome (or Sparta with `sparta_opening_search`): the opening has no victim in sight yet.
     pub(crate) fn sparta_opening_seeking(&self) -> bool {
-        self.faction == Faction::Sparta
+        let enabled = self.faction == Faction::Rome
+            || (self.faction == Faction::Sparta && self.decisions.sparta_opening_search > 0);
+        enabled
             && self.conquest_opening_faction()
             && self.difficulty == AiDifficulty::Hard
             && self.decisions.rome_opening_march > 0
-            && self.decisions.sparta_opening_search > 0
             && self.campaigns.rome_opening_target.is_none()
-            && self.view().turn <= crate::rome_finish::OPENING_LAST_TURN
+            && self.view().turn <= self.rome_opening_last_turn()
     }
 
     pub(crate) fn rome_opening_build(&self, city: &CityView) -> Option<ProductionItem> {
-        // Gene `sparta_opening_search`: the wing is trained while its victim is still sought.
+        // Train the opening melee wing while its victim is still sought.
         let seeking = self.sparta_opening_seeking() && city.is_capital;
         // Gene `sparta_war_army`: Sparta keeps training melee for its opening and second war
         // up to this many units.
@@ -235,7 +240,11 @@ impl Planner<'_> {
         let Some(home) = self.ctx.capital().map(|c| c.pos) else {
             return;
         };
-        let radius = self.decisions.sparta_opening_search;
+        let radius = if self.faction == Faction::Rome {
+            10
+        } else {
+            self.decisions.sparta_opening_search
+        };
         let centre = Hex::from_offset(self.view().width / 2, self.view().height / 2);
         let direct = home.distance(centre);
         let land: Vec<Hex> = self
@@ -258,7 +267,10 @@ impl Planner<'_> {
             .free(army)
             .into_iter()
             .filter(|u| {
-                data::unit_class(u.kind) == Some(UnitClass::Melee) && u.hp >= 50 && !alone(self, u)
+                data::unit_class(u.kind) == Some(UnitClass::Melee)
+                    && u.hp >= 50
+                    && u.occupation_lock.is_none()
+                    && !alone(self, u)
             })
             .take(2)
             .collect();
@@ -625,5 +637,38 @@ mod tests {
         planner.decisions.sparta_opening_search = 10;
         planner.choose_rome_opening();
         assert!(!planner.sparta_opening_seeking());
+    }
+
+    #[test]
+    fn rome_seeks_a_victim_only_while_none_is_known() {
+        let mut view = opening_view();
+        view.cities.retain(|c| c.owner == ME);
+        let mut planner = Planner::new(&view, Knobs::for_faction(Faction::Rome), Faction::Rome, 1);
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.rome_opening_march = 1;
+        planner.choose_rome_opening();
+        assert!(planner.sparta_opening_seeking());
+        let known = opening_view();
+        let mut planner = Planner::new(&known, Knobs::for_faction(Faction::Rome), Faction::Rome, 1);
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.rome_opening_march = 1;
+        planner.choose_rome_opening();
+        assert!(!planner.sparta_opening_seeking());
+    }
+
+    #[test]
+    fn rome_opening_melee_excludes_occupation_locked_units() {
+        let mut view = opening_view();
+        view.units
+            .iter_mut()
+            .find(|u| u.id == UnitId(3))
+            .unwrap()
+            .occupation_lock = Some(ENEMY);
+        let mut planner = Planner::new(&view, Knobs::for_faction(Faction::Rome), Faction::Rome, 1);
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.rome_opening_march = 1;
+        planner.choose_rome_opening();
+        let city = planner.rome_opening_city().unwrap();
+        assert!(!planner.rome_opening_ready(city));
     }
 }
