@@ -119,10 +119,10 @@ Split parallel work across disjoint lanes whenever possible:
 | `author:claude` / `author:chatgpt` / `author:gemini` | Identifies which model family authored the PR (required because all agents may share one GitHub account). |
 | `needs-review` | Author finished implementation and CI is green; ready for a different model family (`reviewer != author`) to review and merge. |
 | `reviewing:claude` / `reviewing:chatgpt` / `reviewing:gemini` | Active peer-review lock so two reviewers do not review/merge the same PR simultaneously. |
-| `changes-requested` | Peer reviewer found blocking issues; author should address them (max 2 rounds). |
+| `changes-requested` | Peer reviewer found blocking issues; author should address them while review is making progress. |
 | `status:handoff` | WIP pushed to a branch with a Handoff Comment; ready for another agent to continue. |
 | `mode:bakeoff` | Multiple agents solve the same issue on separate Draft PRs from the same base commit for comparison. |
-| `needs-human` | Requires the maintainer (human-only governance/security fence, unsettled design question, outside PR, or 2+ failed review rounds). Direct notification is mandatory; see below. |
+| `needs-human` | Requires the maintainer (human-only governance/security fence, unsettled design question, outside PR, or a review that is stuck or unlikely to converge with reasonable effort). Direct notification is mandatory; see below. |
 | `lane:core` / `lane:ai` / `lane:ui` / `lane:docs` | Primary area touched (determines collision risk). |
 
 ### Human escalation: notify the maintainer directly
@@ -213,11 +213,14 @@ Before merging:
    When GitHub Merge Queue is enabled on `master`, this command automatically adds the PR to the merge queue (`merge_group` CI tests it against the latest `master` and any earlier queued PRs, then merges it without another review round). If `ci-ok` is still running on the exact head you already `PASS`-reviewed (outside the human-only fence), you may pass `--auto` (`gh pr merge <N> --squash --delete-branch --auto`); **never** arm `--auto` or enqueue your own family's PR, an unreviewed or `changes-requested` PR, a fork/outside PR, or any human-only governance/security fence PR.
 4. Remove `needs-review` and `reviewing:<self>` labels once merged or enqueued.
 
-### 5. Max 2 review rounds (no infinite ping-pong)
+### 5. Continue productive reviews; escalate when stuck
 - If blocking issues are found: swap `needs-review` + `reviewing:<self>` -> `changes-requested` and list concrete blockers.
 - Keep `author:<agent>` on the PR. Address the author by canonical agent ID in the review and give an actionable revision checklist; that author's next heartbeat picks up its own `changes-requested` PR under priority 2. There is no assumed GitHub bot account to @mention for a model. Use `status:handoff` instead when transferring unfinished implementation to a different agent, with the Handoff Comment below. Neither label bypasses a human-only merge fence.
 - When the author fixes them and CI is green on the new head SHA, the author swaps `changes-requested` -> `needs-review`.
-- If a PR still fails peer review after **2 rounds**, stop iterating, swap to `needs-human`, and summarize the disagreement with a direct maintainer notification as above.
+- **No fixed round limit** (maintainer, 2026-11-28). Continue when revisions resolve findings, experiments add useful evidence, or remaining work is concrete and reasonably bounded. Another round, a newly discovered issue, or a corrected documentation omission is not by itself a reason to escalate.
+- Exercise judgment after each review: what changed, what remains, and is the next attempt likely to move this toward resolution? Put that assessment in the existing review or revision comment; do not add a separate tracking system. Reviewers should consolidate known blockers early and acknowledge findings they missed previously.
+- Escalate when the same substantive disagreement repeats without new evidence, revisions cycle or stop reducing blockers, likely remaining effort is unreasonable for the benefit, or resolution needs a human decision/access. Do not keep trying indefinitely merely because another approach is imaginable. Set `needs-human`, notify the maintainer once, and summarize the attempts, unresolved question and recommended next step. Human-only fences still require escalation immediately, regardless of progress.
+- For PRs escalated solely because of the former round cap, reassess the latest revision. If there is a concrete productive next step and no other human-only reason, explain the reassessment, remove that obsolete `needs-human` reason and resume the normal review/fix flow. Never clear a current FAIL without actually reviewing the fix, or waive exact-head verdicts, CI, independence or merge-race safeguards.
 
 ## Other work modes
 

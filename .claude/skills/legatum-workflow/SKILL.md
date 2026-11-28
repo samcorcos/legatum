@@ -11,6 +11,8 @@ Current rules only, one line each with the date and who. Detail, the user's full
 
 ## Source of truth, merging and gates
 
+- Productive review iterations (user, 2026-11-28): no fixed round cutoff. Continue while revisions resolve findings or experiments produce useful evidence and a reasonable path to completion remains. Exercise judgment to escalate repeated disagreements without new evidence, cycling/stalled revisions, unreasonable likely effort, or decisions/access requiring a human. Explain attempts and the next decision in the existing review; preserve all independent review, exact-head CI and human-only merge safeguards. See `docs/ops/multi-agent.md` for routing and resuming old round-cap escalations.
+
 - Required review before merge (user, 2026-11-27): use a required `peer-review` check alongside `ci-ok` so ordinary merges stay blocked until the current commit has the required specialist verdicts and independent model-family or explicit maintainer approval. Labels route work, not approval. Shared-account model attribution is an accepted convention; leave administrator bypass settings unchanged. Activation and review-comment format live in `docs/ops/multi-agent.md`.
 - Heartbeat parallelism (user, 2026-11-27, clarified): three is a concurrency ceiling per agent family across overlapping executions, not a per-run/hour quota. Refill slots immediately in priority order when work completes or is handed off as blocked; review/human waits do not occupy released slots, and unchanged blockers are not repeatedly reclaimed. Continue while actionable work remains and execution can continue; hourly wake-ups provide fallback discovery/recovery. Preserve visible claims, worktree/target isolation, lane:core serialization and serial merges. Details and the scheduler prompt live in `docs/ops/multi-agent.md`.
 
@@ -76,7 +78,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 | Diagnosis, valuation audits, trace reading, design research | Fable (allowed, user 2026-11-11; he may bring the ban back) |
 | Max-intelligence reviews and audits on Codex | `astra` (gpt-6-astra) (user, 2026-10-24; supersedes "never gpt-6-astra", 2026-10-04) |
 
-- At most about 4-5 Claude agents at once (2026-10-03, 2026-10-17). Cheap does, better checks: a cheap model implements, Sonnet verifies, Opus judges design-relevant results. Escalate after two failed checks.
+- At most about 4-5 Claude agents at once (2026-10-03, 2026-10-17). Cheap does, better checks: a cheap model implements, Sonnet verifies, Opus judges design-relevant results. Escalate when checks reveal a stuck loop or a need for different expertise; apply the productive-review judgment rule above rather than a fixed failure count.
 - Scripts before models: anything repeated becomes a script.
 - Sub-agents send a one-line interim note while waiting on long jobs, and never start their own UI reviewer and hand back; the lead runs reviewers (2026-10-20, 2026-10-23).
 - Agent briefs that write player text must include: "Follow the plain-language guide in `.claude/skills/legatum-ui/SKILL.md` (Game text: plain language, with its glossary), and `npx vitest run src/ui/textArtifacts.test.tsx src/ui/copySource.test.ts` must pass." (user, 2026-10-17). The `legatum-ui` skill must keep a "Game text: plain language" section with its glossary.
