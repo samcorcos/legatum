@@ -120,6 +120,7 @@ impl Tape {
                                     | "RangedAttack"
                                     | "UpgradeUnit"
                                     | "UpgradeSiege"
+                                    | "Pillage"
                                     | "AirStrike"
                                     | "Rebase"
                                     | "AirRecon"
@@ -555,6 +556,7 @@ mod tests {
             },
             Order::UpgradeUnit { unit: UnitId(21) },
             Order::UpgradeSiege { unit: UnitId(22) },
+            Order::Pillage { unit: UnitId(30) },
             Order::AirStrike {
                 plane: UnitId(23),
                 target: Hex::new(-1, 2),
@@ -585,7 +587,7 @@ mod tests {
         ]
     }
 
-    const ORDER_VARIANTS: usize = 33;
+    const ORDER_VARIANTS: usize = 34;
 
     fn variant_index(order: &Order) -> usize {
         match order {
@@ -622,6 +624,7 @@ mod tests {
             Order::GiveGold { .. } => 30,
             Order::SetResearchGoal { .. } => 31,
             Order::BuyCity { .. } => 32,
+            Order::Pillage { .. } => 33,
         }
     }
 

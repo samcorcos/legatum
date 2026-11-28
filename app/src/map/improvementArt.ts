@@ -98,7 +98,7 @@ export function drawImprovements(ctx: CanvasRenderingContext2D, view: PlayerView
     const img = improvementImage(improvementStem(imp.kind, !!imp.upgraded), size * dpr);
     if (!img) continue;
     ctx.save();
-    ctx.globalAlpha = t.visible ? 0.92 : 0.64;
+    ctx.globalAlpha = (t.visible ? 0.92 : 0.64) * (imp.pillaged ? 0.52 : 1);
     clipHex(ctx, x, y, r * 0.97);
     const n = units.get(i) ?? 0;
     if (n) {
@@ -110,6 +110,21 @@ export function drawImprovements(ctx: CanvasRenderingContext2D, view: PlayerView
       ctx.clip('evenodd');
     }
     ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+    if (imp.pillaged) {
+      // Charred tint + scorch mark so pillaged improvements read unmistakably on the map.
+      ctx.fillStyle = 'rgba(42, 22, 16, 0.34)';
+      ctx.fillRect(x - size / 2, y - size / 2, size, size);
+      ctx.strokeStyle = 'rgba(180, 48, 32, 0.85)';
+      ctx.lineWidth = Math.max(1.5, r * 0.055);
+      ctx.lineCap = 'round';
+      const s = r * 0.28;
+      ctx.beginPath();
+      ctx.moveTo(x - s, y - s);
+      ctx.lineTo(x + s, y + s);
+      ctx.moveTo(x + s, y - s);
+      ctx.lineTo(x - s, y + s);
+      ctx.stroke();
+    }
     ctx.restore();
   }
   ctx.restore();

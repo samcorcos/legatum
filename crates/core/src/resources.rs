@@ -283,19 +283,52 @@ pub fn border_pull(state: &GameState, owner: PlayerId, city_pos: Hex, h: Hex) ->
     }
 }
 
+/// Whether an enemy military unit (at-War rival or Barbarian) or a Barbarian camp occupies `at`,
+/// denying `owner` tile yields and strategic supply from that non-city-centre tile.
+pub fn tile_occupied_by_enemy(state: &GameState, owner: PlayerId, at: Hex) -> bool {
+    if state
+        .cities
+        .values()
+        .any(|c| c.owner == owner && c.pos == at)
+    {
+        return false;
+    }
+    if state
+        .barbarians
+        .as_ref()
+        .is_some_and(|b| b.camps.iter().any(|c| c.pos == at))
+    {
+        return true;
+    }
+    state.units.values().any(|u| {
+        u.pos == at
+            && (u.owner.is_barbarian()
+                || (crate::rules::is_military(u.kind)
+                    && crate::rules::hostile(state, owner, u.owner)))
+    })
+}
+
 /// Strategic deposits this empire supplies from: known deposits on tiles it owns (worked or not).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Deposit {
     pub resource: Resource,
     pub at: Hex,
     pub city: Option<CityId>,
-    /// A Mine on the deposit (or a city built on it) adds `SUPPLY_PER_MINE`.
+    /// A working Mine on the deposit (or a city built on it) adds `SUPPLY_PER_MINE` (false while pillaged).
     pub mined: bool,
+    /// The improvement on this deposit is pillaged (needs repair for the bonus supply).
+    pub pillaged: bool,
+    /// An enemy military unit (or Barbarian camp) sits on this deposit, cutting its supply to 0.
+    pub blocked: bool,
 }
 
 impl Deposit {
     pub fn supply(&self) -> i32 {
-        SUPPLY_PER_DEPOSIT + if self.mined { SUPPLY_PER_MINE } else { 0 }
+        if self.blocked {
+            0
+        } else {
+            SUPPLY_PER_DEPOSIT + if self.mined { SUPPLY_PER_MINE } else { 0 }
+        }
     }
 }
 
@@ -334,11 +367,14 @@ pub fn deposits(state: &GameState, p: PlayerId) -> Vec<Deposit> {
                     .city
                     .and_then(|c| state.cities.get(&c))
                     .is_some_and(|c| c.pos == at);
+                let blocked = !centre && tile_occupied_by_enemy(state, p, at);
                 Deposit {
                     resource: r,
                     at,
                     city: t.city,
-                    mined: t.improved || centre,
+                    mined: (t.improved && !t.pillaged) || centre,
+                    pillaged: !centre && t.improved && t.pillaged,
+                    blocked,
                 }
             })
         })
@@ -354,15 +390,19 @@ pub fn supplied(state: &GameState, p: PlayerId, resource: Resource) -> i32 {
         if t.resource != Some(resource) || t.owner != Some(p) {
             return total;
         }
+        let at = state.map.hex_at(i);
         let centre = t
             .city
             .and_then(|c| state.cities.get(&c))
-            .is_some_and(|c| c.pos == state.map.hex_at(i));
+            .is_some_and(|c| c.pos == at);
+        if !centre && tile_occupied_by_enemy(state, p, at) {
+            return total;
+        }
         total
             + deposit_supply(
                 state.player(p).faction,
                 state.setup.rule_experiments.faction_rules_off,
-                t.improved || centre,
+                (t.improved && !t.pillaged) || centre,
             )
     })
 }
@@ -1141,6 +1181,12 @@ pub struct DepositView {
     /// The city whose land it is on (None: land no city works).
     pub city: Option<CityId>,
     pub mined: bool,
+    /// The improvement on this deposit is pillaged and needs repair.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub pillaged: bool,
+    /// An enemy military unit (or Barbarian camp) occupies this deposit, cutting its supply to 0.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub blocked: bool,
     pub supply: i32,
 }
 
@@ -1154,22 +1200,28 @@ pub fn supply_views(state: &GameState, p: PlayerId) -> Vec<SupplyView> {
             let r = name(resource);
             let mut supplied = Breakdown::default();
             for d in deposits.iter().filter(|d| d.resource == resource) {
-                supplied.add(
-                    format!(
-                        "{r} near {}{}",
-                        city_name(state, d.city),
-                        if d.mined {
-                            format!(", with {}", with_article_name(improvement_name(resource)))
-                        } else {
-                            String::new()
-                        }
-                    ),
-                    deposit_supply(
-                        player.faction,
-                        state.setup.rule_experiments.faction_rules_off,
-                        d.mined,
-                    ),
-                );
+                if d.blocked {
+                    supplied.parts.push((
+                        format!("{r} near {} (enemy on tile)", city_name(state, d.city)),
+                        0,
+                    ));
+                } else {
+                    let suffix = if d.pillaged {
+                        format!(" ({} pillaged)", improvement_name(resource))
+                    } else if d.mined {
+                        format!(", with {}", with_article_name(improvement_name(resource)))
+                    } else {
+                        String::new()
+                    };
+                    supplied.add(
+                        format!("{r} near {}{suffix}", city_name(state, d.city)),
+                        deposit_supply(
+                            player.faction,
+                            state.setup.rule_experiments.faction_rules_off,
+                            d.mined,
+                        ),
+                    );
+                }
             }
             let mut used = Breakdown::default();
             let mut units: BTreeMap<String, i32> = BTreeMap::new();
@@ -1215,11 +1267,17 @@ pub fn supply_views(state: &GameState, p: PlayerId) -> Vec<SupplyView> {
                         hex: d.at,
                         city: d.city,
                         mined: d.mined,
-                        supply: deposit_supply(
-                            player.faction,
-                            state.setup.rule_experiments.faction_rules_off,
-                            d.mined,
-                        ),
+                        pillaged: d.pillaged,
+                        blocked: d.blocked,
+                        supply: if d.blocked {
+                            0
+                        } else {
+                            deposit_supply(
+                                player.faction,
+                                state.setup.rule_experiments.faction_rules_off,
+                                d.mined,
+                            )
+                        },
                     })
                     .collect(),
                 resource,

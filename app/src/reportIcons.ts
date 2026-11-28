@@ -25,6 +25,7 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'CityStarved': return 'yield-food';
     case 'ProductionCompleted': return itemIcon(e.item, faction?.(e.owner));
     case 'ItemBought': case 'TileBought': case 'TreatyPayment': return 'yield-gold';
+    case 'TilePillaged': return mine?.(e.raider) ? (e.healed > 0 ? 'mark-heal' : 'yield-gold') : 'ui-alert';
     case 'WonderRaceLost': return buildingIconName(e.building);
     case 'AircraftRebased': return unitIconName(e.kind, faction?.(e.owner));
     case 'UnitUpgraded': return unitIconName(e.to, faction?.(e.owner));

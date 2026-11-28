@@ -64,7 +64,7 @@ struct CityKey {
 
 /// Terrain, resource and improvement of a tile a city's yields read: its centre and the tiles
 /// it owns (`Tile::city`). The rest of the radius doesn't enter them (barbarian-held tiles are separate).
-type TileKey = Option<(Terrain, Option<Resource>, bool)>;
+type TileKey = Option<(Terrain, Option<Resource>, bool, bool)>;
 
 fn city_wonders(state: &GameState, city: &City) -> Vec<(Hex, Wonder)> {
     state
@@ -85,7 +85,7 @@ fn tile_key(state: &GameState, city: &City, h: Hex) -> TileKey {
         .map
         .get(h)
         .filter(|t| h == city.pos || t.city == Some(city.id))
-        .map(|t| (t.terrain, t.resource, t.improved))
+        .map(|t| (t.terrain, t.resource, t.improved, t.pillaged))
 }
 
 impl CityKey {

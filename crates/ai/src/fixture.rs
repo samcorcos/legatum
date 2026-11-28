@@ -144,6 +144,7 @@ impl ViewBuilder {
             resource: None,
             improvement: None,
             road: 0,
+            blocked: false,
         };
         let players: Vec<PlayerPublic> = [(0u8, 0u8), (1, 0), (2, 2), (3, 3)]
             .iter()
@@ -454,6 +455,7 @@ impl ViewBuilder {
             occupation_lock: None,
             upgrade_cost: None,
             heir_of: None,
+            pillage: None,
         });
         self
     }
@@ -833,6 +835,11 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
                     u.siege_offer.as_ref().is_some_and(|o| o.blocker.is_none()),
                     "Siege not available"
                 );
+                assert!(acted.insert(*unit), "two unit orders for {unit:?}");
+            }
+            Order::Pillage { unit } => {
+                let u = own_unit(*unit);
+                assert!(u.pillage.is_some(), "pillage not available for {unit:?}");
                 assert!(acted.insert(*unit), "two unit orders for {unit:?}");
             }
             Order::FoundCity { unit } => {

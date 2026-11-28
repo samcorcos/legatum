@@ -30,6 +30,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     // Phones have no persistent Diplomacy control; the lesson stays readable without a ring.
     case 'diplomacy': return first('.game .panel.vp .rivals-foot button', '.game .panel.vp .rivals button.rv-row');
     case 'found': return action(/^Found City/i);
+    case 'pillage': return action(/^Pillage/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);
     case 'skip': return action(/^Skip/i);
     case 'explore': return action(/^Auto-explore/i);

@@ -752,6 +752,7 @@ pub(crate) fn determinize_with(
                     owner: t.owner,
                     ruin: t.ruin,
                     improved: t.improvement.is_some(),
+                    pillaged: t.improvement.is_some_and(|imp| imp.pillaged),
                     city: memories[i].clone(),
                 });
             }
@@ -777,6 +778,7 @@ pub(crate) fn determinize_with(
                         owner: tile.owner,
                         ruin: tile.ruin,
                         improved: tile.improved,
+                        pillaged: tile.pillaged,
                         city: state.city_at(x).map(CityMemory::from),
                     });
                 }

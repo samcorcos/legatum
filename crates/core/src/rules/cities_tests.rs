@@ -458,11 +458,8 @@ fn city_turn(state: &mut GameState) -> Vec<Event> {
 }
 
 #[test]
-fn a_foreign_unit_does_not_block_a_worked_tile() {
+fn an_enemy_military_unit_blocks_a_worked_tile_while_peaceful_foreign_unit_does_not() {
     let mut s = test_game(&[(Faction::Mongols, 0), (Faction::Byzantium, 1)]);
-    for relation in &mut s.diplomacy.as_mut().unwrap().relations {
-        relation.state = crate::diplomacy::RelationState::War;
-    }
     let city = found(&mut s, P0, at(5, 5));
     city_mut(&mut s, city).population = 2;
     let tile = at(6, 5);
@@ -470,9 +467,20 @@ fn a_foreign_unit_does_not_block_a_worked_tile() {
     let before = economy::city_yields(&s, &s.cities[&city]);
     assert!(before.worked.contains(&tile));
     spawn_unit(&mut s, P1, UnitKind::Spearman, tile);
-    let after = economy::city_yields(&s, &s.cities[&city]);
-    assert!(after.worked.contains(&tile));
-    assert_eq!(before.total, after.total);
+    // At Peace: foreign unit does not block the worked tile.
+    for relation in &mut s.diplomacy.as_mut().unwrap().relations {
+        relation.state = crate::diplomacy::RelationState::Peace;
+    }
+    let at_peace = economy::city_yields(&s, &s.cities[&city]);
+    assert!(at_peace.worked.contains(&tile));
+    assert_eq!(before.total, at_peace.total);
+    // At War: enemy military unit denies the tile's yields (rules 68).
+    for relation in &mut s.diplomacy.as_mut().unwrap().relations {
+        relation.state = crate::diplomacy::RelationState::War;
+    }
+    let at_war = economy::city_yields(&s, &s.cities[&city]);
+    assert!(!at_war.worked.contains(&tile));
+    assert!(at_war.total.food < before.total.food);
 }
 
 #[test]

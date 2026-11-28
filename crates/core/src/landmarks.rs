@@ -66,6 +66,7 @@ pub fn complete(state: &mut GameState, city: CityId, building: BuildingKind, til
     let owner = state.cities[&city].owner;
     let t = state.map.get_mut(tile).expect("validated wonder tile");
     t.improved = false;
+    t.pillaged = false;
     t.landmark = Some(Landmark {
         building,
         city,

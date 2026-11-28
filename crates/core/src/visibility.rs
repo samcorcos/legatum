@@ -132,6 +132,7 @@ pub fn reveal_map(state: &mut GameState, owner: crate::PlayerId, at: Hex, radius
                 owner: None,
                 ruin: false,
                 improved: false,
+                pillaged: false,
                 city: None,
             });
             memory.ruin = state.map.tiles[i].ruin;
@@ -162,6 +163,7 @@ pub fn reveal_all_to_team(state: &mut GameState, owner: PlayerId) {
                 owner: tile.owner,
                 ruin: tile.ruin,
                 improved: tile.improved,
+                pillaged: tile.pillaged,
                 city: cities.get(&i).cloned(),
             });
         }
@@ -557,6 +559,7 @@ pub fn update_explored(state: &mut GameState) {
                     owner: tile.owner,
                     ruin: tile.ruin,
                     improved: tile.improved,
+                    pillaged: tile.pillaged,
                     city: cities[i].clone(),
                 });
             }
@@ -568,6 +571,7 @@ pub fn update_explored(state: &mut GameState) {
                     owner: None,
                     ruin: false,
                     improved: false,
+                    pillaged: false,
                     city: None,
                 });
                 memory.owner = tile.owner;

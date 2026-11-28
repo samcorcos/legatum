@@ -1576,6 +1576,7 @@ fn capture_one(state: &mut GameState, city: CityId, captor: PlayerId, events: &m
                 t.city = None;
                 t.owner = None;
                 t.improved = false;
+                t.pillaged = false;
                 t.landmark = None;
             }
         }

@@ -161,6 +161,12 @@ pub enum Order {
     UpgradeSiege {
         unit: UnitId,
     },
+    /// Land military unit (not Scout, not occupation-locked) pillages an at-War empire's
+    /// improved, non-pillaged resource tile (non-city-centre). Clears fortify; resolves after
+    /// ranged fire and movement combat if the unit survives.
+    Pillage {
+        unit: UnitId,
+    },
     /// An aircraft in a city's hangar strikes a tile: a Bomber within `data::BOMBER_RANGE` of its
     /// city, a Fighter within `data::FIGHTER_STRIKE_RANGE`, in the ranged phase with no
     /// retaliation, unless a Fighter on guard intercepts (`rules::air`). A Fighter that strikes

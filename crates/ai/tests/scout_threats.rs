@@ -335,6 +335,7 @@ fn distant_ruin_uses_safe_waypoints_around_live_and_remembered_threats() {
                 owner: None,
                 ruin: true,
                 improved: false,
+                pillaged: false,
                 city: None,
             });
             update_explored(&mut state);

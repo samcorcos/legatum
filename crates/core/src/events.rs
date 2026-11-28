@@ -821,6 +821,20 @@ pub enum Event {
         level: u8,
         at: Hex,
     },
+    /// A land military unit pillaged an at-War empire's improved resource tile (`Order::Pillage`).
+    TilePillaged {
+        raider: PlayerId,
+        unit: UnitId,
+        unit_kind: UnitKind,
+        owner: PlayerId,
+        city: Option<CityId>,
+        at: Hex,
+        improvement: ImprovementKind,
+        /// Instant Gold gained (Quarry/Mine/Saltpetre Works/Oil Well/Quartz Mine), 0 for Farm/Pasture.
+        gold: i32,
+        /// Health restored (Farm/Pasture, capped at 100), 0 for Gold improvements.
+        healed: i32,
+    },
     /// An order that could not be carried out at resolution time.
     OrderFailed {
         player: PlayerId,

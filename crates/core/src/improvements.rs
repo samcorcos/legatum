@@ -128,11 +128,36 @@ pub fn resource_yields(resource: Resource, knows: impl Fn(TechId) -> bool) -> Yi
     y
 }
 
-/// The resource part of a tile's yield: nothing until the tile is improved. A city centre counts
-/// as improved (the city is its improvement).
+/// Health restored when pillaging a Farm or Pasture (capped at `data::UNIT_HP`).
+pub const PILLAGE_HEAL: i32 = 50;
+/// Instant Gold per `(era + 1)` when pillaging a Quarry, Mine, Saltpetre Works, Oil Well, or Quartz Mine.
+pub const PILLAGE_GOLD_PER_ERA: i32 = 25;
+
+/// Payout for pillaging `kind` as a raider in 0-based `era`: `(heal, gold)`.
+pub fn pillage_payout(kind: ImprovementKind, era: u8) -> (i32, i32) {
+    match kind {
+        ImprovementKind::Farm | ImprovementKind::Pasture => (PILLAGE_HEAL, 0),
+        ImprovementKind::Quarry
+        | ImprovementKind::Mine
+        | ImprovementKind::SaltpetreWorks
+        | ImprovementKind::OilWell
+        | ImprovementKind::QuartzMine => (0, PILLAGE_GOLD_PER_ERA * (i32::from(era) + 1)),
+    }
+}
+
+/// Whether building an improvement on `tile` is repairing a pillaged improvement (half cost).
+pub fn is_repair(state: &GameState, tile: Hex) -> bool {
+    state
+        .map
+        .get(tile)
+        .is_some_and(|t| t.improved && t.pillaged)
+}
+
+/// The resource part of a tile's yield: nothing until the tile is improved (and not pillaged).
+/// A city centre counts as improved (the city is its improvement).
 pub fn tile_resource_yields(tile: &Tile, centre: bool, knows: impl Fn(TechId) -> bool) -> Yields {
     match tile.resource {
-        Some(r) if tile.improved || centre => resource_yields(r, knows),
+        Some(r) if (tile.improved && !tile.pillaged) || centre => resource_yields(r, knows),
         _ => Yields::ZERO,
     }
 }
@@ -186,7 +211,7 @@ pub fn check<R: economy::Reason>(
             )
         }));
     }
-    if t.improved {
+    if t.improved && !t.pillaged {
         return Some(R::word(|| {
             format!("{} is already improved", resources::name(resource))
         }));
@@ -194,8 +219,8 @@ pub fn check<R: economy::Reason>(
     None
 }
 
-/// Every improvement this city could build now, in hex order: its worked resource tiles that are
-/// known, unimproved and unoccupied.
+/// Every improvement this city could build or repair now, in hex order: its worked resource tiles
+/// that are known, unoccupied, and either unimproved or pillaged.
 pub fn candidates(state: &GameState, city: &City) -> Vec<ProductionItem> {
     let mut out = Vec::new();
     for h in city.pos.within(data::CITY_WORK_RADIUS) {
@@ -213,10 +238,11 @@ pub fn candidates(state: &GameState, city: &City) -> Vec<ProductionItem> {
     out
 }
 
-/// Mark the tile improved (the completed item).
+/// Mark the tile improved and clear any pillaged state (the completed item).
 pub fn complete(state: &mut GameState, tile: Hex) {
     if let Some(t) = state.map.get_mut(tile) {
         t.improved = true;
+        t.pillaged = false;
     }
 }
 

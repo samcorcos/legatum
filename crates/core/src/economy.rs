@@ -132,14 +132,20 @@ fn worked_tiles_squatted(state: &GameState, city: &City, squatted: &[Hex]) -> Ve
     worked
 }
 
-/// Hexes in this city's work radius that yield nothing to it: a barbarian camp or a barbarian
-/// unit (Civ 6; user, 2026-10-06). One pass over the units instead of one per tile (yield
-/// previews call this thousands of times a turn).
+/// Hexes in this city's work radius that yield nothing to it: a barbarian camp, a barbarian
+/// unit, or an at-War rival military unit on a non-city-centre tile. One pass over the units
+/// instead of one per tile (yield previews call this thousands of times a turn).
 pub(crate) fn denied_near(state: &GameState, city: &City) -> Vec<Hex> {
     let mut out: Vec<Hex> = state
         .units
         .values()
-        .filter(|u| u.pos.distance(city.pos) <= CITY_WORK_RADIUS && u.owner.is_barbarian())
+        .filter(|u| {
+            u.pos != city.pos
+                && u.pos.distance(city.pos) <= CITY_WORK_RADIUS
+                && (u.owner.is_barbarian()
+                    || (crate::rules::is_military(u.kind)
+                        && crate::rules::hostile(state, city.owner, u.owner)))
+        })
         .map(|u| u.pos)
         .collect();
     if let Some(barbarians) = &state.barbarians {
@@ -148,9 +154,11 @@ pub(crate) fn denied_near(state: &GameState, city: &City) -> Vec<Hex> {
                 .camps
                 .iter()
                 .map(|c| c.pos)
-                .filter(|h| h.distance(city.pos) <= CITY_WORK_RADIUS),
+                .filter(|h| *h != city.pos && h.distance(city.pos) <= CITY_WORK_RADIUS),
         );
     }
+    out.sort();
+    out.dedup();
     out
 }
 
@@ -593,11 +601,26 @@ fn yields_base<const FULL: bool>(
 
     for h in city.pos.within_iter(CITY_WORK_RADIUS) {
         if state.map.get(h).is_some_and(|t| t.city == Some(city.id)) && squatted.contains(&h) {
+            let barb = state
+                .barbarians
+                .as_ref()
+                .is_some_and(|b| b.camps.iter().any(|c| c.pos == h))
+                || state
+                    .units
+                    .values()
+                    .any(|u| u.pos == h && u.owner.is_barbarian());
             y.note(|| {
-                format!(
-                    "Barbarians hold the tile: it yields nothing at {},{}",
-                    h.q, h.r
-                )
+                if barb {
+                    format!(
+                        "Barbarians hold the tile: it yields nothing at {},{}",
+                        h.q, h.r
+                    )
+                } else {
+                    format!(
+                        "Enemy unit holds the tile: it yields nothing at {},{}",
+                        h.q, h.r
+                    )
+                }
             });
         }
     }
@@ -1319,6 +1342,12 @@ fn undiscounted_production_cost(
     } else {
         faction_cost
     };
+    let full = if matches!(item, ProductionItem::Improvement { tile, .. } if crate::improvements::is_repair(state, tile))
+    {
+        full / 2
+    } else {
+        full
+    };
     if military_science_discount(state, owner, item) {
         full * 90 / 100
     } else {
@@ -1514,6 +1543,10 @@ pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option
     );
     if sparta_nonmilitary_premium(state, city.owner, item) {
         production.add("Sparta: non-military +50%", (production.total + 1) / 2);
+    }
+    if matches!(item, ProductionItem::Improvement { tile, .. } if crate::improvements::is_repair(state, tile))
+    {
+        production.add("Repair (50%)", production.total / 2 - production.total);
     }
     if military_science_discount(state, city.owner, item) {
         production.add(

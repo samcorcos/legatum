@@ -17,6 +17,7 @@ import {
   skipSelected,
   toggleRangedMode,
   upgradeSelected,
+  pillageSelected,
 } from '../commands';
 
 /**
@@ -184,7 +185,8 @@ export function handleGameKey(e: KeyboardEvent) {
       break;
     case 'p':
     case 'P':
-      if (!e.ctrlKey && !e.metaKey && !e.altKey && s.canPing()) s.setPingMode(!s.pingMode);
+      if (e.shiftKey) pillageSelected();
+      else if (!e.ctrlKey && !e.metaKey && !e.altKey && s.canPing()) s.setPingMode(!s.pingMode);
       break;
     case 'm':
     case 'M':

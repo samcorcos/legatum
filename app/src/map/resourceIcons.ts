@@ -186,12 +186,13 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
     if (x < -r || x > width + r || cy < -r * 1.5 || cy > height + r) continue;
     ctx.globalAlpha = t.visible ? 1 : 0.75;
     const dormant = isDormant(t, view.me, myFaction);
-    const ringed = !!t.improvement && !art;
+    const pillaged = !!t.improvement?.pillaged;
+    const ringed = !!t.improvement && !pillaged && !art;
     if (detail === 'dots') {
-      if (dormant) ctx.globalAlpha *= FAR_DORMANT_FADE;
+      if (dormant || pillaged) ctx.globalAlpha *= FAR_DORMANT_FADE;
       const d = dot;
       drawFarMark(ctx, x, cy - r * 0.62, d, res, look);
-      markImprovement(ctx, x, cy - r * 0.62, d + 1.5, dormant, ringed, t.visible, look);
+      markImprovement(ctx, x, cy - r * 0.62, d + 1.5, dormant || pillaged, ringed, t.visible, look);
       continue;
     }
     const slots = cities.has(i) ? town : open;
@@ -202,14 +203,14 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
     if (!s) {
       // No painted medallion (still loading, or none made for this resource): its far-tier mark stands in, so the deposit is never invisible.
       if (resourceArtUrl(res, 64)) continue; // The map is redrawn when the image loads.
-      if (dormant) ctx.globalAlpha *= FAR_DORMANT_FADE;
+      if (dormant || pillaged) ctx.globalAlpha *= FAR_DORMANT_FADE;
       drawFarMark(ctx, x + p.dx, cy + p.dy, p.radius * 0.85, res, look);
-      markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + 2, dormant, ringed, t.visible, look);
+      markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + 2, dormant || pillaged, ringed, t.visible, look);
       continue;
     }
     const size = s.width / dpr;
     // Dormant: your own unimproved resource yields nothing yet, so its medallion is faded and ringed with a dashed pen.
-    if (dormant) ctx.globalAlpha *= art ? 0.62 : FAR_DORMANT_FADE;
+    if (dormant || pillaged) ctx.globalAlpha *= art ? 0.62 : FAR_DORMANT_FADE;
     ctx.drawImage(s, x + p.dx - size / 2, cy + p.dy - size / 2, size, size);
     // Keep the map's strategic-resource cue visible over the painted brass frame.
     if (strategic) {
@@ -219,7 +220,17 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
       ctx.lineWidth = Math.max(0.8, 0.8 * dpr);
       ctx.stroke();
     }
-    markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + 2, dormant, ringed, t.visible, look);
+    if (pillaged) {
+      const rr = p.radius * 0.72;
+      ctx.beginPath();
+      ctx.moveTo(x + p.dx - rr, cy + p.dy - rr);
+      ctx.lineTo(x + p.dx + rr, cy + p.dy + rr);
+      ctx.strokeStyle = INK[look].red;
+      ctx.lineWidth = Math.max(1.5, 1.4 * dpr);
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+    markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + 2, dormant || pillaged, ringed, t.visible, look);
   }
   ctx.restore();
 }

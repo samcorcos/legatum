@@ -335,6 +335,7 @@ fn apply_order(
                     t.city = None;
                     t.owner = None;
                     t.improved = false;
+                    t.pillaged = false;
                     t.landmark = None;
                 }
             }
@@ -874,6 +875,7 @@ pub(crate) fn found_city_at(
             t.city = Some(id);
             // A city on an improved tile replaces the improvement.
             t.improved &= h != pos;
+            t.pillaged &= h != pos;
         }
     }
     events.push(Event::CityFounded {

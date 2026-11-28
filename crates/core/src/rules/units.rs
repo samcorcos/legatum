@@ -29,6 +29,8 @@ pub struct UnitPlan {
     pub automation_paths: BTreeMap<UnitId, Vec<Hex>>,
     /// Phase 2, in player then submission order.
     pub ranged: Vec<(PlayerId, UnitId, Hex)>,
+    /// Phase 4.5 (after ranged fire and movement combat), in player then submission order.
+    pub pillage: Vec<(PlayerId, UnitId)>,
     /// Phase 5.
     pub found: Vec<(PlayerId, UnitId)>,
     /// Attackers ordered onto a unit or city of a team their team declares War on this turn.
@@ -139,7 +141,8 @@ pub fn order_unit(order: &Order) -> Option<UnitId> {
         | Order::DisbandUnit { unit }
         | Order::RangedAttack { unit, .. }
         | Order::UpgradeUnit { unit }
-        | Order::UpgradeSiege { unit } => Some(*unit),
+        | Order::UpgradeSiege { unit }
+        | Order::Pillage { unit } => Some(*unit),
         _ => None,
     }
 }
@@ -514,7 +517,118 @@ pub(crate) fn validate_unit_order(
             *gold -= price.total;
             Ok(())
         }
+        Order::Pillage { .. } => match pillage_blocker(state, player, u) {
+            Some(reason) => Err(reason),
+            None => Ok(()),
+        },
         _ => Ok(()),
+    }
+}
+
+/// Why `u` cannot pillage the tile it stands on, or `None` when it can.
+pub fn pillage_blocker(
+    state: &GameState,
+    player: PlayerId,
+    u: &crate::state::Unit,
+) -> Option<String> {
+    if !is_military(u.kind) || u.kind == UnitKind::Scout {
+        return Some("only land military units (not Scouts) can pillage".into());
+    }
+    if let Some(reason) = super::occupation::refusal(state, u) {
+        return Some(reason);
+    }
+    let Some(t) = state.map.get(u.pos) else {
+        return Some("tile is off the map".into());
+    };
+    if state.cities.values().any(|c| c.pos == u.pos) {
+        return Some("cannot pillage a city centre".into());
+    }
+    let Some(tile_owner) = t.owner else {
+        return Some("tile is not owned by an empire at War with you".into());
+    };
+    if !super::hostile(state, player, tile_owner) {
+        return Some("you must be at War with the tile's owner to pillage".into());
+    }
+    if t.resource.is_none() || !t.improved {
+        return Some("there is no improved resource on this tile".into());
+    }
+    if t.pillaged {
+        return Some("this improvement is already pillaged".into());
+    }
+    None
+}
+
+/// Preview of what pillaging `u`'s current tile would yield, when legal.
+pub fn pillage_preview(
+    state: &GameState,
+    player: PlayerId,
+    u: &crate::state::Unit,
+) -> Option<crate::view::PillagePreview> {
+    if pillage_blocker(state, player, u).is_some() {
+        return None;
+    }
+    let resource = state.map.get(u.pos)?.resource?;
+    let improvement = crate::improvements::kind_for(resource);
+    let era = crate::eras::current_era(&state.player(player).techs);
+    let (heal, gold) = crate::improvements::pillage_payout(improvement, era);
+    Some(crate::view::PillagePreview {
+        improvement,
+        heal,
+        gold,
+    })
+}
+
+/// Phase 4.5 (after ranged fire and movement combat): surviving raiders pillage their tile.
+pub fn resolve_pillage(
+    state: &mut GameState,
+    pillage: &[(PlayerId, UnitId)],
+    events: &mut Vec<Event>,
+) {
+    for &(player, unit_id) in pillage {
+        let Some(u) = state.units.get(&unit_id).filter(|u| u.owner == player) else {
+            // Destroyed in ranged fire or movement combat before pillaging.
+            continue;
+        };
+        if let Some(reason) = pillage_blocker(state, player, u) {
+            events.push(Event::OrderFailed {
+                player,
+                reason: format!("Unit {} could not pillage: {reason}", unit_id.0),
+            });
+            continue;
+        }
+        let pos = u.pos;
+        let unit_kind = u.kind;
+        let tile = state.map.get(pos).expect("validated tile");
+        let owner = tile.owner.expect("validated owner");
+        let city = tile.city;
+        let resource = tile.resource.expect("validated resource");
+        let improvement = crate::improvements::kind_for(resource);
+        let era = crate::eras::current_era(&state.player(player).techs);
+        let (heal_amount, gold_amount) = crate::improvements::pillage_payout(improvement, era);
+        let healed = if heal_amount > 0 {
+            let u = state.units.get_mut(&unit_id).expect("unit");
+            let before = u.hp;
+            u.hp = (u.hp + heal_amount).min(UNIT_HP);
+            u.hp - before
+        } else {
+            0
+        };
+        if gold_amount > 0 {
+            let before = state.player(player).gold;
+            state.player_mut(player).gold = crate::validation::credit_gold(before, gold_amount);
+        }
+        state.map.get_mut(pos).expect("tile").pillaged = true;
+        events.push(Event::TilePillaged {
+            raider: player,
+            unit: unit_id,
+            unit_kind,
+            owner,
+            city,
+            at: pos,
+            improvement,
+            gold: gold_amount,
+            healed,
+        });
     }
 }
 
@@ -908,6 +1022,22 @@ pub fn apply_unit_orders(
                         }
                         Err(r) => events.push(fail(format!("Siege for unit {} failed: {r}", id.0))),
                     }
+                }
+                Order::Pillage { .. } => {
+                    let u_ref = &state.units[&id];
+                    if let Some(reason) = pillage_blocker(state, player, u_ref) {
+                        events.push(fail(format!("Unit {} could not pillage: {reason}", id.0)));
+                        continue;
+                    }
+                    let u = state.units.get_mut(&id).expect("unit");
+                    u.goto = None;
+                    u.path.clear();
+                    u.path_stop_on_block = false;
+                    u.needs_orders = false;
+                    u.fortify = 0;
+                    u.acted = true;
+                    u.moves_left = 0;
+                    plan.pillage.push((player, id));
                 }
                 Order::UpgradeUnit { .. } => {
                     let gold = state.player(player).gold;

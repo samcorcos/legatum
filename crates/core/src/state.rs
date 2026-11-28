@@ -213,6 +213,11 @@ pub struct Tile {
     /// Cleared whenever the tile changes hands. Omitted when false, so old hashes hold.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub improved: bool,
+    /// The improvement on this tile has been pillaged (`Order::Pillage`). While pillaged, it
+    /// provides no resource yield bonus and no improved-deposit supply bonus until repaired.
+    /// Omitted when false, so unpillaged maps keep their hashes.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub pillaged: bool,
     /// A road here (`crate::roads`): bit d (0..6) links to the neighbour in direction d,
     /// `roads::NODE` marks the tile as road even with no link. 0 = no road. Roads never
     /// leave a tile, whoever owns it. Omitted at 0, so road-free maps keep their hashes.
@@ -231,6 +236,7 @@ impl Tile {
             city: None,
             resource: None,
             improved: false,
+            pillaged: false,
             road: 0,
         }
     }
@@ -741,6 +747,9 @@ pub struct TileMemory {
     /// The remembered tile's resource was improved (`Tile::improved`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub improved: bool,
+    /// The remembered tile's improvement was pillaged (`Tile::pillaged`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub pillaged: bool,
     pub city: Option<CityMemory>,
 }
 

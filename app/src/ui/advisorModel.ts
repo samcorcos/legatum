@@ -20,7 +20,7 @@ import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, Tech
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'diplomacy' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'queueTech' | 'researchQueue' | 'closeResearch' | 'buyTile' | 'buyCity' | 'automate' | 'queueBuild' | 'heal' | 'autoFire' | 'upgrade' | 'airRecon' | 'ping' | 'siege' | 'mapYields' | 'cities'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'diplomacy' | 'found' | 'pillage' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'queueTech' | 'researchQueue' | 'closeResearch' | 'buyTile' | 'buyCity' | 'automate' | 'queueBuild' | 'heal' | 'autoFire' | 'upgrade' | 'airRecon' | 'ping' | 'siege' | 'mapYields' | 'cities'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
 export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean; tip?: boolean }
 export interface AdvisorContext {
@@ -210,6 +210,7 @@ function unitSuggestion(ctx: AdvisorContext, unit: UnitView, order?: Order): Sug
     SleepUnit: { title: `Fortify your ${name}`, instruction: unit.military && unit.kind !== 'Scout' ? `${ctx.touch ? 'Tap' : 'Click'} Fortify.` : `${ctx.touch ? 'Tap' : 'Click'} Wait.`, key: 'F', target: control('fortify') },
     SkipUnit: { title: `Skip your ${name}`, instruction: 'Press Space to skip this turn.', key: 'Space', target: control('skip') },
     FoundCity: { title: 'Found a new city', instruction: `${ctx.touch ? 'Tap' : 'Click'} Found City.`, key: 'B', target: control('found') },
+    Pillage: { title: `Pillage with your ${name}`, instruction: `${ctx.touch ? 'Tap' : 'Click'} Pillage.`, key: 'Shift+P', target: control('pillage') },
     SetAutomation: order.type === 'SetAutomation' && order.automation === 'Explore' ? { title: `Explore with your ${name}`, instruction: `${ctx.touch ? 'Tap' : 'Click'} Auto-explore.`, key: 'E', target: control('explore') } : undefined,
   };
   const action = actions[order.type];

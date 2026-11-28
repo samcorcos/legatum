@@ -50,9 +50,17 @@ pub struct TileView {
     /// current (roads are laid for everyone to see, and never removed). 0 = none.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub road: u8,
+    /// Own non-city-centre tile occupied by an enemy military unit or barbarian camp: yields and
+    /// strategic supply from this tile are 0 while occupied.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub blocked: bool,
 }
 
 fn is_zero_u8(v: &u8) -> bool {
+    *v == 0
+}
+
+fn is_zero_i32(v: &i32) -> bool {
     *v == 0
 }
 
@@ -73,6 +81,21 @@ pub struct TileImprovement {
     /// The upgraded form (Deep Mine...): known only for the viewer's own tiles.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub upgraded: bool,
+    /// Pillaged: yields no resource bonus and no improved-deposit supply bonus until repaired.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub pillaged: bool,
+}
+
+/// What pillaging the tile this unit stands on would yield right now (own units only, when legal).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PillagePreview {
+    pub improvement: ImprovementKind,
+    /// Health restored (Farm/Pasture: +50, capped at 100), 0 for Gold improvements.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub heal: i32,
+    /// Instant Gold gained (Quarry/Mine/Saltpetre Works/Oil Well/Quartz Mine: 25 * (era + 1)), 0 for heal improvements.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub gold: i32,
 }
 
 /// What building an improvement does, for its production option.
@@ -80,8 +103,11 @@ pub struct TileImprovement {
 pub struct ImprovementPreview {
     pub tile: Hex,
     pub resource: crate::resources::Resource,
-    /// What the tile gains when built, at the owner's current technology.
+    /// What the tile gains when built (or repaired), at the owner's current technology.
     pub gain: Yields,
+    /// True when this item repairs a pillaged improvement (half Production/Gold cost).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub repair: bool,
     /// The automatic upgrade the owner doesn't have yet: its name, technology and extra yields.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub upgrade: Option<ImprovementUpgrade>,
@@ -252,6 +278,7 @@ fn shared_tiles_clone_copies_only_on_write_and_keeps_json_array() {
         resource: None,
         improvement: None,
         road: 0,
+        blocked: false,
     };
     let original: SharedTileViews = vec![tile.clone()].into();
     let mut projected = original.clone();
@@ -370,6 +397,9 @@ pub struct UnitView {
     /// An Heir only (public): the Byzantium empire whose goal he carries, whoever holds him now.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heir_of: Option<PlayerId>,
+    /// Own units only: pillage preview when this unit can legally pillage the tile it stands on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pillage: Option<PillagePreview>,
 }
 
 /// The newest researched form a unit's upgrade skips for want of strategic supply.
@@ -1565,15 +1595,20 @@ fn improvement_view(
     state: &GameState,
     me: PlayerId,
     t: &crate::state::Tile,
-    seen: Option<bool>,
+    seen: Option<(bool, bool)>,
 ) -> Option<TileImprovement> {
-    if seen != Some(true) {
+    let (improved, pillaged) = seen?;
+    if !improved {
         return None;
     }
     let kind = crate::improvements::kind_for(t.resource?);
     let upgraded = t.owner == Some(me)
         && crate::improvements::upgraded(kind, |tech| state.player(me).techs.contains(&tech));
-    Some(TileImprovement { kind, upgraded })
+    Some(TileImprovement {
+        kind,
+        upgraded,
+        pillaged,
+    })
 }
 
 /// The preview shown with an Improvement production option.
@@ -1587,6 +1622,7 @@ fn improvement_preview(state: &GameState, c: &City, tile: Hex) -> Option<Improve
         tile,
         resource,
         gain: crate::improvements::resource_yields(resource, knows),
+        repair: crate::improvements::is_repair(state, tile),
         upgrade: (!knows(upgrade_tech)).then(|| ImprovementUpgrade {
             tech: upgrade_tech,
             name: crate::improvements::name(kind, true).to_string(),
@@ -1913,6 +1949,27 @@ pub fn player_view_cached(
     let supply = (!map_only).then(|| crate::resources::ViewSupply::new(state, me));
     let team = player.team;
     let visible = visibility::visible_tiles(state, team);
+    let own_centres: BTreeSet<Hex> = state.cities_of(me).map(|c| c.pos).collect();
+    let mut blocked_hexes: BTreeSet<Hex> = state
+        .units
+        .values()
+        .filter(|u| {
+            !own_centres.contains(&u.pos)
+                && (u.owner.is_barbarian()
+                    || (crate::rules::is_military(u.kind)
+                        && crate::rules::hostile(state, me, u.owner)))
+        })
+        .map(|u| u.pos)
+        .collect();
+    if let Some(barbarians) = &state.barbarians {
+        blocked_hexes.extend(
+            barbarians
+                .camps
+                .iter()
+                .map(|c| c.pos)
+                .filter(|h| !own_centres.contains(h)),
+        );
+    }
 
     let tiles: Vec<TileView> = state
         .map
@@ -1923,6 +1980,7 @@ pub fn player_view_cached(
             let vis = visible.get(i);
             let memory = player.tile_memory.get(i).and_then(Option::as_ref);
             let explored = vis || player.explored.get(i) || memory.is_some();
+            let hex = state.map.hex_at(i);
             TileView {
                 explored,
                 visible: vis,
@@ -1936,7 +1994,7 @@ pub fn player_view_cached(
                 landmark: t.landmark,
                 wonder_found: explored
                     && t.wonder.is_some()
-                    && state.wonders_discovered.contains(&state.map.hex_at(i)),
+                    && state.wonders_discovered.contains(&hex),
                 owner: if explored || t.landmark.is_some() {
                     t.owner
                 } else {
@@ -1948,12 +2006,15 @@ pub fn player_view_cached(
                     me,
                     t,
                     if vis {
-                        Some(t.improved)
+                        Some((t.improved, t.pillaged))
                     } else {
-                        memory.filter(|_| explored).map(|m| m.improved)
+                        memory
+                            .filter(|_| explored)
+                            .map(|m| (m.improved, m.pillaged))
                     },
                 ),
                 road: if explored { t.road } else { 0 },
+                blocked: t.owner == Some(me) && blocked_hexes.contains(&hex),
             }
         })
         .collect();
@@ -2385,6 +2446,9 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
         }),
         resting_heal: own.then(|| crate::rules::units::resting_heal(state, u)),
         heir_of: u.heir_of,
+        pillage: own
+            .then(|| crate::rules::units::pillage_preview(state, me, u))
+            .flatten(),
         upgrade_cost: if own { upgrade_cost(state, u) } else { None },
         upgrade_to: plan.as_ref().map(|plan| plan.0),
         upgrade_steps: plan.as_ref().map(|plan| plan.1.clone()).unwrap_or_default(),

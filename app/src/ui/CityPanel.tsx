@@ -633,9 +633,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const supplyGain = imp && preview && isStrategic(preview.resource) ? `+${supplyPerMine(view.players.find((p) => p.id === view.me)?.faction)} ${RESOURCE_INFO[preview.resource].name} supply` : '';
     const gainYields = impGain && YIELD_KEYS.some((k) => impGain[k]) ? yieldsText(impGain) : '';
     const gains = [gainYields, supplyGain].filter(Boolean).join(' and ');
-    // The card copy already leads `detail`, so a site's effect adds only what this tile gives up.
+    const repair = !!preview?.repair;
     const effect = site && o.wonder && !unplaced ? `Replaces ${yieldsText(o.wonder.lost)} on this tile${view.tiles[tileIndex(site.tile, view.width, view.height)]?.improvement ? ' and removes its improvement' : ''}.` : imp && preview && info ? [
-      gains ? `${gains} when built` : null,
+      gains ? `${gains} when ${repair ? 'repaired (half cost)' : 'built'}` : null,
       ...(techKnown || !YIELD_KEYS.some((k) => nileYields(owner?.faction, improvementUpgradeYields(preview.resource))[k]) ? [] : [`Later: ${info.upgradedName} with ${TECH_NAME[info.upgradeTech]}, ${yieldsText(nileYields(owner?.faction, improvementUpgradeYields(preview.resource)))}`]),
     ].filter(Boolean).join(' · ') : null;
     const against = owner ? pieceAgainst(owner.faction, o.item) : null;
@@ -652,13 +652,13 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const cardLineBase = site && isGreatWork(site.building) ? `${summaryOf(o.item, owner?.faction).replace(/^World wonder: /, '').replace(/^whoever holds its tile scores (\+\d+ VP)$/, '$1 to its tile holder')} · one in the world${rivalBuilders.length ? `, also building: ${rivalBuilders.join(', ')}` : ''}` : [keeps, gains || summaryOf(o.item, owner?.faction)].filter(Boolean).join(' · ');
     const cardLine = industryFood(o.item) ? `${cardLineBase} · −1 Food` : cardLineBase;
     const card = <>
-        <button className={`prod ${active ? 'active' : ''} ${chosen ? 'pending' : ''}`} aria-label={`Build ${name}`} aria-pressed={active}
+        <button className={`prod ${active ? 'active' : ''} ${chosen ? 'pending' : ''}`} aria-label={`${repair ? 'Repair' : 'Build'} ${name}`} aria-pressed={active}
         aria-disabled={resourceBlocked || undefined}
         aria-description={resourceBlocked ? `${o.resource_blocker}${o.supply_need ? ` Open ${o.supply_need} supply.` : ''}` : undefined}
         title={imp || site ? detail : undefined}
         disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else if (!buildNow(o.item, event.currentTarget)) advanceAfterBuild(); }}>
         <span className="prod-icons"><ItemArt item={o.item} faction={owner?.faction} size={20} />{imp && preview && <Icon name={`resource-${preview.resource.toLowerCase()}`} size={18} label={RESOURCE_INFO[preview.resource].name} />}</span>
-        <span className="prod-name">{imp ? <><span className="prod-what">{improvementName(imp.improvement, preview?.resource)}</span><span className="prod-where">{improvementWhere(imp, city.pos)}</span></> : site ? <><span className="prod-what">{baseItemName(site, owner?.faction)}</span>{unplaced && !isGreatWork(site.building) && <span className="prod-where place-where">{placingHere ? 'Click a lit tile on the map' : 'Choose its tile on the map'}</span>}{!unplaced && <><span className="prod-where">{sitePlace(site.tile)}</span>{o.wonder && <span className="prod-where site-cost"><Amounts text={`gives up ${yieldsText(o.wonder.lost)}`} /></span>}</>}</> : name} {positions.length > 1
+        <span className="prod-name">{imp ? <><span className="prod-what">{repair ? `Repair ${improvementName(imp.improvement, preview?.resource)}` : improvementName(imp.improvement, preview?.resource)}</span><span className="prod-where">{improvementWhere(imp, city.pos)}</span></> : site ? <><span className="prod-what">{baseItemName(site, owner?.faction)}</span>{unplaced && !isGreatWork(site.building) && <span className="prod-where place-where">{placingHere ? 'Click a lit tile on the map' : 'Choose its tile on the map'}</span>}{!unplaced && <><span className="prod-where">{sitePlace(site.tile)}</span>{o.wonder && <span className="prod-where site-cost"><Amounts text={`gives up ${yieldsText(o.wonder.lost)}`} /></span>}</>}</> : name} {positions.length > 1
           ? <span className="queue-badge queue-count" title={`In the queue ${positions.length} times (positions ${positions.join(', ')})`}>×{positions.length}</span>
           : positions.map((n) => <span className="queue-badge" key={n} title={`Position ${n} in the queue`}>{n}</span>)}</span>
         <span className="prod-cost">{progress ? <span className="prod-progress">{progress}</span> : <>{costInFactionYield(owner?.faction ?? 'India', o.cost)} <YieldIcon k={costYield(owner?.faction ?? 'India') === 'Food' ? 'food' : 'production'} size={11} /></>}{o.supply_need && <span className="prod-supply-need" title={`${needText(o.supply_need)} for as long as it exists. ${supplyRuleText(o.supply_need, view.players.find((p) => p.id === view.me)?.faction)}`}><Amounts text={needText(o.supply_need)} /></span>}</span>
@@ -667,8 +667,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           : o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
         {o.item.kind === 'Building' && o.item.building === 'Market' && owner?.faction === 'India' && !!city.revenue_office_upkeep_savings && <span className="prod-upkeep gain" data-testid="office-city-upkeep">City upkeep: saves {city.revenue_office_upkeep_savings} Gold a turn</span>}
         {o.item.kind === 'Building' && o.item.building === 'Market' && owner?.faction === 'India' && !!city.revenue_office_remittance_gain && <span className="prod-upkeep gain" data-testid="office-remittance">Sends {city.revenue_office_remittance_gain} more Gold a turn to your treasury</span>}
-        {imp && <span className="prod-upkeep none">No upkeep</span>}
-        <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : tombStopped ? 'Queue' : 'Build →'}</span>
+        {imp && <span className="prod-upkeep none">{repair ? 'Repair · half cost' : 'No upkeep'}</span>}
+        <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : tombStopped ? 'Queue' : repair ? 'Repair →' : 'Build →'}</span>
       </button>
     </>;
     return <div className={`production-choice ${picked ? ' picked' : ''}${resourceBlocked ? ' supply-blocked' : ''}${site ? ' wonder-site' : ''}`} key={key} data-item={key} data-picked={picked || undefined}

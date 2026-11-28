@@ -213,6 +213,11 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['yours', ev({ type: 'TileBought', city: 1, owner: 0, tile: at, gold: 40 }), 'neutral'],
     ['theirs', ev({ type: 'TileBought', city: 5, owner: 2, tile: at, gold: 40 }), 'neutral'],
   ],
+  TilePillaged: [
+    ['you pillaged', ev({ type: 'TilePillaged', raider: 0, unit: 1, unit_kind: 'Horseman', owner: 2, city: 5, at, improvement: 'Mine', gold: 50, healed: 0 }), 'good'],
+    ['yours pillaged', ev({ type: 'TilePillaged', raider: 2, unit: 9, unit_kind: 'Horseman', owner: 0, city: 1, at, improvement: 'Farm', gold: 0, healed: 50 }), 'bad'],
+    ['third party', ev({ type: 'TilePillaged', raider: 2, unit: 9, unit_kind: 'Horseman', owner: 3, city: 6, at, improvement: 'Mine', gold: 25, healed: 0 }), 'neutral'],
+  ],
   TileClaimed: [
     ['yours', ev({ type: 'TileClaimed', city: 1, owner: 0, tile: at }), 'good'],
     ['theirs', ev({ type: 'TileClaimed', city: 1, owner: 2, tile: at }), 'neutral'],

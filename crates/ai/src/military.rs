@@ -254,6 +254,8 @@ impl Planner<'_> {
         }
         self.pass("recover_city_fire");
         self.recover_city_fire(&army);
+        self.pass("pillage_heal");
+        self.pillage_heal(&army);
         self.pass("recover_wounded");
         self.recover_wounded(&army);
         // Gene `focus_fire`: joint kill plans take their units before single-unit attacks.
@@ -285,6 +287,8 @@ impl Planner<'_> {
             self.pass("attack_targets#2");
             self.attack_targets(&army, false);
         }
+        self.pass("pillage_standing");
+        self.pillage_standing(&army);
         // Let Sparta's sorties, rush siege and coordinated assault take their units first.
         // The early siege then moves only unused shooters toward a running campaign.
         if self.faction == Faction::Sparta && self.decisions.siege_storm_first > 0 {
@@ -361,6 +365,8 @@ impl Planner<'_> {
         }
         self.pass("hold_captures_late");
         self.hold_captures_late(&army);
+        self.pass("raid_enemy_resources");
+        self.raid_enemy_resources(&army);
         self.pass("collect_ruins");
         self.collect_ruins(&army);
         self.pass("commit_idle_defenders");
@@ -4800,6 +4806,236 @@ mod mongol_horde_tests {
             )),
             "{:?}",
             p.orders
+        );
+    }
+}
+
+impl Planner<'_> {
+    /// Wounded units standing on an enemy Farm or Pasture pillage for +50 health before
+    /// `recover_wounded` sends them home, provided they are likely to survive the turn.
+    pub(crate) fn pillage_heal(&mut self, army: &[&UnitView]) {
+        for u in self.free(army) {
+            let Some(p) = u.pillage else { continue };
+            if p.heal > 0 && u.hp <= 75 && self.exposure_at(u.pos) < u.hp {
+                self.unit_order(u.id, Order::Pillage { unit: u.id });
+            }
+        }
+    }
+
+    /// Units already standing on a pillageable enemy resource tile pillage it when it pays
+    /// Gold, heals meaningful wounds, denies a strategic resource, or is a mounted raider.
+    pub(crate) fn pillage_standing(&mut self, army: &[&UnitView]) {
+        let view = self.view();
+        for u in self.free(army) {
+            let Some(p) = u.pillage else { continue };
+            if self.exposure_at(u.pos) >= u.hp {
+                continue;
+            }
+            let mounted = data::unit_class(u.kind) == Some(legatum_core::UnitClass::Mounted);
+            let strategic = view
+                .tile(u.pos)
+                .and_then(|t| t.resource)
+                .is_some_and(legatum_core::resources::is_strategic);
+            if p.gold > 0 || (p.heal > 0 && u.hp < 90) || strategic || mounted {
+                self.unit_order(u.id, Order::Pillage { unit: u.id });
+            }
+        }
+    }
+
+    /// Mounted raiders and free wartime units raid nearby visible enemy strategic deposits
+    /// (cutting supply to 0 while sitting on them, and pillaging next turn) or improved bonus
+    /// resource tiles. Uses public `PlayerView` only.
+    pub(crate) fn raid_enemy_resources(&mut self, army: &[&UnitView]) {
+        let view = self.view();
+        let mut candidates: Vec<(Hex, i32)> = Vec::new();
+        for (i, t) in view.tiles.iter().enumerate() {
+            if !t.explored {
+                continue;
+            }
+            let Some(owner) = t.owner else { continue };
+            if !view.at_war(view.me, owner) {
+                continue;
+            }
+            let hex = Hex::from_offset((i as i32) % view.width, (i as i32) / view.width);
+            if view.cities.iter().any(|c| c.pos == hex) {
+                continue;
+            }
+            if view.units.iter().any(|u| u.pos == hex) {
+                continue;
+            }
+            let strategic = t
+                .resource
+                .is_some_and(legatum_core::resources::is_strategic);
+            let pillageable = t.improvement.is_some_and(|imp| !imp.pillaged);
+            if !strategic && !pillageable {
+                continue;
+            }
+            let value = match (strategic, pillageable) {
+                (true, true) => 120,
+                (true, false) => 85,
+                (false, true) => 50,
+                (false, false) => 0,
+            };
+            candidates.push((hex, value));
+        }
+        if candidates.is_empty() {
+            return;
+        }
+        let mut claimed = std::collections::BTreeSet::new();
+        for u in self.free(army) {
+            if u.occupation_lock.is_some() {
+                continue;
+            }
+            let mounted = data::unit_class(u.kind) == Some(legatum_core::UnitClass::Mounted);
+            let max_dist = if mounted {
+                u.max_moves * 2
+            } else {
+                u.max_moves
+            };
+            let best = candidates
+                .iter()
+                .filter(|&&(h, value)| {
+                    if claimed.contains(&h) {
+                        return false;
+                    }
+                    let d = u.pos.distance(h);
+                    if d == 0 || d > max_dist {
+                        return false;
+                    }
+                    // Non-mounted units only detour for strategic deposits or adjacent pillageables.
+                    if !mounted && value < 85 && d > 1 {
+                        return false;
+                    }
+                    self.exposure_at(h) < u.hp
+                })
+                .max_by_key(|&&(h, value)| (value - u.pos.distance(h) * 15, std::cmp::Reverse(h)))
+                .map(|&(h, _)| h);
+            if let Some(target) = best {
+                claimed.insert(target);
+                self.go_to(u, target);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod pillage_ai_tests {
+    use super::*;
+    use legatum_core::view::{ImprovementPreview, PillagePreview, TileImprovement};
+    use legatum_core::{ImprovementKind, PlayerId, ProductionItem, Resource, UnitId, Yields};
+
+    fn off(col: i32, row: i32) -> Hex {
+        Hex::from_offset(col, row)
+    }
+
+    #[test]
+    fn wounded_unit_on_enemy_farm_pillages_to_heal() {
+        let mut view = crate::fixture::ViewBuilder::new(10, 10)
+            .unit(1, PlayerId(0), UnitKind::Horseman, off(4, 4))
+            .build();
+        view.units[0].hp = 45;
+        let idx = (4 * view.width + 4) as usize;
+        view.tiles[idx].owner = Some(PlayerId(2));
+        view.tiles[idx].resource = Some(Resource::Wheat);
+        view.tiles[idx].improvement = Some(TileImprovement {
+            kind: ImprovementKind::Farm,
+            upgraded: false,
+            pillaged: false,
+        });
+        view.units[0].pillage = Some(PillagePreview {
+            improvement: ImprovementKind::Farm,
+            heal: 50,
+            gold: 0,
+        });
+        let mut p = crate::fixture::planner(&view, 7);
+        let army: Vec<&UnitView> = view.units.iter().collect();
+        p.pillage_heal(&army);
+        assert!(
+            p.orders.contains(&Order::Pillage { unit: UnitId(1) }),
+            "expected wounded Horseman to pillage Farm: {:?}",
+            p.orders
+        );
+    }
+
+    #[test]
+    fn mounted_raider_pillages_mine_and_raids_nearby_strategic_deposit() {
+        let mut view = crate::fixture::ViewBuilder::new(10, 10)
+            .unit(1, PlayerId(0), UnitKind::Horseman, off(4, 4))
+            .unit(2, PlayerId(0), UnitKind::Horseman, off(2, 4))
+            .build();
+        let mine_hex = off(4, 4);
+        let idx1 = (4 * view.width + 4) as usize;
+        view.tiles[idx1].owner = Some(PlayerId(2));
+        view.tiles[idx1].resource = Some(Resource::Copper);
+        view.tiles[idx1].improvement = Some(TileImprovement {
+            kind: ImprovementKind::Mine,
+            upgraded: false,
+            pillaged: false,
+        });
+        view.units[0].pillage = Some(PillagePreview {
+            improvement: ImprovementKind::Mine,
+            heal: 0,
+            gold: 50,
+        });
+
+        let iron_hex = off(3, 5);
+        let idx2 = (5 * view.width + 3) as usize;
+        view.tiles[idx2].owner = Some(PlayerId(2));
+        view.tiles[idx2].resource = Some(Resource::Iron);
+        view.tiles[idx2].improvement = Some(TileImprovement {
+            kind: ImprovementKind::Mine,
+            upgraded: false,
+            pillaged: false,
+        });
+
+        let mut p = crate::fixture::planner(&view, 7);
+        let army: Vec<&UnitView> = view.units.iter().collect();
+        p.pillage_standing(&army);
+        p.raid_enemy_resources(&army);
+        assert!(
+            p.orders.contains(&Order::Pillage { unit: UnitId(1) }),
+            "expected unit 1 to pillage Mine: {:?}",
+            p.orders
+        );
+        assert!(
+            p.orders.iter().any(|o| matches!(
+                o,
+                Order::MoveUnit { unit: UnitId(2), to } | Order::MoveUnitPath { unit: UnitId(2), to, .. }
+                if *to == iron_hex
+            )),
+            "expected unit 2 to raid enemy Iron at {iron_hex:?}: {:?}",
+            p.orders
+        );
+        let _ = mine_hex;
+    }
+
+    #[test]
+    fn economic_automation_picks_up_half_cost_repair() {
+        let mut view = crate::fixture::ViewBuilder::new(10, 10)
+            .city(1, PlayerId(0), off(5, 5), 3)
+            .build();
+        let tile = off(6, 5);
+        let repair_item = ProductionItem::Improvement {
+            improvement: ImprovementKind::Mine,
+            tile,
+        };
+        let mut opt = view.cities[0].detail.as_ref().unwrap().options[0].clone();
+        opt.item = repair_item;
+        opt.cost = 20;
+        opt.turns = 2;
+        opt.improvement = Some(ImprovementPreview {
+            tile,
+            resource: Resource::Iron,
+            gain: Yields::new(0, 2, 0, 0),
+            repair: true,
+            upgrade: None,
+        });
+        let detail = view.cities[0].detail.as_mut().unwrap();
+        detail.yields.total.production = 10;
+        detail.options = vec![opt];
+        assert_eq!(
+            crate::economic_automation::choose(&view, legatum_core::CityId(1)),
+            Some(repair_item)
         );
     }
 }

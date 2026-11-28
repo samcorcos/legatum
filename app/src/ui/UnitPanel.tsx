@@ -5,6 +5,7 @@ import { useGame } from '../store';
 import { feel } from '../feel';
 import type { Faction, Order, PlayerView, UnitKind, UnitView } from '../types';
 import { UNSUPPLIED_STRENGTH_PERCENT } from '../resources';
+import { improvementName } from '../improvements';
 import { hexEq, tileIndex } from '../hex';
 import { roadBonusText } from '../path';
 import { siegeCityBonus, siegeTier } from '../combat';
@@ -17,6 +18,7 @@ import {
   cancelSelected,
   disbandSelected,
   foundCitySelected,
+  pillageSelected,
   sleepSelected,
   healSelected,
   healBlocker,
@@ -258,6 +260,21 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
               tip={coloniaHere ? `${COLONIA_SITE_LEAD} This veteran is used up.` : unit.kind === 'Settler' ? `Found a city here, on land you or nobody owns. Cities need ${minCityGap(owner?.faction ?? 'Athens')} tiles between them.` : `Found a city here and consume this level-${unit.level} veteran. Combat resolves first: if this unit is wounded or killed, the city does not appear, and a surviving unit stays. A Legionary starts the city at population 2.`} />
           )}
           {canFound && cityUpkeepForecast(view) && <div className="prod-upkeep paid" data-testid="found-city-upkeep"><Amounts text={cityUpkeepForecast(view)!} /></div>}
+          {unit.pillage && (() => {
+            const p = unit.pillage;
+            const imp = improvementName(p.improvement, undefined);
+            const healGain = p.heal ? Math.min(p.heal, Math.max(0, 100 - unit.hp)) : 0;
+            const label = p.gold ? `Pillage ${imp} · +${p.gold} Gold` : healGain > 0 ? `Pillage ${imp} · +${healGain} health` : `Pillage ${imp}`;
+            const payout = p.gold
+              ? `Gains ${p.gold} Gold.`
+              : healGain > 0
+                ? `Restores ${healGain} health (up to +${p.heal}, capped at 100).`
+                : `Unit is already at full health, but pillaging still cuts the tile's bonus.`;
+            return (
+              <Action label={label} hotkey="⇧P" active={pending?.type === 'Pillage'} onClick={pillageSelected}
+                tip={`Pillage this enemy ${imp}. ${payout} Uses the unit's turn, clears resting defence, and happens after combat if the unit survives. The tile loses its resource bonus and improved supply until repaired.`} />
+            );
+          })()}
           {movePrimary && !locked && <Action label={mode === 'move' ? 'Cancel targeting' : unit.military && attacksInMelee(unit.kind) ? 'Move or attack' : 'Move'} primary={leads && !coloniaHere}
             onClick={toggleMoveSelected} active={mode === 'move'} hotkey={mode === 'move' ? 'Esc' : undefined} 
             tip="Choose a tile on the map. Your route and combat forecast appear before you click. Esc cancels targeting. You can also right-click a destination, or drag from the unit to plot a path." />}

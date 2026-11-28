@@ -49,6 +49,7 @@ fn scenario(war: bool, sites: &[Hex]) -> (GameState, UnitId) {
                 owner: Some(ENEMY),
                 ruin: false,
                 improved: false,
+                pillaged: false,
                 city: None,
             });
         }

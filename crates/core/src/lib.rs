@@ -63,7 +63,8 @@ pub mod rules;
 /// 65: India's Revenue Offices waive their city's upkeep while it still counts toward the empire's city count. A non-capital Office remits all Gold. Save shape unchanged.
 /// 66: Byzantium's Buy a city (`Order::BuyCity`, `buy_city`): an offer on a rival's city with the price in escrow, sold after three turns unless War or a price rise stops it; and the fall of Constantinople: taking Byzantium's capital takes every Byzantine city unless its Heir shelters in another. `Player` gains `city_offer`.
 /// 67: Research queues may span eras when earlier eras are fully queued first; research itself remains gated to the current era. Save shape unchanged.
-pub const RULES_VERSION: u32 = 67;
+/// 68: Pillaging (`Order::Pillage`, `Tile::pillaged`, `Event::TilePillaged`) for improved resource tiles (heal +50 on Farm/Pasture, instant Gold `25 * (era + 1)` on Quarry/Mine/Saltpetre Works/Oil Well/Quartz Mine, half-cost repair via `ProductionItem::Improvement`), and enemy-occupied tile denial (at-War military units and barbarians deny both tile yields and strategic resource supply on non-city-centre tiles).
+pub const RULES_VERSION: u32 = 68;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;
@@ -119,5 +120,7 @@ pub use yields_cache::ViewCache;
 
 #[cfg(test)]
 mod aztecs_tests;
+#[cfg(test)]
+mod pillage_tests;
 #[cfg(test)]
 mod rome_tests;

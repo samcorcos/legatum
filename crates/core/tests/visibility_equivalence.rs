@@ -77,6 +77,7 @@ fn original_update_explored(state: &mut GameState) {
                         owner: tile.owner,
                         ruin: tile.ruin,
                         improved: tile.improved,
+                        pillaged: tile.pillaged,
                         city: cities[i].clone(),
                     });
                 } else if player.explored.get(i) || player.tile_memory[i].is_some() {
@@ -84,6 +85,7 @@ fn original_update_explored(state: &mut GameState) {
                         owner: None,
                         ruin: false,
                         improved: false,
+                        pillaged: false,
                         city: None,
                     });
                     memory.owner = tile.owner;
@@ -370,6 +372,7 @@ fn empty_short_and_older_memory_gain_only_public_fog_facts() {
             owner: Some(PlayerId(2)),
             ruin: false,
             improved: false,
+            pillaged: false,
             city: None
         })
     );

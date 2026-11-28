@@ -13,7 +13,7 @@ export function pendingMarksFor(view: PlayerView | null, orders: readonly Order[
     if (u === null) continue;
     if (UNIT_ACTIONS.has(o.type) && errors?.some((e) => e.index === i)) { m.set(u, 'invalid'); continue; }
     const mark = (
-      { MoveUnit: 'move', MoveUnitPath: 'move', SleepUnit: 'sleep', SkipUnit: 'skip', FoundCity: 'found', DisbandUnit: 'disband', RangedAttack: 'ranged', UpgradeUnit: 'upgrade', UpgradeSiege: 'upgrade' } as Record<string, PendingMark>
+      { MoveUnit: 'move', MoveUnitPath: 'move', SleepUnit: 'sleep', SkipUnit: 'skip', FoundCity: 'found', DisbandUnit: 'disband', RangedAttack: 'ranged', UpgradeUnit: 'upgrade', UpgradeSiege: 'upgrade', Pillage: 'ranged' } as Record<string, PendingMark>
     )[o.type];
     if (mark) m.set(u, o.type === 'SleepUnit' && o.until_healed ? 'heal' : mark);
   }

@@ -315,6 +315,7 @@ mod tests {
             tile: off(9, 8),
             resource: Resource::Copper,
             gain: Yields::new(0, 2, 0, 0),
+            repair: false,
             upgrade: None,
         });
         improvement.turns = 1;

@@ -7,7 +7,7 @@ import { ruinText } from './celebrate/moments';
 import { STOP_REASON } from './automation';
 // Turn report: events -> human-readable lines, grouped and filterable. Battles are explained
 // with the numbers that decided them (pillar 5: no hidden math).
-import { improvementTitle } from './improvements';
+import { improvementName, improvementTitle } from './improvements';
 import type { Breakdown, CityView, Event, Faction, Hex, PlayerId, PlayerView, ProductionItem, Resource, TechId, UnitKind, UpkeepPreview } from './types';
 import { techCardUnlocks, techUnlockSummary } from './ui/techCardUnlocks';
 import { eraName } from './ui/eraResearch';
@@ -1311,6 +1311,18 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         at: e.tile,
         players: [e.owner],
       });
+    case 'TilePillaged': {
+      const imp = improvementName(e.improvement, undefined);
+      const gain = e.healed > 0 ? ` (+${e.healed} health)` : e.gold > 0 ? ` (+${e.gold} Gold)` : '';
+      const place = e.city !== null ? ` near ${ctx.cityName(e.city)}` : ` ${at(ctx, e.at)}`;
+      const whoOwner = mine(e.owner) ? 'your' : `${possessive(ctx, e.owner)}`;
+      return line('combat', `${unitLabel(ctx, e.unit, e.raider, e.unit_kind)} pillaged ${whoOwner} ${imp}${place}${gain}`, {
+        at: e.at,
+        players: [e.raider, e.owner],
+        tone: mine(e.raider) ? 'good' : mine(e.owner) ? 'bad' : 'neutral',
+        weight: mine(e.owner) ? 2 : 1,
+      });
+    }
     case 'TileClaimed': {
       const tile = ctx.claimedTile?.(e.tile, e.owner);
       return line('cities', tile ? `${ctx.cityName(e.city)} claimed ${/^[AEIOU]/.test(tile.terrain) ? 'an' : 'a'} ${tile.terrain} tile${tile.yields ? ` (${tile.yields})` : ''}` : `${ctx.cityName(e.city)} claimed a tile ${at(ctx, e.tile)}`, {

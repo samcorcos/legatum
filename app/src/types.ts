@@ -214,20 +214,32 @@ export interface TileView {
   improvement?: TileImprovement | null;
   /** The tile's road links (core `Tile::road`): bit d links to the neighbour in direction d, 64 marks a road tile. Public and always current on explored tiles. Absent = no road. */
   road?: number;
+  /** Own non-city-centre tile occupied by an enemy military unit or barbarian camp: yields and strategic supply from this tile are 0 while occupied. */
+  blocked?: boolean;
 }
 
 /** A built improvement as the viewer sees it; the upgraded form shows only on the viewer's own tiles. */
 interface TileImprovement {
   kind: ImprovementKind;
   upgraded?: boolean;
+  pillaged?: boolean;
+}
+
+/** What pillaging the tile this unit stands on would yield right now (own units only, when legal). */
+export interface PillagePreview {
+  improvement: ImprovementKind;
+  heal?: number;
+  gold?: number;
 }
 
 /** What building an improvement does, shown with its production option. */
 export interface ImprovementPreview {
   tile: Hex;
   resource: Resource;
-  /** What the tile gains when built, at the owner's current technology. */
+  /** What the tile gains when built (or repaired), at the owner's current technology. */
   gain: Yields;
+  /** True when this item repairs a pillaged improvement (half Production/Gold cost). */
+  repair?: boolean;
   /** The automatic upgrade the owner doesn't have yet. */
   upgrade?: { tech: TechId; name: string; gain: Yields } | null;
 }
@@ -243,6 +255,8 @@ interface DepositView {
   hex: Hex;
   city: CityId | null;
   mined: boolean;
+  pillaged?: boolean;
+  blocked?: boolean;
   supply: number;
 }
 
@@ -334,6 +348,8 @@ export interface UnitView {
   resting_heal?: Breakdown | null;
   /** An Heir only (public): the Byzantium empire whose goal he carries, whoever holds him now. */
   heir_of?: PlayerId | null;
+  /** Own units only: pillage preview when this unit can legally pillage the tile it stands on. */
+  pillage?: PillagePreview | null;
 }
 
 /** Military upkeep effect of building one more of this unit (legatum-ui: every build card shows
@@ -1181,6 +1197,8 @@ export type Order =
   | { type: 'BuyTile'; city: CityId; tile: Hex }
   /** Buy Siege for a land military unit in own territory: its attacks on a city ignore enemy Walls, for good (core `rules::siege`). */
   | { type: 'UpgradeSiege'; unit: UnitId }
+  /** Land military unit pillages an at-War empire's improved resource tile (core `Order::Pillage`). */
+  | { type: 'Pillage'; unit: UnitId }
   | { type: 'Action'; action: GameAction }
   /** Give Gold to a living teammate (core `rules::gifts`): it moves after this turn's purchases, capped at the Gold left then. */
   | { type: 'GiveGold'; to: PlayerId; amount: number }
@@ -1327,6 +1345,7 @@ export type Event =
   | { type: 'TileClaimed'; city: CityId; owner: PlayerId; tile: Hex }
   | { type: 'TileReleased'; city: CityId; owner: PlayerId; tile: Hex }
   | { type: 'TileBought'; city: CityId; owner: PlayerId; tile: Hex; gold: number }
+  | { type: 'TilePillaged'; raider: PlayerId; unit: UnitId; unit_kind: UnitKind; owner: PlayerId; city: CityId | null; at: Hex; improvement: ImprovementKind; gold: number; healed: number }
   | { type: 'TilesReassigned'; from: CityId; to: CityId; owner: PlayerId; tiles: Hex[] }
   | { type: 'AircraftRebased'; plane: UnitId; owner: PlayerId; kind: UnitKind; from: CityId; to: CityId }
   | { type: 'RuinExplored'; unit: UnitId; owner: PlayerId; at: Hex; reward: RuinReward }

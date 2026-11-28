@@ -18,7 +18,6 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Aircraft on the map / airbases as tiles | **Absent** — aircraft live in a city's hangar (Eras and technologies, "The air layer"); no airfields, carriers, air movement or air superiority over open ground |
 | Mounted/ranged/melee class bonus beyond the triangle | **Absent** — only +40% of base strength (`combat::CLASS_BONUS_PERCENT`) melee line vs mounted and mounted vs ranged (in melee only: none when the mounted unit is shot at, designer 2026-11-10), none from the Modern era (`combat::triangle_applies`), and the mounted −33% charging a city; no ranged-vs-melee bonus (the cavalry experiment's +27 backfired). A Keshig's shot fights as ranged (`combat::fight_class`), so it gets no ranged-vs-melee bonus either |
 | Loyalty | **Absent** |
-| Pillaging | **Absent** — code: "this game has no pillage" |
 | Road-laying units / tile-by-tile road building | **Absent** — roads come only from the Yam Relay Station (the Courier Hall, §8) and the Roadworks building (`roads::extend_roadworks`) |
 | Military Engineer, Forts | **Removed 2026-10-22** — Siege is a Gold upgrade on an ordinary unit (§4); units laying roads or building Forts are roadmap only |
 | City-states | **Absent** |

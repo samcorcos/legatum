@@ -284,6 +284,12 @@ pub fn visible_events(
                 Event::TileClaimed { owner, tile, .. }
                 | Event::TileReleased { owner, tile, .. }
                 | Event::TileBought { owner, tile, .. } => teammates.contains(owner) || at(*tile),
+                Event::TilePillaged {
+                    raider,
+                    owner,
+                    at: pos,
+                    ..
+                } => teammates.contains(raider) || teammates.contains(owner) || at(*pos),
                 Event::TilesReassigned { owner, .. } => teammates.contains(owner),
                 Event::BarbarianCampSpawned { .. } => false,
                 Event::BarbarianCampDiscovered { team, .. } => *team == before.team,
@@ -743,6 +749,7 @@ mod tests {
             owner: tile_owner,
             ruin: false,
             improved: false,
+            pillaged: false,
             city: Some(crate::state::CityMemory::from(&city)),
         });
         state

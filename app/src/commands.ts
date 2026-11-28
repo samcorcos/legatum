@@ -298,6 +298,12 @@ export function siegeSelected() {
   if (u && u.siege_offer && !u.siege_offer.blocker) issue({ type: 'UpgradeSiege', unit: u.id }, false);
 }
 
+/** Pillage the enemy improved resource tile the selected unit stands on (core `Order::Pillage`). */
+export function pillageSelected() {
+  const u = selectedOwnUnit();
+  if (u && u.pillage) issue({ type: 'Pillage', unit: u.id }, false);
+}
+
 export function cancelSelected() {
   const u = selectedOwnUnit();
   if (u) st().editOrders((o) => clearUnitOrder(o, u.id));

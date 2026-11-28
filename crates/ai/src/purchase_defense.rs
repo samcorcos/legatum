@@ -491,6 +491,7 @@ pub(crate) fn purchased_defender(view: &PlayerView, city: &CityView, kind: UnitK
         resting_heal: None,
         standing_order: None,
         heir_of: None,
+        pillage: None,
     }
 }
 

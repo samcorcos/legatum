@@ -116,7 +116,7 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
             continue;
         }
         let result = units::validate_unit_order(
-            if matches!(order, Order::RangedAttack { .. }) {
+            if matches!(order, Order::RangedAttack { .. } | Order::Pillage { .. }) {
                 ranged_state.as_ref().unwrap_or(state)
             } else {
                 state
@@ -359,6 +359,8 @@ pub fn resolve_turn(
         &mut events,
     );
     barbarians::clear_camps(&mut s, &mut events);
+    // 4.5. Pillaging: surviving raiders pillage their tile before cities/supply resolve.
+    units::resolve_pillage(&mut s, &plan.pillage, &mut events);
     // 5. Found cities.
     for settler in units::found_city_candidates(&s, &plan.found, &mut events) {
         let owner = s.units[&settler].owner;
@@ -463,6 +465,7 @@ pub fn resolve_tactical_turn(
         held,
         &mut events,
     );
+    units::resolve_pillage(&mut s, &plan.pillage, &mut events);
     let _ = units::found_city_candidates(&s, &plan.found, &mut events);
     units::heal_and_fortify(&mut s);
     units::wake_healed(&mut s, &mut events);

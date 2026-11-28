@@ -107,10 +107,13 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
   // The next action for the tile's resource: improve it (yours), claim it (nobody's) or who holds it.
   const ownerName = owner ? empireOfPlayer(view, owner.id) : 'another empire';
   const resourceStatus = !resource || !kind ? null
+    : t.improvement?.pillaged
+      ? `${improvementName(t.improvement.kind, !!t.improvement.upgraded)} (pillaged): no resource bonus${isStrategic(resource) ? ' or improved supply' : ''} until repaired${t.owner === view.me && builder ? ` from ${builder.name}'s production list` : ''}`
     : t.improvement ? `${improvementName(t.improvement.kind, !!t.improvement.upgraded)}: the resource is yielding its bonus`
     : t.owner === null ? (isStrategic(resource) ? 'Unclaimed: bring it inside your borders' : 'Unclaimed: bring it inside your borders to improve it')
     : t.owner !== view.me ? (isStrategic(resource) ? `${empireHolds([ownerName.split(' · ')[0]])} this deposit.${lackedResources(view.supply).has(resource) ? ` You have no ${RESOURCE_INFO[resource].name} yet: take it or find another.` : ''}` : `In ${ownerName} territory`)
     : dormantNote;
+  const enemyHeld = !barbarianHeld && (!!t.blocked || (!!owner && !city && units.some((u) => u.military && !isBarbarian(u.owner) && owner.id === view.me && atWar(view, u.owner))));
   return (
     <div className="tilecard" ref={placed.ref} style={placed.style}>
       {t.landmark ? <div className="tilecard-lead" data-testid="tile-landmark"><LeadArt url={slugUrl(buildingArtSlug(t.landmark.building, owner?.faction), 128) ?? slugUrl(buildingArtSlug(t.landmark.building), 128)} icon={buildingIconName(t.landmark.building)} /><div><b className="tilecard-lead-name">{BUILDING_NAME[t.landmark.building]}</b><span className="tilecard-lead-kind">Wonder tile · {owner ? empireOfPlayer(view, owner.id) : 'unclaimed'}</span></div></div> : t.wonder ? <WonderLead view={view} hex={hex} t={t} /> : resource ? (
@@ -134,7 +137,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
           <ul className="tilecard-benefits">
             {resourceBenefitLines(resource, view.research.known, view.players.find((p) => p.id === view.me)?.faction).map((line) => <li key={line}><Amounts text={line} /></li>)}
           </ul>
-          {resourceStatus && <div className={`tilecard-status ${isDormant(t, view.me, faction) && !isStrategic(resource) ? 'bad' : ''}`} data-testid="tile-improvement"><Amounts text={resourceStatus} /></div>}
+          {resourceStatus && <div className={`tilecard-status ${(t.improvement?.pillaged || (isDormant(t, view.me, faction) && !isStrategic(resource))) ? 'bad' : ''}`} data-testid="tile-improvement"><Amounts text={resourceStatus} /></div>}
         </div>
       )}
       {routeWarning && <div className={isCalmRouteNote(routeWarning) ? 'tilecard-warn route-note' : 'tilecard-warn'} role={isCalmRouteNote(routeWarning) ? undefined : 'alert'} data-testid="route-warning">{routeWarning}</div>}
@@ -172,7 +175,8 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
           ? `${owningCity.name} owns this tile beyond its ${WORK_RADIUS}-tile work radius. ${recipient.name} will take it over and work it after the next turn.`
           : `Striped: ${owningCity.name} owns this tile beyond its ${WORK_RADIUS}-tile work radius. It gives no yield. It blocks rivals.`}
       </div>}
-      {barbarianHeld && <div className="tilecard-row bad">Barbarians hold the tile: it yields nothing.</div>}
+      {barbarianHeld && <div className="tilecard-row bad" data-testid="tile-denied">Barbarians hold the tile: it yields nothing{resource && isStrategic(resource) ? ` and gives no ${RESOURCE_INFO[resource].name} supply` : ''}.</div>}
+      {enemyHeld && <div className="tilecard-row bad" data-testid="tile-denied">Enemy unit holds the tile: it yields nothing{resource && isStrategic(resource) ? ` and gives no ${RESOURCE_INFO[resource].name} supply` : ''}.</div>}
       {(camp || units.some((u) => isBarbarian(u.owner))) && faction === 'Celts' && <div className="tilecard-row good">Barbarians don't attack you.</div>}
       {city && view.players.find((p) => p.id === view.me)?.faction === 'Celts' && owner?.id !== view.me && city.founder !== view.me && <div className="tilecard-row bad">Celts sack this city when they capture it.</div>}
       {t.ruin && <div className="tilecard-row ruin"><Icon name="ruin" size={15} color="currentColor" /> ancient ruin: unexplored</div>}

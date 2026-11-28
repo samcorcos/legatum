@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useGame } from '../store';
 import { useGuide } from '../ui/guideState';
 import { readyAndPass } from '../ui/SeatBar';
-import { toggleAutoExploreSelected, cancelSelected, disbandSelected, foundCitySelected, sleepSelected, healSelected, skipSelected, toggleRangedMode, upgradeSelected } from '../commands';
+import { toggleAutoExploreSelected, cancelSelected, disbandSelected, foundCitySelected, pillageSelected, sleepSelected, healSelected, skipSelected, toggleRangedMode, upgradeSelected } from '../commands';
 import type { PlayerView } from '../types';
 import { gameplayKeyAllowed, gameplayFocusAllowed, handleOverlayKey, notePointerDown, returnFocusAfterPointer } from '../gameplayKeys';
 import { handleAircraftKey, handleGameKey } from './gameKeyHandler';
@@ -13,13 +13,13 @@ import { getOverlays, reloadOverlays } from '../map/overlays';
 
 vi.mock('../ui/SeatBar', () => ({ readyAndPass: vi.fn() }));
 vi.mock('../commands', () => ({
-  toggleAutoExploreSelected: vi.fn(), cancelSelected: vi.fn(), disbandSelected: vi.fn(), foundCitySelected: vi.fn(),
+  toggleAutoExploreSelected: vi.fn(), cancelSelected: vi.fn(), disbandSelected: vi.fn(), foundCitySelected: vi.fn(), pillageSelected: vi.fn(),
   sleepSelected: vi.fn(), healSelected: vi.fn(), skipSelected: vi.fn(), toggleRangedMode: vi.fn(), upgradeSelected: vi.fn(),
 }));
 
 const nextDecision = vi.fn();
 const select = vi.fn();
-const commands = [toggleAutoExploreSelected, nextDecision, select, readyAndPass, cancelSelected, disbandSelected, foundCitySelected, sleepSelected, healSelected, skipSelected, toggleRangedMode, upgradeSelected];
+const commands = [toggleAutoExploreSelected, nextDecision, select, readyAndPass, cancelSelected, disbandSelected, foundCitySelected, pillageSelected, sleepSelected, healSelected, skipSelected, toggleRangedMode, upgradeSelected];
 let map: HTMLCanvasElement;
 
 beforeEach(() => {
