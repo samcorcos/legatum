@@ -72,6 +72,12 @@ struct Cli {
     /// Rotate the explicitly listed factions one seat per game.
     #[arg(long, requires = "factions", conflicts_with = "mirror")]
     rotate_factions: bool,
+    /// The eleven-faction census: seat the eleven cyclic rosters of eight (Egypt and Rome
+    /// included), one roster per eight games, turned one seat per game. Needs --players 8 and
+    /// --games a multiple of 88, so every faction plays every seat equally often. Off by
+    /// default, so seeded rosters and pinned tapes are unchanged.
+    #[arg(long, conflicts_with_all = ["factions", "mirror", "proxy", "strategy_matchups", "replay", "replay_export", "tape_in"])]
+    all_factions: bool,
     /// Play each requested seed twice, reversing policies on the same map/factions.
     #[arg(long, conflicts_with_all = ["proxy", "strategy_matchups", "replay", "replay_export", "tape_in"])]
     mirror: bool,
@@ -537,6 +543,7 @@ fn lobby_options(cli: &Cli) -> Result<lobby::Config, String> {
         map_size: cli.map_size,
         factions,
         rotate_factions: cli.rotate_factions,
+        all_factions: cli.all_factions,
         mirror: cli.mirror,
     })
 }
@@ -546,6 +553,16 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
         return Err("--hard-v2-handoff requires --brain scripted".into());
     }
     let lobby = lobby_options(cli)?;
+    if cli.all_factions
+        && (lobby.players != runner::CENSUS_SEATS
+            || !cli.games.is_multiple_of(runner::CENSUS_CYCLE))
+    {
+        return Err(format!(
+            "--all-factions requires --players {} and --games a multiple of {}",
+            runner::CENSUS_SEATS,
+            runner::CENSUS_CYCLE
+        ));
+    }
     let games = cli
         .games
         .checked_mul(if cli.mirror { 2 } else { 1 })
@@ -839,6 +856,7 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
         difficulty_rotation: cli.difficulty_rotation,
         strategies: cli.strategies.clone(),
         strategy_matchups: cli.strategy_matchups,
+        all_factions: cli.all_factions,
         safety_cap: opts.safety_cap(),
         turn_limit: cli.turn_limit,
         determinism: cli.determinism,
@@ -1105,6 +1123,15 @@ mod tests {
             vec!["sim", "--players", "9"],
             vec!["sim", "--map-size", "huge"],
             vec!["sim", "--factions", "unknown,India"],
+            vec![
+                "sim",
+                "--all-factions",
+                "--players",
+                "2",
+                "--factions",
+                "India,Celts",
+            ],
+            vec!["sim", "--all-factions", "--proxy", "0"],
         ] {
             assert!(Cli::try_parse_from(args).is_err());
         }

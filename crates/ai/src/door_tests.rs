@@ -154,6 +154,61 @@ fn an_army_within_its_march_is_a_front_and_a_far_one_is_not() {
 }
 
 #[test]
+fn late_invasion_prepares_for_a_visible_peace_army_without_spending_in_the_old_policy() {
+    let mut v = view(2600, &army(3, Hex::new(9, 6)));
+    v.turn = 151;
+    v.diplomacy.legacy = false;
+    v.players[0].faction = Faction::Switzerland;
+    v.players[0].faction_goal_done = false;
+    v.economy.gold_per_turn.total = 31;
+    v.units.push(
+        ViewBuilder::new(24, 14)
+            .unit(10, ME, UnitKind::Spearman, Hex::new(5, 6))
+            .build()
+            .units
+            .remove(0),
+    );
+    let upgrade = legatum_core::data::unit_stats(UnitKind::Spearman)
+        .upgrades_to
+        .unwrap();
+    v.research.current = legatum_core::data::unit_stats(upgrade).requires;
+    v.research.turns_left = Some(1);
+    v.cities.push(
+        ViewBuilder::new(24, 14)
+            .city(3, ME, Hex::new(5, 11), 3)
+            .build()
+            .cities
+            .remove(0),
+    );
+    let mut old = planner(&v, 100);
+    old.decisions.invasion_defense = 0;
+    assert!(old.saving_for_goal());
+    assert_eq!(old.ordinary_gold_reserve(), 5000);
+    assert!(old.military_upgrade_hold(old.ctx.own_cities[0]));
+    assert!(old.door_fronts().is_empty());
+    old.plan_door_defense();
+    assert!(buys(&old.orders).is_empty());
+
+    let mut active = planner(&v, 100);
+    active.decisions.invasion_defense = 1;
+    assert!(
+        active
+            .door_fronts()
+            .iter()
+            .any(|f| f.city == CityId(1) && f.gap() > 0)
+    );
+    active.plan_door_defense();
+    assert_eq!(buys(&active.orders).len(), 1, "{:?}", active.orders);
+    assert!(active.gold_left < 2600);
+    assert_valid(&v, &active.orders);
+
+    v.turn = 50;
+    let mut early = planner(&v, 100);
+    early.decisions.invasion_defense = 1;
+    assert!(early.door_fronts().is_empty());
+}
+
+#[test]
 fn threat_counts_strength_squared_so_an_era_lead_outweighs_numbers() {
     // One Phalangite (25) outweighs one Spearman (20) by more than its linear 25%.
     let one_new = view(0, &[(50, UnitKind::Phalangite, Hex::new(9, 6), 100)]);

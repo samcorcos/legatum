@@ -1076,11 +1076,17 @@ export class MapScene {
     }
   }
 
+  /** Request a fresh render on the next frame (e.g. when reduced-motion state toggles). */
+  markDirty() { this.animating = true; }
+
   /** Render one frame. Returns false when nothing moved (the caller may skip frames). */
   frame(): boolean {
+    const now = performance.now();
     const dt = Math.min(0.05, this.clock.getDelta());
-    this.uniforms.uTime.value += dt;
-    this.stepAnim(performance.now());
+    const activeAnim = this.anim !== null || this.settling.size > 0;
+    if (this.still && !this.animating && !activeAnim) return false;
+    if (!this.still) this.uniforms.uTime.value += dt;
+    this.stepAnim(now);
     this.flora?.update(this.uniforms.uTime.value, this.still, this.dist);
     for (const g of this.settling) {
       g.rotation.y += -g.rotation.y * Math.min(1, dt * 12);
@@ -1088,7 +1094,7 @@ export class MapScene {
       this.animating = true;
     }
     if (!this.still) for (const m of this.mixers) m.update(dt);
-    this.stepSelection(performance.now());
+    this.stepSelection(now);
     this.post.render(this.scene, this.camera);
     const was = this.animating;
     this.animating = false;

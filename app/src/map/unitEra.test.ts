@@ -1,6 +1,6 @@
 // The era cues (user, 2026-10-11): the forecast headline's wording, and strength chips only on enemies the selected unit
 // could attack this turn.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { FixtureClient } from '../test/fixtureEngine';
 import { unitEraFixture } from '../test/unitEraFixture';
 import { attackableEnemies, drawStrengthChip, eraDeltaWords, forecastEraHeadline, matchupStrength, outclasses, shoots } from './unitEra';
@@ -62,5 +62,44 @@ describe('era cues', () => {
     const base = unitDefenseStrength('Spearman', 100, 'Grassland', 0, 'Byzantium', 0).total;
     expect(matchupStrength(near, 'Byzantium', keshig, false)).toBe(base);
     expect(matchupStrength(far, 'Byzantium', keshig, false)).toBe(base + classBonusStrength(unitStatsFor('Byzantium', 'Spearman').strength));
+  });
+
+  it('memoizes matchupStrength and attackableEnemies across repeated frames without re-invoking WASM', async () => {
+    const { Game } = await import('../wasm-pkg/legatum.js');
+    const setup = unitEraFixture();
+    const client = new FixtureClient();
+    client.load(JSON.stringify(setup.fixture));
+    const view = client.view(0);
+    const hoplite = view.units.find((u) => u.id === setup.hoplite)!;
+    const phalangite = view.units.find((u) => u.id === setup.phalangite)!;
+
+    // First call computes reach once; repeated calls for the same (view, unit) hit the WeakMap cache.
+    const reachCalls = { n: 0 };
+    const { reachTiles } = await import('./reach');
+    const getReach = () => { reachCalls.n++; return reachTiles(view, hoplite); };
+    const firstTargets = attackableEnemies(view, hoplite, getReach);
+    const secondTargets = attackableEnemies(view, hoplite, getReach);
+    expect(secondTargets).toBe(firstTargets);
+    expect(reachCalls.n).toBe(1);
+
+    // Warm matchupStrength with a distinct hp value so prior tests cannot have cached it, then spy on WASM.
+    const woundedHoplite = { ...hoplite, hp: 73 };
+    const woundedPhalangite = { ...phalangite, hp: 67 };
+    const spy = vi.spyOn(Game, 'combat_projection');
+    try {
+      const a1 = matchupStrength(woundedHoplite, 'Sparta', woundedPhalangite, true);
+      const d1 = matchupStrength(woundedPhalangite, 'Athens', woundedHoplite, false);
+      const callsAfterFirst = spy.mock.calls.length;
+      expect(callsAfterFirst).toBeGreaterThan(0);
+
+      // Repeated per-frame calls must execute zero additional WASM combat_projection calls.
+      for (let i = 0; i < 10; i++) {
+        expect(matchupStrength(woundedHoplite, 'Sparta', woundedPhalangite, true)).toBe(a1);
+        expect(matchupStrength(woundedPhalangite, 'Athens', woundedHoplite, false)).toBe(d1);
+      }
+      expect(spy.mock.calls.length).toBe(callsAfterFirst);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

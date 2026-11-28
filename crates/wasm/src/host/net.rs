@@ -92,6 +92,7 @@ impl NetHost {
             return;
         };
         link.last_seen = now;
+        self.host.tick_turn_timer(now);
         let result = if text.len() > MAX_GUEST_MESSAGE {
             Err("Message too large".to_owned())
         } else {
@@ -123,6 +124,7 @@ impl NetHost {
 
     /// Ends connections past their join deadline or silent for too long.
     pub fn tick(&mut self, now: f64) {
+        self.host.tick_turn_timer(now);
         self.track_admission(now);
         let expired: Vec<_> = self
             .links

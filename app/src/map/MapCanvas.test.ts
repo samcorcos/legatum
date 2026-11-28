@@ -287,12 +287,13 @@ it.each(['unit', 'city'] as const)('phone taps select a %s without a tile card; 
 });
 
 it('defers map resize writes until the next frame and ignores unchanged canvas dimensions', () => {
-  let notify: ResizeObserverCallback | undefined;
+  const notifies: ResizeObserverCallback[] = [];
   vi.stubGlobal('ResizeObserver', class {
     constructor(private callback: ResizeObserverCallback) {}
-    observe(el: Element) { if (el.matches('.map-wrap')) notify = this.callback; }
+    observe(el: Element) { if (el.matches('.map-wrap')) notifies.push(this.callback); }
     disconnect() {}
   });
+  const notifyAll = () => { for (const notify of notifies) notify([], {} as ResizeObserver); };
   let height = 600;
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
     return this.matches('.map-wrap') ? new DOMRect(0, 0, 800, height) : new DOMRect();
@@ -302,12 +303,12 @@ it('defers map resize writes until the next frame and ignores unchanged canvas d
   const before = canvas.height;
   const writes = vi.spyOn(canvas, 'height', 'set');
   height = 420;
-  act(() => { notify!([], {} as ResizeObserver); notify!([], {} as ResizeObserver); });
+  act(() => { notifyAll(); notifyAll(); });
   expect(canvas.height).toBe(before); // No writes inside observer delivery.
   frame(performance.now());
   expect(canvas.style.height).toBe('420px');
   expect(writes).toHaveBeenCalledTimes(1);
-  act(() => notify!([], {} as ResizeObserver));
+  act(() => notifyAll());
   frame(performance.now());
   expect(writes).toHaveBeenCalledTimes(1);
 });
@@ -605,7 +606,7 @@ it('keeps the settlement card route over friendly units and gives mouse-specific
 it('fetches a breakdown only for an inspected site, caches it across hover movement, and keeps hover compact', () => {
   vi.useFakeTimers();
   const { view: v, settler } = settlerAtLegalSite();
-  const site = { ...settlementSite(v, settler, settler.pos, [])!, score: 100, breakdown: [{ label: 'Food', value: 120 }, { label: 'Travel', value: -20 }, { label: 'No effect', value: 0 }] };
+  const site = { ...settlementSite({ ...v }, settler, settler.pos, [])!, score: 100, breakdown: [{ label: 'Food', value: 120 }, { label: 'Travel', value: -20 }, { label: 'No effect', value: 0 }] };
   const detail = vi.spyOn(Game, 'settlement_site').mockReturnValue(JSON.stringify(site));
   act(() => useGame.setState({ selection: { kind: 'unit', id: settler.id } }));
   expect(detail).not.toHaveBeenCalled();
@@ -721,3 +722,41 @@ it('the unit card movement picker accepts a left-click through the existing vali
   expect(useGame.getState().errors[0]).toEqual([]);
   expect(useGame.getState().mode).toBe('normal');
 });
+
+it('draws one full unclipped settle frame when a unit glide finishes before resuming pulseOnly clipping', () => {
+  const v = useGame.getState().views![0];
+  const unit = v.units.find((u) => u.owner === v.me)!;
+  const ctx = map.getContext('2d')!;
+  const clipSpy = vi.spyOn(ctx, 'clip');
+  const drawMock = vi.mocked(draw);
+  drawMock.mockReturnValue({ pending: false, labelRects: [], ambient: [], ring: { x: 200, y: 200, r: 40 } } as never);
+  const start = performance.now() + 1000;
+  act(() => useGame.setState({
+    selection: { kind: 'unit', id: unit.id },
+    anim: { paths: new Map([[unit.id, [unit.pos, { q: unit.pos.q + 1, r: unit.pos.r }]]]), start, duration: 200 },
+  }));
+  // Mid-glide: full unclipped frame with unitPos populated (movement reach is suppressed).
+  clipSpy.mockClear();
+  drawMock.mockClear();
+  frame(start + 100);
+  expect(drawMock).toHaveBeenCalledTimes(1);
+  expect(drawMock.mock.calls[0][1].unitPos.size).toBe(1);
+  expect(clipSpy).not.toHaveBeenCalled();
+
+  // First frame after glide ends: must draw one full unclipped settle frame with unitPos empty
+  // so movement reach paints across the entire map instead of clipping to a pulseOnly rectangle.
+  clipSpy.mockClear();
+  drawMock.mockClear();
+  frame(start + 300);
+  expect(drawMock).toHaveBeenCalledTimes(1);
+  expect(drawMock.mock.calls[0][1].unitPos.size).toBe(0);
+  expect(clipSpy).not.toHaveBeenCalled();
+
+  // Subsequent pulse frame after settling: resumes clipped pulseOnly rendering normally.
+  clipSpy.mockClear();
+  drawMock.mockClear();
+  frame(start + 350);
+  expect(drawMock).toHaveBeenCalledTimes(1);
+  expect(clipSpy).toHaveBeenCalledTimes(1);
+});
+

@@ -1,0 +1,151 @@
+{
+  "method": "Manual roof-to-base height of a representative ordinary building, read from each 512 px master with PIL; approximate to 2-4 px. Monumental towers and trees are excluded. Draw scale is base scale times globalScaleFactor; the median metropolis width measured from alpha >= 128 at map scale is about 1.46 hex widths (hamlet ~0.67, town ~0.86, city ~1.15). No hamlet floor adjustment is needed.",
+  "targetHouseHeightPx": 34,
+  "globalScaleFactor": 1.16,
+  "sprites": {
+    "ancient-hamlet": {
+      "houseHeightPx": 85,
+      "scale": 0.4
+    },
+    "ancient-town": {
+      "houseHeightPx": 65,
+      "scale": 0.5231
+    },
+    "ancient-city": {
+      "houseHeightPx": 48,
+      "scale": 0.7083
+    },
+    "ancient-metropolis": {
+      "houseHeightPx": 39,
+      "scale": 0.8718
+    },
+    "classical-hamlet": {
+      "houseHeightPx": 80,
+      "scale": 0.425
+    },
+    "classical-town": {
+      "houseHeightPx": 63,
+      "scale": 0.5397
+    },
+    "classical-city": {
+      "houseHeightPx": 49,
+      "scale": 0.6939
+    },
+    "classical-metropolis": {
+      "houseHeightPx": 38,
+      "scale": 0.8947
+    },
+    "medieval-hamlet": {
+      "houseHeightPx": 87,
+      "scale": 0.3908
+    },
+    "medieval-town": {
+      "houseHeightPx": 66,
+      "scale": 0.5152
+    },
+    "medieval-city": {
+      "houseHeightPx": 50,
+      "scale": 0.68
+    },
+    "medieval-metropolis": {
+      "houseHeightPx": 37,
+      "scale": 0.9189
+    },
+    "renaissance-hamlet": {
+      "houseHeightPx": 82,
+      "scale": 0.4146
+    },
+    "renaissance-town": {
+      "houseHeightPx": 64,
+      "scale": 0.5312
+    },
+    "renaissance-city": {
+      "houseHeightPx": 47,
+      "scale": 0.7234
+    },
+    "renaissance-metropolis": {
+      "houseHeightPx": 37,
+      "scale": 0.9189
+    },
+    "industrial-hamlet": {
+      "houseHeightPx": 76,
+      "scale": 0.4474
+    },
+    "industrial-town": {
+      "houseHeightPx": 61,
+      "scale": 0.5574
+    },
+    "industrial-city": {
+      "houseHeightPx": 46,
+      "scale": 0.7391
+    },
+    "industrial-metropolis": {
+      "houseHeightPx": 37,
+      "scale": 0.9189
+    },
+    "machine-hamlet": {
+      "houseHeightPx": 78,
+      "scale": 0.4359
+    },
+    "machine-town": {
+      "houseHeightPx": 62,
+      "scale": 0.5484
+    },
+    "machine-city": {
+      "houseHeightPx": 47,
+      "scale": 0.7234
+    },
+    "machine-metropolis": {
+      "houseHeightPx": 37,
+      "scale": 0.9189
+    },
+    "modern-hamlet": {
+      "houseHeightPx": 78,
+      "scale": 0.4359
+    },
+    "modern-town": {
+      "houseHeightPx": 61,
+      "scale": 0.5574
+    },
+    "modern-city": {
+      "houseHeightPx": 47,
+      "scale": 0.7234
+    },
+    "modern-metropolis": {
+      "houseHeightPx": 37,
+      "scale": 0.9189
+    },
+    "contemporary-hamlet": {
+      "houseHeightPx": 79,
+      "scale": 0.4304
+    },
+    "contemporary-town": {
+      "houseHeightPx": 60,
+      "scale": 0.5667
+    },
+    "contemporary-city": {
+      "houseHeightPx": 46,
+      "scale": 0.7391
+    },
+    "contemporary-metropolis": {
+      "houseHeightPx": 36,
+      "scale": 0.9444
+    },
+    "future-hamlet": {
+      "houseHeightPx": 83,
+      "scale": 0.4096
+    },
+    "future-town": {
+      "houseHeightPx": 64,
+      "scale": 0.5312
+    },
+    "future-city": {
+      "houseHeightPx": 48,
+      "scale": 0.7083
+    },
+    "future-metropolis": {
+      "houseHeightPx": 38,
+      "scale": 0.8947
+    }
+  }
+}

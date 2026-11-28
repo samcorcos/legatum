@@ -63,6 +63,16 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
       </div>
       <Segmented label="Map size" value={typeof lobby.mapSize === 'string' ? lobby.mapSize : 'Custom'} options={sizes}
         onChange={onChange && ((mapSize: MapSizeId | 'Custom') => { if (mapSize !== 'Custom') onChange(setMapSize(lobby, mapSize)); })} />
+      {lobby.mode === 'host' && <div className="lobby-field">
+        <label className="lbl" htmlFor="turn-timer">Turn timer</label>
+        <select className="lobby-select" id="turn-timer" value={lobby.turnTimerSeconds ?? 0} disabled={!onChange}
+          onChange={(e) => change?.({ turnTimerSeconds: Number(e.target.value) })}>
+          {[0, 30, 60, 120, 180, 300, 600].map((seconds) => <option key={seconds} value={seconds}>
+            {seconds === 0 ? 'Unlimited' : seconds < 60 ? `${seconds} seconds` : `${seconds / 60} minute${seconds === 60 ? '' : 's'}`}
+          </option>)}
+        </select>
+        <div className="muted">When time runs out, the turn ends with your queued orders.</div>
+      </div>}
       {notes(lobby).map((n) => (
         <div key={n} className="lobby-note">
           {n}

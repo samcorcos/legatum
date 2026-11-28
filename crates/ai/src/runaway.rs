@@ -45,6 +45,7 @@ const ALLY_SLOW_WEIGHT: i32 = 50;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Runaway {
     pub team: TeamId,
+    pub members: Vec<TeamId>,
     pub score: i32,
     /// Its VP minus the best other living team's.
     pub vp_lead: i32,
@@ -119,7 +120,8 @@ impl Planner<'_> {
         if self.difficulty != AiDifficulty::Hard
             || self.decisions.busy_leader_front == 0
             || self.runaway_read().is_none_or(|r| {
-                r.team != target || (r.recent_captures == 0 && r.eliminations == 0 && r.vp_lead < 3)
+                !r.members.contains(&target)
+                    || (r.recent_captures == 0 && r.eliminations == 0 && r.vp_lead < 3)
             })
             || self
                 .top_threat_team()
@@ -491,6 +493,9 @@ impl Planner<'_> {
     /// The public read of the leader, if any: the strict VP leader (by VP) or a team counting
     /// down to victory, with its score on public signs. Never our own team.
     pub(crate) fn runaway_read(&self) -> Option<Runaway> {
+        if self.difficulty == AiDifficulty::Hard && self.decisions.runaway_bloc & 1 != 0 {
+            return self.runaway_bloc_read();
+        }
         let v = self.view();
         let living: Vec<_> = v
             .standings
@@ -531,6 +536,7 @@ impl Planner<'_> {
         let score = runaway_score(vp_lead, army_percent, recent_captures, eliminations, hold);
         (score > 0).then_some(Runaway {
             team,
+            members: vec![team],
             score,
             vp_lead,
             army_percent,
@@ -538,6 +544,98 @@ impl Planner<'_> {
             eliminations,
             hold,
         })
+    }
+
+    fn public_bloc(&self, team: TeamId) -> Vec<TeamId> {
+        self.view()
+            .diplomacy
+            .side(team)
+            .into_iter()
+            .filter(|t| alive(self.view(), *t))
+            .collect()
+    }
+
+    fn runaway_bloc_read(&self) -> Option<Runaway> {
+        let v = self.view();
+        let mut blocs = std::collections::BTreeMap::<TeamId, Vec<TeamId>>::new();
+        for standing in v
+            .standings
+            .iter()
+            .filter(|s| alive(v, s.team) && s.target > 0)
+        {
+            let members = self.public_bloc(standing.team);
+            if let Some(first) = members.first() {
+                blocs.entry(*first).or_insert(members);
+            }
+        }
+        let vp = |members: &[TeamId]| -> i32 {
+            v.standings
+                .iter()
+                .filter(|s| members.contains(&s.team))
+                .map(|s| s.vp as i32)
+                .sum()
+        };
+        let members = blocs
+            .values()
+            .max_by_key(|m| (vp(m), std::cmp::Reverse(m[0])))?;
+        if members.contains(&v.team) {
+            return None;
+        }
+        let best_other = blocs
+            .values()
+            .filter(|m| *m != members)
+            .map(|m| vp(m))
+            .max()
+            .unwrap_or(0);
+        let hold = v
+            .standings
+            .iter()
+            .any(|s| members.contains(&s.team) && s.victory_hold.is_some());
+        let vp_lead = vp(members) - best_other;
+        if vp_lead <= 0 && !hold {
+            return None;
+        }
+        let team = *members.iter().max_by_key(|t| {
+            (
+                v.standings
+                    .iter()
+                    .find(|s| s.team == **t)
+                    .map_or(0, |s| s.vp),
+                std::cmp::Reverse(**t),
+            )
+        })?;
+        let bloc_army = |m: &[TeamId]| -> i32 { m.iter().map(|t| army(v, *t)).sum() };
+        let next_army = blocs
+            .values()
+            .filter(|m| *m != members)
+            .map(|m| bloc_army(m))
+            .max()
+            .unwrap_or(0);
+        let army_percent = bloc_army(members) * 100 / next_army.max(1);
+        let (recent_captures, eliminations) = self.opponents.map_or((0, 0), |m| {
+            m.threats
+                .scores
+                .values()
+                .filter(|t| members.contains(&v.team_of(t.rival)))
+                .fold((0, 0), |(c, e), t| {
+                    (c + t.recent_captures, e + t.eliminations)
+                })
+        });
+        let score = runaway_score(vp_lead, army_percent, recent_captures, eliminations, hold);
+        (score > 0).then_some(Runaway {
+            team,
+            members: members.clone(),
+            score,
+            vp_lead,
+            army_percent,
+            recent_captures,
+            eliminations,
+            hold,
+        })
+    }
+
+    fn runaway_has(&self, bit: i32, against: TeamId) -> bool {
+        self.runaway_gene(bit) && self.runaway().is_some_and(|r| r.members.contains(&against))
     }
 
     fn runaway_team(&self, bit: i32) -> Option<TeamId> {
@@ -552,7 +650,48 @@ impl Planner<'_> {
     /// home sue: in the Horde scenario that escape let India and the Celts sign Peace with the
     /// Mongols and freed the horde (Byzantine cities held 3.12 with this gate, 2.39 with it).
     pub(crate) fn runaway_refuses_peace(&self, against: TeamId) -> bool {
-        self.runaway_team(1) == Some(against) && !self.collapsing()
+        self.runaway_has(1, against) && !self.collapsing()
+    }
+
+    /// A third-party bloc has pulled clear, and this pair can end a distracting war without
+    /// surrendering a nearly won siege or leaving a city to fall.
+    pub(crate) fn runaway_rival_peace(&self, against: TeamId) -> bool {
+        if self.difficulty != AiDifficulty::Hard || self.decisions.runaway_bloc & 3 != 3 {
+            return false;
+        }
+        let v = self.view();
+        if !v.teams_at_war(v.team, against)
+            || self.collapsing()
+            || self.endangered_by(against)
+            || self.idle_war_turns(against).is_none_or(|turns| turns < 8)
+        {
+            return false;
+        }
+        let Some(r) = self.runaway_bloc_read() else {
+            return false;
+        };
+        let cities = |team: TeamId| -> u32 {
+            v.players
+                .iter()
+                .filter(|p| p.alive && p.team == team)
+                .map(|p| p.cities)
+                .sum()
+        };
+        if r.members.contains(&against)
+            || r.vp_lead < 2
+            || r.army_percent < 120
+            || cities(v.team) < 2
+            || cities(against) < 2
+            || army(v, v.team) * 5 < army(v, against)
+            || army(v, against) * 5 < army(v, v.team)
+            || self.ctx.own_cities.iter().any(|c| c.hp <= 100)
+            || v.cities
+                .iter()
+                .any(|c| v.team_of(c.owner) == against && c.visible && c.hp <= 100)
+        {
+            return false;
+        }
+        true
     }
 
     /// Bit 1: what an Alliance with `other` is worth against the runaway: nothing unless
@@ -560,6 +699,34 @@ impl Planner<'_> {
     /// runaway's public army the pair can bring (each side's army by its reach to the runaway's
     /// cities, `helper_reach_percent`).
     pub(crate) fn runaway_alliance_value(&self, other: TeamId) -> i32 {
+        if self.difficulty == AiDifficulty::Hard && self.decisions.runaway_bloc & 1 != 0 {
+            if !self.runaway_gene(1) {
+                return 0;
+            }
+            let Some(runaway) = self.runaway() else {
+                return 0;
+            };
+            let v = self.view();
+            let total: i32 = runaway.members.iter().map(|t| army(v, *t)).sum();
+            return runaway
+                .members
+                .iter()
+                .copied()
+                .filter(|t| other != *t && v.teams_at_war(other, *t))
+                .filter(|t| {
+                    v.teams_at_war(v.team, *t)
+                        || self.reachable_war_force(*t)
+                        || self.busy_leader_front(*t)
+                })
+                .map(|t| {
+                    let brought = army(v, v.team) * self.helper_reach_percent(v.team, t) / 100
+                        + army(v, other) * self.helper_reach_percent(other, t) / 100;
+                    let slow = (brought * 100 / total.max(1)).clamp(0, 100);
+                    15 + slow * ALLY_SLOW_WEIGHT / 100
+                })
+                .max()
+                .unwrap_or(0);
+        }
         let Some(leader) = self.runaway_team(1) else {
             return 0;
         };
@@ -587,6 +754,43 @@ impl Planner<'_> {
         let v = self.view();
         if observer == target || !alive(v, observer) || !alive(v, target) {
             return 0;
+        }
+        if self.difficulty == AiDifficulty::Hard && self.decisions.runaway_bloc & 1 != 0 {
+            let observers = self.public_bloc(observer);
+            let targets = self.public_bloc(target);
+            if targets.contains(&observer) {
+                return 0;
+            }
+            let (captures, eliminations) = self.opponents.map_or((0, 0), |m| {
+                m.threats
+                    .scores
+                    .values()
+                    .filter(|t| targets.contains(&v.team_of(t.rival)))
+                    .fold((0u32, 0u32), |(c, e), t| {
+                        (c + t.recent_captures, e + t.eliminations)
+                    })
+            });
+            let vp = |members: &[TeamId]| -> i32 {
+                v.standings
+                    .iter()
+                    .filter(|s| members.contains(&s.team))
+                    .map(|s| s.vp as i32)
+                    .sum()
+            };
+            let strength =
+                |members: &[TeamId]| -> i32 { members.iter().map(|t| army(v, *t)).sum() };
+            let near = targets
+                .iter()
+                .map(|t| self.helper_reach_percent(observer, *t))
+                .max()
+                .unwrap_or(0);
+            return wariness_score(
+                captures,
+                eliminations,
+                strength(&targets) * 100 / strength(&observers).max(1),
+                vp(&targets) - vp(&observers),
+                near,
+            );
         }
         let (captures, eliminations) = self.opponents.map_or((0, 0), |m| {
             m.threats
@@ -842,7 +1046,7 @@ impl Planner<'_> {
     /// Bit 1: joining a war on the runaway (an ally's call to arms, or the war an Alliance
     /// brings) is worth this much more.
     pub(crate) fn runaway_join_bonus(&self, enemy: TeamId) -> i32 {
-        if self.runaway_team(1) == Some(enemy)
+        if self.runaway_has(1, enemy)
             && (self.view().teams_at_war(self.view().team, enemy)
                 || self.reachable_war_force(enemy)
                 || self.busy_leader_front(enemy))
@@ -914,21 +1118,37 @@ impl Planner<'_> {
     /// already under way: any reachable weakly held city of it is a target, and the strike
     /// declares when assembled. Its army at our door and our own collapse still stop it.
     pub(crate) fn second_front_why(&self) -> Result<(TeamId, CityId), &'static str> {
-        let v = self.view();
-        let radius = self.front_radius();
         let runaway = self.runaway();
         let coalition = self.coalition_enemy();
-        let leader = runaway
+        let leaders = runaway
             .as_ref()
-            .map(|r| r.team)
-            .or(coalition)
+            .map(|r| r.members.clone())
+            .or_else(|| coalition.map(|t| vec![t]))
             .ok_or("no runaway")?;
+        let mut last = "no weak city in reach";
+        for leader in leaders {
+            match self.second_front_against(leader, runaway.as_ref(), coalition) {
+                Ok(target) => return Ok(target),
+                Err(reason) => last = reason,
+            }
+        }
+        Err(last)
+    }
+
+    fn second_front_against(
+        &self,
+        leader: TeamId,
+        runaway: Option<&Runaway>,
+        coalition: Option<TeamId>,
+    ) -> Result<(TeamId, CityId), &'static str> {
+        let v = self.view();
+        let radius = self.front_radius();
         // Strikes that need no army away: a hollow or counting-down runaway (bit 8), or any
         // empire a coalition is at war with (bit 16: no token wars, all in at once).
         let all_in = coalition == Some(leader);
         let hollow_strike = all_in
             || (self.runaway_gene(8)
-                && runaway.as_ref().is_some_and(|r| {
+                && runaway.is_some_and(|r| {
                     r.hold
                         || crate::threat::hollow_bonus_from(v, leader, self.hollow_floor(leader))
                             > 0
@@ -937,11 +1157,19 @@ impl Planner<'_> {
             return Err("bit 2 off");
         }
         let at_war = v.teams_at_war(v.team, leader);
+        let bloc_front = self.decisions.runaway_bloc & 1 != 0
+            && runaway.is_some_and(|r| {
+                r.members.contains(&leader)
+                    && r.members
+                        .iter()
+                        .any(|member| v.teams_at_war(v.team, *member))
+            });
         let allied_front = !at_war
-            && v.diplomacy
-                .side(v.team)
-                .into_iter()
-                .any(|t| t != v.team && alive(v, t) && v.teams_at_war(t, leader))
+            && (bloc_front
+                || v.diplomacy
+                    .side(v.team)
+                    .into_iter()
+                    .any(|t| t != v.team && alive(v, t) && v.teams_at_war(t, leader)))
             && crate::opportunity::legal_declaration(v, leader);
         let hollow_front = hollow_strike
             && !all_in
@@ -1295,6 +1523,97 @@ mod tests {
         assert_eq!(runaway_score(1, 100, 1, 0, false), 25);
         assert_eq!(runaway_score(1, 100, 0, 0, true), 75);
         assert_eq!(runaway_score(9, 900, 9, 9, false), 60 + 25 + 40 + 40);
+    }
+
+    #[test]
+    fn allied_vp_and_armies_form_one_runaway_target_set() {
+        let mut v = runaway_view(false);
+        let me = v.team;
+        let first = v.team_of(ENEMY);
+        let second = v.team_of(THIRD);
+        let mut city = v.cities.iter().find(|c| c.owner == ENEMY).unwrap().clone();
+        city.id = CityId(90);
+        city.owner = THIRD;
+        city.pos = off(16, 5);
+        v.cities.push(city);
+        standings(&mut v, [(me.0, 3), (first.0, 2), (second.0, 2)]);
+        v.diplomacy.relations.retain(|r| !r.between(first, second));
+        v.diplomacy
+            .relations
+            .push(relation(first, second, RelationState::Alliance));
+        let old = planner(&v, 1);
+        assert_eq!(old.runaway_read(), None);
+        let mut on = planner(&v, 1);
+        on.decisions.runaway_bloc = 1;
+        let read = on.runaway_read().expect("allied bloc leads");
+        assert_eq!(read.members, vec![first, second]);
+        assert_eq!(read.vp_lead, 1);
+        assert!(read.army_percent > 100);
+        assert!(on.runaway_refuses_peace(first));
+        assert!(on.runaway_refuses_peace(second));
+        assert_eq!(on.wariness(me, first), on.wariness(me, second));
+    }
+
+    #[test]
+    fn two_viable_rivals_can_end_their_war_against_a_runaway_bloc() {
+        let mut v = runaway_view(true);
+        let me = v.team;
+        let enemy = v.team_of(ENEMY);
+        let third = v.team_of(THIRD);
+        let fourth = TeamId(4);
+        let mut player = v.players[THIRD.0 as usize].clone();
+        player.id = PlayerId(4);
+        player.team = fourth;
+        player.cities = 1;
+        player.army = 600;
+        v.players.push(player);
+        let mut city = v.cities.iter().find(|c| c.owner == ME).unwrap().clone();
+        city.id = CityId(91);
+        city.pos = off(3, 6);
+        v.cities.push(city);
+        let mut city = v.cities.iter().find(|c| c.owner == ENEMY).unwrap().clone();
+        city.id = CityId(92);
+        city.pos = off(13, 6);
+        v.cities.push(city);
+        v.players[ME.0 as usize].cities = 2;
+        v.players[ENEMY.0 as usize].cities = 2;
+        v.players[ME.0 as usize].army = 300;
+        v.players[ENEMY.0 as usize].army = 200;
+        v.players[THIRD.0 as usize].cities = 1;
+        v.players[THIRD.0 as usize].army = 600;
+        v.standings = [(me, 1), (enemy, 1), (third, 3), (fourth, 3)]
+            .map(|(team, vp)| TeamStanding {
+                team,
+                members: vec![],
+                vp,
+                target: 12,
+                victory_hold: None,
+            })
+            .to_vec()
+            .into();
+        v.diplomacy
+            .relations
+            .push(relation(third, fourth, RelationState::Alliance));
+        let mut off = planner(&v, 1);
+        off.decisions.runaway_bloc = 0;
+        assert!(!off.runaway_rival_peace(enemy));
+        let mut on = planner(&v, 1);
+        on.decisions.runaway_bloc = 3;
+        assert!(on.runaway_rival_peace(enemy));
+        assert!(on.wants_peace(enemy));
+        assert_eq!(
+            on.treaty_score(
+                enemy,
+                TreatyKind::Peace,
+                &Order::ProposeTreaty {
+                    to: enemy,
+                    kind: TreatyKind::Peace,
+                    gold: 0
+                },
+                &crate::TreatyBudget::of(&v),
+            ),
+            Some(100)
+        );
     }
 
     #[test]

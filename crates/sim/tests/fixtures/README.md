@@ -2348,3 +2348,18 @@ stayed unchanged. The AI can now value a distant attack on a stationary horse, s
 The other two default AI digests stayed unchanged. Historical single-game JSON reports produced
 by `crates/sim/examples/hard_vs_human.rs` are prior-run results, not live rule pins; new runs
 write their own per-game snapshots.
+
+## Visible late front in Hard (2026-11-27)
+
+`invasion_defense` became the Hard default after a 300-pair duel. It activates from turn 120 and changes AI purchases and movement near a short visible front. `tools/sim/repin.sh` changed only the 160-turn scripted Hard runner digest in `pins.json`, from `14468041954912674984` to `950804818896013881`. The three 80-turn mixed digests, all three regenerated 40-turn tapes, and all nine fixed-order fixture tapes stayed byte-identical; their initial and per-turn hashes did not move. Both release pin tests and all 12 determinism tests passed on the box. No core rule or save format changed.
+
+After integrating the current public master, including the modern-army default, the late-front
+`invasion_defense` default changed the 160-turn scripted Hard digest from
+`11218632973235829022` to `16181879122229932678`. A box repin left the three mixed digests
+and all nine fixed-order fixture tapes unchanged. Both pin tests and all 12 determinism tests
+passed. The prior late-front digest above was measured before that integration.
+
+After integrating the Gold purchase and reserve changes on master, another box repin moved the
+160-turn scripted Hard digest from `7677945178084151405` to `4008255431853945247`.
+The three mixed digests and nine fixed-order fixture tapes stayed unchanged. Both pin tests,
+all 12 determinism tests, and the plain Hard benchmark passed on the combined branch.

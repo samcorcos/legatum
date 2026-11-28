@@ -25,22 +25,32 @@ if (typeof document !== 'undefined' && document.fonts) {
 }
 export const fontEpoch = () => fontLoads;
 
+export const SPRITE_CACHE_LIMIT = 600;
 type Sprite = { c: HTMLCanvasElement; ax: number; ay: number; w: number; h: number };
 const cache = new Map<string, Sprite>();
 let epoch = '';
 function cached(key: string, make: () => Sprite): Sprite {
   const e = `${fontLoads}|${iconEpoch()}`;
-  if (e !== epoch || cache.size > 600) {
+  if (e !== epoch) {
     cache.clear();
     epoch = e;
   }
-  let s = cache.get(key);
-  if (!s) {
-    s = make();
-    cache.set(key, s);
+  const hit = cache.get(key);
+  if (hit) {
+    // Refresh recency so hot sprites stay at the tail of Map iteration order.
+    cache.delete(key);
+    cache.set(key, hit);
+    return hit;
+  }
+  const s = make();
+  cache.set(key, s);
+  if (cache.size > SPRITE_CACHE_LIMIT) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
   }
   return s;
 }
+export const spriteCacheSize = () => cache.size;
 
 function canvas(w: number, h: number, dpr: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement('canvas');

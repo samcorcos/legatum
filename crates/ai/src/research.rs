@@ -21,7 +21,9 @@
 
 use crate::scripted::Planner;
 use legatum_core::data;
-use legatum_core::{Order, ScienceConversion, TechId};
+use legatum_core::{
+    AiDifficulty, Order, PlayerId, ProductionItem, ScienceConversion, TechId, UnitClass, UnitKind,
+};
 
 /// Value every technology has for opening the next era, so no technology is worth nothing.
 pub(crate) const ERA_STEP_VALUE: i32 = 25;
@@ -249,7 +251,105 @@ impl Planner<'_> {
                 order.insert(0, current);
             }
         }
+        if self.difficulty == AiDifficulty::Hard
+            && self.decisions.counter_tech > 0
+            && let Some(counter) = self.counter_tech_choice()
+            && let Some(at) = order.iter().position(|tech| *tech == counter)
+        {
+            order.remove(at);
+            order.insert(0, counter);
+        }
         order
+    }
+
+    /// The strict era gate permits only a change in order. If this era has no useful
+    /// counter, finish its cheapest remaining technology to reach the next era sooner.
+    fn counter_tech_choice(&self) -> Option<TechId> {
+        let v = self.view();
+        let runaway = self.runaway_read().map(|r| r.team);
+        let best_ours = v
+            .units
+            .iter()
+            .filter(|u| u.owner == v.me && u.military)
+            .map(|u| data::unit_era_tier(u.kind))
+            .max()
+            .unwrap_or(0);
+        let enemy = v
+            .units
+            .iter()
+            .filter(|u| {
+                u.military
+                    && u.owner != PlayerId::BARBARIAN
+                    && !v.same_team(v.me, u.owner)
+                    && data::unit_era_tier(u.kind) >= v.research.era
+                    && (((v.at_war(v.me, u.owner) || runaway == Some(v.team_of(u.owner)))
+                        && data::unit_era_tier(u.kind) > best_ours)
+                        || self.ctx.own_cities.iter().any(|c| {
+                            u.pos.distance(c.pos) <= 6
+                                && !v.units.iter().any(|defender| {
+                                    defender.owner == v.me
+                                        && defender.military
+                                        && defender.pos.distance(c.pos) <= 2
+                                        && matches!(
+                                            data::unit_class(defender.kind),
+                                            Some(UnitClass::Melee | UnitClass::Ranged)
+                                        )
+                                        && data::unit_era_tier(defender.kind)
+                                            >= data::unit_era_tier(u.kind)
+                                })
+                        }))
+            })
+            .max_by_key(|u| {
+                (
+                    data::unit_era_tier(u.kind),
+                    u.strength,
+                    std::cmp::Reverse(u.id),
+                )
+            })?;
+        let wanted = match data::unit_class(enemy.kind)? {
+            UnitClass::Mounted => UnitClass::Melee,
+            UnitClass::Ranged => UnitClass::Mounted,
+            UnitClass::Melee => UnitClass::Ranged,
+            UnitClass::Air => UnitClass::Air,
+        };
+        let candidates = &v.research.available;
+        let unlocks = |tech: TechId, class: UnitClass, minimum_tier: u8| {
+            UnitKind::ALL.iter().any(|kind| {
+                data::unit_stats(*kind).requires == Some(tech)
+                    && data::unit_class(*kind) == Some(class)
+                    && data::unit_era_tier(*kind) >= minimum_tier
+                    && data::available_to_faction(
+                        self.faction,
+                        ProductionItem::Unit { unit: *kind },
+                    )
+            })
+        };
+        candidates
+            .iter()
+            .filter(|option| unlocks(option.tech, wanted, data::unit_era_tier(enemy.kind)))
+            .min_by_key(|option| (option.cost.total, option.tech))
+            .or_else(|| {
+                candidates
+                    .iter()
+                    .filter(|option| {
+                        unlocks(
+                            option.tech,
+                            UnitClass::Melee,
+                            data::unit_era_tier(enemy.kind),
+                        ) || unlocks(
+                            option.tech,
+                            UnitClass::Ranged,
+                            data::unit_era_tier(enemy.kind),
+                        )
+                    })
+                    .min_by_key(|option| (option.cost.total, option.tech))
+            })
+            .or_else(|| {
+                candidates
+                    .iter()
+                    .min_by_key(|option| (option.cost.total, option.tech))
+            })
+            .map(|option| option.tech)
     }
 
     /// The tech's own value, scaled by the committed strategy's research weight.
@@ -636,7 +736,7 @@ mod tests {
     use crate::fixture::{ENEMY, ME, ViewBuilder, assert_valid, off};
     use crate::{Brain, Knobs, ScriptedBrain};
     use legatum_core::eras;
-    use legatum_core::{Faction, PlayerView, UnitKind};
+    use legatum_core::{AiDifficulty, Faction, PlayerView, UnitKind};
 
     fn planner(view: &PlayerView) -> Planner<'_> {
         let mut p = Planner::new(
@@ -670,6 +770,101 @@ mod tests {
             .build();
         view.turn_limit = None;
         view
+    }
+
+    #[test]
+    fn counter_tech_prioritizes_a_city_defender_against_newer_melee() {
+        let view = ViewBuilder {
+            view: view_in_era(4),
+        }
+        .unit(20, ME, UnitKind::Pikeman, off(5, 5))
+        .unit(21, ENEMY, UnitKind::Rifleman, off(7, 5))
+        .build();
+        let mut candidate = planner(&view);
+        candidate.difficulty = AiDifficulty::Hard;
+        candidate.decisions.counter_tech = 1;
+        assert_eq!(candidate.counter_tech_choice(), Some(TechId::Cannonry));
+        assert_eq!(candidate.research_order()[0], TechId::Cannonry);
+        let mut baseline = planner(&view);
+        baseline.decisions.counter_tech = 0;
+        assert_eq!(baseline.research_order(), planner(&view).research_order());
+    }
+
+    #[test]
+    fn counter_tech_uses_diffusion_price_and_requires_a_known_threat() {
+        let mut view = ViewBuilder {
+            view: view_in_era(4),
+        }
+        .unit(21, ENEMY, UnitKind::Biplane, off(7, 5))
+        .build();
+        // No aircraft unlocks in Industrial, so the best interim land defender wins.
+        for option in &mut view.research.available {
+            option.cost.total = if option.tech == TechId::Cannonry {
+                178
+            } else {
+                250
+            };
+        }
+        let mut candidate = planner(&view);
+        candidate.difficulty = AiDifficulty::Hard;
+        candidate.decisions.counter_tech = 1;
+        assert_eq!(candidate.counter_tech_choice(), Some(TechId::Cannonry));
+        let mut quiet = ViewBuilder {
+            view: view_in_era(4),
+        }
+        .unit(21, ENEMY, UnitKind::Biplane, off(18, 18))
+        .build();
+        quiet.diplomacy.legacy = false;
+        let mut candidate = planner(&quiet);
+        candidate.decisions.counter_tech = 1;
+        assert_eq!(candidate.counter_tech_choice(), None);
+    }
+
+    #[test]
+    fn counter_tech_skips_a_counter_the_faction_cannot_train() {
+        let view = ViewBuilder {
+            view: view_in_era(4),
+        }
+        .unit(20, ME, UnitKind::Pikeman, off(5, 5))
+        .unit(21, ENEMY, UnitKind::FieldCannon, off(7, 5))
+        .build();
+        let mut candidate = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Aztecs),
+            Faction::Aztecs,
+            7,
+        );
+        candidate.difficulty = AiDifficulty::Hard;
+        candidate.decisions.counter_tech = 1;
+        assert_eq!(candidate.counter_tech_choice(), Some(TechId::Rifling));
+    }
+
+    #[test]
+    fn counter_tech_uses_the_city_garrison_even_with_a_modern_unit_elsewhere() {
+        let view = ViewBuilder {
+            view: view_in_era(4),
+        }
+        .unit(20, ME, UnitKind::Pikeman, off(5, 5))
+        .unit(21, ME, UnitKind::FieldCannon, off(18, 18))
+        .unit(22, ENEMY, UnitKind::Rifleman, off(7, 5))
+        .build();
+        let mut candidate = planner(&view);
+        candidate.difficulty = AiDifficulty::Hard;
+        candidate.decisions.counter_tech = 1;
+        assert_eq!(candidate.counter_tech_choice(), Some(TechId::Cannonry));
+    }
+
+    #[test]
+    fn counter_tech_ignores_barbarians() {
+        let view = ViewBuilder {
+            view: view_in_era(3),
+        }
+        .unit(21, PlayerId::BARBARIAN, UnitKind::Musketman, off(7, 5))
+        .build();
+        let mut candidate = planner(&view);
+        candidate.difficulty = AiDifficulty::Hard;
+        candidate.decisions.counter_tech = 1;
+        assert_eq!(candidate.counter_tech_choice(), None);
     }
 
     #[test]

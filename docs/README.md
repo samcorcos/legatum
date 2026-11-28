@@ -7,11 +7,13 @@
 | [engineering-notes.md](engineering-notes.md) | Dated engine, determinism, AI measurement, testing, and UI boundary lessons from development. |
 | [game-archive.md](game-archive.md) | The game-recording format used for analysis. |
 | [ai-evolution.md](archive/ai-evolution.md), [ai-competitiveness.md](ai-competitiveness.md), [ai-proxy-benchmark.md](archive/ai-proxy-benchmark.md), [human-playbook-benchmark.md](archive/human-playbook-benchmark.md), [strategy-diversity.md](strategy-diversity.md), [opening-league.md](archive/opening-league.md) | How the AI is measured and improved. |
-| [sim-results/](sim-results/) | Methodology for the simulation benchmarks (the raw run output is not published). |
+| [sim-results/](sim-results/) | Methodology and reproducible results for the simulation benchmarks. |
+| [design/advisor-discovery.md](design/advisor-discovery.md) | When useful controls are taught, and how gameplay reviews check feature discovery. |
 | [design/](design/) | Design notes and art-direction records, with prompts. |
 | [research/](research/) | Background research on 4X design. |
 | [sound-qa.md](sound-qa.md), [celebration-sound-qa.md](celebration-sound-qa.md) | Measured audio levels of the shipped sounds. |
+| [ops/multi-agent.md](ops/multi-agent.md) | How Claude, ChatGPT/Codex, and Gemini coordinate autonomously on this repo via GitHub Issues, Draft PR locks, two-key cross-model peer merge, and staggered hourly heartbeats. |
 
 Build and contribution instructions are in [../CONTRIBUTING.md](../CONTRIBUTING.md).
 
-The development layer is public too: `CLAUDE.md` and `.claude/` (skills, agents, hooks) record how the project is run with AI agents; `docs/learnings.md` is a short digest of the engineering log, whose full archive is `docs/learnings/` (one file per entry; the older month files are closed) (`engineering-notes.md` is the curated version); `docs/ops/`, `docs/status/` and `tools/` hold the operations side (cloud build box, spot simulations, test gates).
+The development layer is public too: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` and `.claude/` (skills, agents, hooks) record how the project is run with AI agents; `docs/learnings.md` is a short digest of the engineering log, whose full archive is `docs/learnings/` (one file per entry; the older month files are closed) (`engineering-notes.md` is the curated version); `docs/ops/`, `docs/status/` and `tools/` hold the operations side (multi-agent coordination, cloud build box, spot simulations, test gates).

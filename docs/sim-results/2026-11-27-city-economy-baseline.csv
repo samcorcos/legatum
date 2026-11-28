@@ -1,0 +1,65 @@
+case,policy,gold,science,production,population,improvements,first_pick
+young-fertile-11,automation,60,282,300,10,0,Building { building: Walls }
+young-fertile-11,gold-first,284,354,312,10,2,Building { building: Market }
+young-fertile-11,growth-first,103,295,340,11,4,Building { building: Granary }
+young-fertile-11,production-first,170,288,384,10,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+young-fertile-29,automation,60,282,300,10,0,Building { building: Walls }
+young-fertile-29,gold-first,284,354,312,10,2,Building { building: Market }
+young-fertile-29,growth-first,103,295,340,11,4,Building { building: Granary }
+young-fertile-29,production-first,170,288,384,10,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+young-hills-11,automation,131,222,1102,2,3,Building { building: Walls }
+young-hills-11,gold-first,542,298,1296,3,4,Building { building: Market }
+young-hills-11,growth-first,507,281,1368,3,4,Building { building: Granary }
+young-hills-11,production-first,523,281,1366,3,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+young-hills-29,automation,131,222,1102,2,3,Building { building: Walls }
+young-hills-29,gold-first,542,298,1296,3,4,Building { building: Market }
+young-hills-29,growth-first,507,281,1368,3,4,Building { building: Granary }
+young-hills-29,production-first,523,281,1366,3,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+young-plains-11,automation,66,239,800,5,4,Building { building: Walls }
+young-plains-11,gold-first,434,348,920,6,4,Building { building: Market }
+young-plains-11,growth-first,380,330,988,7,4,Building { building: Granary }
+young-plains-11,production-first,406,326,1002,7,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+young-plains-29,automation,66,239,800,5,4,Building { building: Walls }
+young-plains-29,gold-first,434,348,920,6,4,Building { building: Market }
+young-plains-29,growth-first,380,330,988,7,4,Building { building: Granary }
+young-plains-29,production-first,406,326,1002,7,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+established-fertile-11,automation,60,368,300,12,0,Building { building: Walls }
+established-fertile-11,gold-first,284,440,312,12,2,Building { building: Market }
+established-fertile-11,growth-first,103,380,340,12,4,Building { building: Granary }
+established-fertile-11,production-first,170,374,384,12,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+established-fertile-29,automation,60,368,300,12,0,Building { building: Walls }
+established-fertile-29,gold-first,284,440,312,12,2,Building { building: Market }
+established-fertile-29,growth-first,103,380,340,12,4,Building { building: Granary }
+established-fertile-29,production-first,170,374,384,12,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+established-hills-11,automation,136,236,1134,2,3,Building { building: Walls }
+established-hills-11,gold-first,552,313,1334,3,4,Building { building: Market }
+established-hills-11,growth-first,544,313,1452,3,4,Building { building: Granary }
+established-hills-11,production-first,539,293,1400,3,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+established-hills-29,automation,136,236,1134,2,3,Building { building: Walls }
+established-hills-29,gold-first,552,313,1334,3,4,Building { building: Market }
+established-hills-29,growth-first,544,313,1452,3,4,Building { building: Granary }
+established-hills-29,production-first,539,293,1400,3,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+late-fertile-11,automation,60,635,783,14,0,Wonder { building: HagiaSophia; tile: Hex { q: 4; r: 8 } }
+late-fertile-11,gold-first,432,846,1054,14,4,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+late-fertile-11,growth-first,237,546,1187,16,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+late-fertile-11,production-first,213,536,1581,15,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+late-fertile-29,automation,60,635,783,14,0,Wonder { building: HagiaSophia; tile: Hex { q: 17; r: 14 } }
+late-fertile-29,gold-first,432,846,1054,14,4,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+late-fertile-29,growth-first,237,546,1187,16,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+late-fertile-29,production-first,213,536,1581,15,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+late-hills-11,automation,149,425,1840,3,5,Wonder { building: IterFusionReactor; tile: Hex { q: 4; r: 8 } }
+late-hills-11,gold-first,714,555,2848,6,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+late-hills-11,growth-first,650,509,3361,7,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+late-hills-11,production-first,626,462,3035,6,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+late-hills-29,automation,149,425,1840,3,5,Wonder { building: IterFusionReactor; tile: Hex { q: 17; r: 14 } }
+late-hills-29,gold-first,714,555,2848,6,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+late-hills-29,growth-first,650,509,3361,7,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+late-hills-29,production-first,626,462,3035,6,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+late-plains-11,automation,60,847,1654,9,1,Wonder { building: HagiaSophia; tile: Hex { q: 4; r: 8 } }
+late-plains-11,gold-first,486,1007,2371,9,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+late-plains-11,growth-first,349,600,2687,12,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+late-plains-11,production-first,426,657,3002,11,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+late-plains-29,automation,60,847,1654,9,1,Wonder { building: HagiaSophia; tile: Hex { q: 17; r: 14 } }
+late-plains-29,gold-first,486,1007,2371,9,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+late-plains-29,growth-first,349,600,2687,12,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+late-plains-29,production-first,426,657,3002,11,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }

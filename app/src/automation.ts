@@ -1,5 +1,4 @@
-import type { CityBuildFocus, CityView, Faction, Order, PlayerView, ProductionItem, UnitView } from './types';
-import { itemName } from './data';
+import type { CityBuildFocus, Order, PlayerView, UnitView } from './types';
 import { pendingUnitOrder } from './orders';
 import { loadedWasmModule } from './wasmClient';
 
@@ -51,7 +50,7 @@ export function advisorOrders(view: PlayerView): Order[] | null {
   } catch { return null; }
 }
 
-export const AUTOMATION_NO_CHOICE = "Nothing here fits its automation focus. Choose this turn's build.";
+export const AUTOMATION_NO_CHOICE = "No economic build is available. Choose this turn's build.";
 export interface CityAutomationPlan { orders: Order[]; unchosen_cities: number[] }
 
 /** Exact chooser preview when WASM is already loaded; Ready always loads it if needed. */
@@ -76,38 +75,12 @@ export function cityAutomationPreview(view: PlayerView, orders: Order[]): CityAu
 
 export function cityAutomationFocus(city: number, view: PlayerView, orders: Order[]): CityBuildFocus | null {
   const pending = orders.findLast((o) => o.type === 'SetCityAutomation' && o.city === city);
-  return pending?.type === 'SetCityAutomation' ? pending.focus : view.cities.find((c) => c.id === city)?.detail?.build_automation ?? null;
-}
-
-/** I turns a city's automation on with the focus last chosen; Shift+I steps through this order. */
-export const FOCUS_CYCLE: CityBuildFocus[] = ['Economy', 'Military', 'Gold', 'Science', 'Food'];
-
-/** The focus's name in menus: a stream focus is named for its project (Nile Egypt's Food stream is Grow). */
-export const focusLabel = (focus: CityBuildFocus, faction?: Faction): string =>
-  focus === 'Food' && faction === 'Egypt' ? 'Grow' : focus === 'Military' || focus === 'Economy' ? focus : `${focus} project`;
-const FOCUS_KEY = 'legatum.lastAutomationFocus';
-let lastFocus: CityBuildFocus | null = null;
-
-export function lastAutomationFocus(): CityBuildFocus {
-  if (!lastFocus) {
-    try {
-      const saved = localStorage.getItem(FOCUS_KEY) as CityBuildFocus | null;
-      if (saved && FOCUS_CYCLE.includes(saved)) lastFocus = saved;
-    } catch { /* storage blocked: Economy */ }
-  }
-  return lastFocus ?? 'Economy';
-}
-
-export function nextAutomationFocus(focus: CityBuildFocus | null): CityBuildFocus {
-  return focus ? FOCUS_CYCLE[(FOCUS_CYCLE.indexOf(focus) + 1) % FOCUS_CYCLE.length] : lastAutomationFocus();
+  const active = pending?.type === 'SetCityAutomation' ? pending.focus : view.cities.find((c) => c.id === city)?.detail?.build_automation;
+  return active ? 'Economy' : null;
 }
 
 /** A player's edit supersedes only a previously generated choice, never their own queue. */
 export function setCityAutomation(orders: Order[], city: number, focus: CityBuildFocus | null): Order[] {
-  if (focus) {
-    lastFocus = focus;
-    try { localStorage.setItem(FOCUS_KEY, focus); } catch { /* per-viewer convenience only */ }
-  }
   return [...orders.filter((o) => !(o.type === 'SetCityAutomation' && o.city === city)
     && !(generated.has(o) && 'city' in o && o.city === city)), { type: 'SetCityAutomation', city, focus }];
 }
@@ -128,17 +101,4 @@ export async function addCityAutomatedOrders(view: PlayerView, orders: Order[]):
   const keep = clean.filter((o) => !(o.type === 'SetCityAutomation' && picked.has(o.city)));
   planned.forEach((o) => generated.add(o));
   return { orders: [...keep, ...planned], unchosen_cities };
-}
-
-const isArmyUnit = (item: ProductionItem): boolean => item.kind === 'Unit' && item.unit !== 'Scout' && item.unit !== 'Settler' && item.unit !== 'HeirToTheThrone';
-
-/** Why automation chose `pick` for `city`: the real reason, never a stock phrase. */
-export function autoPickReason(pick: ProductionItem, focus: CityBuildFocus, city: CityView, view: PlayerView): string {
-  const faction = view.players.find((p) => p.id === city.owner)?.faction ?? 'Switzerland';
-  const name = itemName(pick, faction);
-  if (pick.kind === 'Project') {
-    return focus === 'Military' || focus === 'Economy' ? `${name}: nothing useful is left to build.` : `${name}: runs until you change the focus.`;
-  }
-  if (focus === 'Military' && isArmyUnit(pick)) return `${name}: the best unit your resources allow.`;
-  return focus === 'Military' ? `${name}: no unit is available now, so the city builds this.` : `${name}: the most useful build for ${city.name}.`;
 }

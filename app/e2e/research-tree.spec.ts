@@ -1,6 +1,6 @@
 // The tech tree view of Research (TechTree.tsx): it opens by default on your era, a click on a
-// technology of your era researches it (Shift+click queues), a click on a later one makes it the goal,
-// and the goal order reaches the engine. Shots go to test-results/research-tree/<size>/ for the UI reviewer.
+// technology of your era researches it (Shift+click or its + Queue button queues), a later one queues
+// behind what it waits for (marked red first), and the queue reaches the engine across eras. Shots go to test-results/research-tree/<size>/ for the UI reviewer.
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
@@ -57,7 +57,7 @@ async function shot(page: Page, size: { width: number; height: number }, name: s
 }
 
 for (const size of SIZES) {
-  test(`the tech tree researches, queues and sets a goal at ${size.width}x${size.height}`, async ({ page }) => {
+  test(`the tech tree researches and queues across eras at ${size.width}x${size.height}`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize(size);
     await load(page);
@@ -89,18 +89,38 @@ for (const size of SIZES) {
     await tree.locator('.tree-node[data-tech="Feudalism"]').click({ force: true });
     expect((await plan(page)).queue).toEqual(['Chivalry', 'Machinery']);
 
-    // A later technology becomes the goal, with its arrival forecast; a second click clears it.
-    await tree.locator('.tree-node[data-tech="Gunpowder"]').click();
-    await expect(page.getByTestId('tree-goal')).toContainText('Gunpowder');
-    await expect(page.getByTestId('tree-goal')).toContainText(/About turn \d+/);
-    await expect(tree.locator('.tree-node[data-tech="Gunpowder"]')).toHaveClass(/\bgoal\b/);
-    await expect(tree.locator('.tree-node[data-tech="Machinery"]')).toHaveClass(/\bon-path\b/);
-    expect((await plan(page)).goal).toBe('Gunpowder');
-    await shot(page, size, '02-goal');
-    await tree.locator('.tree-node[data-tech="Gunpowder"]').click();
-    await expect(page.getByTestId('tree-goal')).toHaveCount(0);
+    // Every unknown technology has its own Queue button. A later one whose earlier eras are all queued goes straight in.
+    await tree.locator('[data-testid="tree-queue"][data-tech="Gunpowder"]').click();
+    expect((await plan(page)).queue).toEqual(['Chivalry', 'Machinery', 'Gunpowder']);
+    await expect(tree.locator('[data-testid="tree-queue"][data-tech="Gunpowder"]')).toHaveText(/Remove/);
+
+    // One further on: the tree says the era must be finished first, marks what is missing in red, and queues it all in order.
     await tree.locator('.tree-node[data-tech="Rifling"]').click();
-    await expect(page.getByTestId('tree-goal')).toContainText('Rifling');
+    await expect(page.getByTestId('tree-ask')).toContainText('Finish the Renaissance era first');
+    await expect(tree.locator('.tree-node.needed')).toHaveCount(4);
+    await shot(page, size, '02-ask');
+    await page.getByTestId('tree-ask-queue').click();
+    await expect(page.getByTestId('tree-ask')).toHaveCount(0);
+    const queued = (await plan(page)).queue;
+    expect(queued).toHaveLength(8);
+    expect(queued.slice(0, 3)).toEqual(['Chivalry', 'Machinery', 'Gunpowder']);
+    expect(queued.at(-1)).toBe('Rifling');
+    await shot(page, size, '03-queued-across-eras');
+
+    // Removing a Medieval technology takes out the later ones that waited behind it.
+    await expect(tree.locator('[data-testid="tree-queue"][data-tech="Machinery"]')).toHaveAttribute('title', /including later-era technologies/);
+    await tree.locator('[data-testid="tree-queue"][data-tech="Machinery"]').click();
+    expect((await plan(page)).queue).toEqual(['Chivalry']);
+    // Two eras short: both are named, and Cancel leaves the queue alone.
+    await tree.locator('[data-testid="tree-queue"][data-tech="Rifling"]').click();
+    await expect(page.getByTestId('tree-ask')).toContainText('Finish the Medieval and Renaissance eras first');
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(tree.locator('.tree-node.needed')).toHaveCount(0);
+    expect((await plan(page)).queue).toEqual(['Chivalry']);
+    await tree.locator('[data-testid="tree-queue"][data-tech="Rifling"]').click();
+    await page.getByTestId('tree-ask-queue').click();
+    const plan2 = (await plan(page)).queue;
+    expect(plan2).toHaveLength(8);
 
     // The view switch is remembered.
     await page.getByTestId('research-view-era').click();
@@ -110,14 +130,14 @@ for (const size of SIZES) {
     await page.getByTestId('research-view-tree').click();
     await expect(page.getByTestId('tech-tree')).toBeVisible();
 
-    // The goal survives the turn: the engine holds it.
+    // The engine takes the queue across eras and keeps it over the turn.
     await page.keyboard.press('Escape');
     await expect(page.locator('dialog.tech-modal')).toHaveCount(0);
     await endPlanning(page);
     await expect(page.getByTestId('turn-number')).toHaveText('3', { timeout: 20_000 });
     await dismissInterstitials(page);
-    const goal = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views?.[s.seat]?.research.goal; });
-    expect(goal).toBe('Rifling');
+    const engineQueue = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views?.[s.seat]?.research.queue; });
+    expect(engineQueue?.at(-1)).toBe('Rifling');
   });
 }
 
@@ -134,7 +154,7 @@ for (const size of SIZES) {
     const current = await tree.locator('.tree-era.current').getAttribute('data-era');
     expect(Number(current)).toBeGreaterThanOrEqual(5);
     await expect(tree.locator('.tree-node.available').first()).toBeInViewport({ ratio: 0.9 });
-    await shot(page, size, '03-late');
+    await shot(page, size, '04-late');
     // Closed and opened again (after scrolling away), it opens on your era again.
     await tree.locator('.tree-scroll').evaluate((el) => { el.scrollLeft = 0; });
     await page.keyboard.press('Escape');

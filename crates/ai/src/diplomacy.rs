@@ -1450,6 +1450,9 @@ impl Planner<'_> {
         {
             return None;
         }
+        if kind == TreatyKind::Peace && self.runaway_rival_peace(other) {
+            return Some(100);
+        }
         // A search chose Peace with this team (it rolled out the alternatives and found nothing
         // better to do with the war): the older heuristics below must not refuse what the
         // search wants (gene `peace_follows_plan`; playtest 8.4: a Athens whose search
@@ -2363,6 +2366,9 @@ impl Planner<'_> {
         }
         if self.rome_second_refuses_peace(against) {
             return (false, "Roman second war open city");
+        }
+        if self.runaway_rival_peace(against) {
+            return (true, "third-party runaway bloc");
         }
         // Gene `operations`: a committed strike on this team refuses Peace while it runs.
         if self.operation_refuses_peace(against) {

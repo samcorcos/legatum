@@ -856,6 +856,9 @@ pub struct RunMeta {
     pub proxy_version: Option<u32>,
     pub strategies: Vec<legatum_ai::Strategy>,
     pub strategy_matchups: bool,
+    /// `--all-factions`: the eleven cyclic census rosters. Omitted when off.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub all_factions: bool,
     pub safety_cap: u32,
     pub turn_limit: Option<u32>,
     pub determinism: bool,
@@ -1040,8 +1043,7 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
     o += &format!(
         "Source checkout at run start: `{}`; dirty: {}. Map {}×{}, {} initial seats. \
          `first_setup` and exact binary argv are recorded in JSON. Ordinary games use seed + i \
-         (wrapping); the strategy tournament schedule is specified below. All games use a \
-         deterministic shuffle of the full faction pool, taking eight distinct factions, with any Proxy rotation described below.\n\nCommand argv: `{}`\n\n",
+         (wrapping); the strategy tournament schedule is specified below. {}, with any Proxy rotation described below.\n\nCommand argv: `{}`\n\n",
         meta.source.commit.as_deref().unwrap_or("unavailable"),
         meta.source
             .worktree_dirty
@@ -1049,6 +1051,14 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
         meta.first_setup.width,
         meta.first_setup.height,
         meta.first_setup.players.len(),
+        if meta.all_factions {
+            "Games seat the eleven cyclic rosters of eight over all eleven factions \
+             (`--all-factions`), one roster per eight games, turned one seat per game, so \
+             every faction plays every seat equally often"
+        } else {
+            "All games use a deterministic shuffle of the original nine factions, taking \
+             eight distinct factions (Egypt and Rome join with `--all-factions` or `--factions`)"
+        },
         serde_json::to_string(&meta.command)
             .expect("argv serializes")
             .replace('`', "\\u0060")
@@ -1547,6 +1557,7 @@ mod tests {
             brain: "mixed".into(),
             strategies: vec![],
             strategy_matchups: false,
+            all_factions: false,
             difficulty_rotation: None,
             proxy: None,
             proxy_version: None,
@@ -1620,6 +1631,7 @@ mod tests {
             brain: "mixed".into(),
             strategies: vec![],
             strategy_matchups: false,
+            all_factions: false,
             difficulty_rotation: None,
             proxy: None,
             proxy_version: None,

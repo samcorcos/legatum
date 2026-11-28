@@ -27,6 +27,8 @@ pub struct Config {
     pub factions: Option<[Faction; 8]>,
     /// Rotate explicit factions one seat per game for position-balanced smoke runs.
     pub rotate_factions: bool,
+    /// Seat the eleven cyclic rosters of eight over all eleven factions, in turn.
+    pub all_factions: bool,
     pub mirror: bool,
 }
 
@@ -37,6 +39,7 @@ impl Default for Config {
             map_size: MapSize::Medium,
             factions: None,
             rotate_factions: false,
+            all_factions: false,
             mirror: false,
         }
     }

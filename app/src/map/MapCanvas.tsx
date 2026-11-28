@@ -47,6 +47,7 @@ import { pickerClick, pickerOpen, useAirPicker, useImproveOverlay, usePlacePicke
 import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from './orderMarks';
 import { CompassRose } from './CompassRose';
 import { placeCompass as compassPlace, type Rect } from './compass';
+import { observeHudLayout } from './hudObserver';
 import { gameplayFocusAllowed, gameplayKeyAllowed } from '../gameplayKeys';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { usePhoneLayout } from '../ui/usePhoneLayout';
@@ -93,6 +94,11 @@ export function hoverOnlyChange<T extends Record<string, unknown>>(prev: T, next
     hover = true;
   }
   return hover;
+}
+
+/** Whether a non-ambient animation just finished and needs one full unclipped settle frame. */
+export function fullMotionEnding(hadFullMotion: boolean, fullMotion: boolean): boolean {
+  return hadFullMotion && !fullMotion;
 }
 
 interface Hover {
@@ -707,29 +713,29 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   }, []);
 
   // Compass: keep clear of panels and the labels actually drawn in the current frame.
-  // Panel rects are sampled a few times a second rather than read every frame.
+  // Panel rects are updated when panels mount, resize, or toggle rather than polled on an interval.
   const placeCompass = () => {
     const el = compassRef.current;
     const v = frame.current.view;
     if (!el || !v) return;
     const { x, y, covered } = compassPlace(worldBounds(v), cam.current, size.current.w, size.current.h, [...panels.current, ...labels.current]);
-    el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-    el.classList.toggle('covered', covered);
+    const transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    if (el.style.transform !== transform) el.style.transform = transform;
+    if (el.classList.contains('covered') !== covered) el.classList.toggle('covered', covered);
   };
   useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const selector = '.game .panel, .game .vp, .game .report, .map-lenses, .advisor-card, .topbar';
     const sample = () => {
-      const wrap = wrapRef.current;
-      if (!wrap) return;
       const o = wrap.getBoundingClientRect();
-      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .map-lenses, .advisor-card, .topbar')].map((e) => {
+      panels.current = [...document.querySelectorAll(selector)].map((e) => {
         const r = e.getBoundingClientRect();
         return { x: r.left - o.left, y: r.top - o.top, w: r.width, h: r.height };
       });
       placeCompass();
     };
-    sample();
-    const t = window.setInterval(sample, 250);
-    return () => window.clearInterval(t);
+    return observeHudLayout(wrap, selector, sample);
   }, []); // placeCompass reads refs only
 
   // Draw loop.
@@ -742,7 +748,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     let lastFonts = -1;
     let reported = '';
     let lastCam = { x: NaN, y: NaN, zoom: NaN };
-    let heldMoments = false;
+    let hadFullMotion = false;
     let lastIdle = -Infinity;
     // The selection ring as the last frame drew it, and the clock of the last frame that drew more than the ring.
     let lastRing: SelectionRing | null = null;
@@ -779,10 +785,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const mplan = !still ? f.anim?.moments ?? null : null;
       const mT = mplan && f.anim ? t - f.anim.start : -1;
       const momentsRunning = !!mplan && momentsLive(mplan, mT);
-      // One more frame after the last moment, so the map lets go of everything it held back.
-      const momentsEnding = !momentsRunning && heldMoments;
-      heldMoments = momentsRunning;
-      const animating = fxRunning || momentsRunning || momentsEnding || (!plan && !still && !!f.anim && f.anim.paths.size > 0 && t - f.anim.start < f.anim.duration + 50);
+      const glideRunning = !plan && !still && !!f.anim && f.anim.paths.size > 0 && t - f.anim.start < f.anim.duration + 50;
+      const animating = fxRunning || momentsRunning || glideRunning;
       const pulse = !still && !!f.selection && t - lastPulse > 33;
       const cueDelay = plan ? (hex: Hex) => plan.cueDelay.get(`${hex.q},${hex.r}`) ?? 0 : undefined;
       const cueSpan = CUE_HOLD_MS + CUE_FADE_MS + 100 + (plan ? Math.max(0, ...plan.cueDelay.values()) : 0);
@@ -805,6 +809,11 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         pingMarks.push({ hex: p.hex, color: mapPlayerColor(p.from), age, own: p.from === f.view.me });
       }
       const celebrating = !still && !!f.celebration.active && t - celebStarted < EFFECT_MS + 50;
+      // One full unclipped frame after any full-frame animation/effect ends so movement reach
+      // (suppressed while unitPos.size > 0) and cleared overlays repaint across the whole map.
+      const fullMotion = animating || celebrating || cueLive || arrowLive || pingLive;
+      const motionEnding = fullMotionEnding(hadFullMotion, fullMotion);
+      hadFullMotion = fullMotion;
       const siegePulse = !still && f.siege.size > 0 && t - lastPulse > 33;
       // Idle life (idleLife.ts) redraws the map a few times a second, never every frame, with map animations on.
       const idleLife = !still;
@@ -814,7 +823,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const smoulder = !still && hasVisibleSmoulder(f.view.cities, cam.current, size.current.w, size.current.h);
       const smoulderTick = smoulder && t - lastSmoulder > 50;
       const hoverMoved = hoverDirty.current && !dirty.current;
-      if (!dirty.current && !hoverMoved && !animating && !pulse && !cueLive && !arrowLive && !pingLive && !celebrating && !siegePulse && !smoulderTick && !idleTick) {
+      if (!dirty.current && !hoverMoved && !animating && !motionEnding && !pulse && !cueLive && !arrowLive && !pingLive && !celebrating && !siegePulse && !smoulderTick && !idleTick) {
         // Only the terrain wants this frame: paint a stage of it and draw the map once a chunk is whole. Redrawing
         // the whole map for every stage cost a slow machine more than the painting did.
         if (!terrainWaiting || !stepTerrain()) return;
@@ -826,7 +835,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       // smoke, idle life): repaint just their boxes, with the rest of the map's clock held. A full redraw of a crowded
       // late-game map 20 to 30 times a second only for these kept the main thread busy and made hover and clicks lag.
       // The pointer reaching a new tile is the same kind of frame: the old and new hover marks and routes are a few boxes.
-      const pulseOnly = (pulse || siegePulse || smoulderTick || idleTick || hoverMoved) && !dirty.current && !animating && !cueLive && !arrowLive && !pingLive && !celebrating
+      const pulseOnly = (pulse || siegePulse || smoulderTick || idleTick || hoverMoved) && !dirty.current && !animating && !motionEnding && !cueLive && !arrowLive && !pingLive && !celebrating
         && (!pulse || !!lastRing) && (!(siegePulse || smoulderTick) || lastAmbient.length > 0);
       const drawT = pulseOnly ? lastFullT : t;
       if (!pulseOnly) lastFullT = t;
@@ -989,9 +998,10 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       banners.current = bannerRects ?? [];
       bannerHits.current = hits ?? [];
       liftedHits.current = lifted ?? [];
-      placeCompass();
       const c = cam.current;
-      if (c.x !== lastCam.x || c.y !== lastCam.y || c.zoom !== lastCam.zoom) {
+      const camMoved = c.x !== lastCam.x || c.y !== lastCam.y || c.zoom !== lastCam.zoom;
+      if (!pulseOnly || camMoved) placeCompass();
+      if (camMoved) {
         lastCam = { x: c.x, y: c.y, zoom: c.zoom };
         placeInspector.current?.();
       }
