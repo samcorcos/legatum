@@ -2358,3 +2358,8 @@ After integrating the current public master, including the modern-army default, 
 `11218632973235829022` to `16181879122229932678`. A box repin left the three mixed digests
 and all nine fixed-order fixture tapes unchanged. Both pin tests and all 12 determinism tests
 passed. The prior late-front digest above was measured before that integration.
+
+After integrating the Gold purchase and reserve changes on master, another box repin moved the
+160-turn scripted Hard digest from `7677945178084151405` to `4008255431853945247`.
+The three mixed digests and nine fixed-order fixture tapes stayed unchanged. Both pin tests,
+all 12 determinism tests, and the plain Hard benchmark passed on the combined branch.
