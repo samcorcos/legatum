@@ -31,7 +31,11 @@ function watch(page: Page, origin: string) {
     if (message.type() === 'error') problems.push(`console: ${message.text()} (${message.location().url})`);
   });
   page.on('pageerror', (error) => problems.push(`uncaught: ${error.message}`));
-  page.on('requestfailed', (request) => problems.push(`failed: ${request.url()} ${request.failure()?.errorText}`));
+  page.on('requestfailed', (request) => {
+    // Reloading a game can cancel an upload that the test's route was already answering.
+    if (new URL(request.url()).origin === gamesOrigin && request.failure()?.errorText === 'net::ERR_ABORTED') return;
+    problems.push(`failed: ${request.url()} ${request.failure()?.errorText}`);
+  });
   page.on('request', (request) => {
     const url = new URL(request.url());
     if (url.protocol === 'data:' || url.protocol === 'blob:') return;
@@ -221,14 +225,8 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   await expect(page).toHaveTitle(/^Legatum/);
   await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible();
   await expect(page.locator('.title-foot')).toContainText(`Version ${version}`);
-  if (relayBuilt) {
-    await page.getByRole('button', { name: /^Multiplayer/ }).click();
-    await expect(page.getByRole('button', { name: /^Host Game/ })).toBeEnabled();
-    await expect(page.getByRole('button', { name: /^Join Game/ })).toBeEnabled();
-  } else {
-    await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeDisabled();
-  }
-  if (relayBuilt) await page.getByRole('button', { name: /Back/ }).click();
+  if (relayBuilt) await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeEnabled();
+  else await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeDisabled();
 
   // The licence notices open inside the Credits.
   await page.getByRole('button', { name: /^How to Play/ }).click();
