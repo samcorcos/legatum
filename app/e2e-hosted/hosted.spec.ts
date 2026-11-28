@@ -327,7 +327,7 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   await page.reload();
   const resume = page.getByRole('button', { name: /^Continue/ });
   await expect(resume).toBeEnabled();
-  await expect(resume).toContainText(`turn ${turn}`);
+  await expect(resume).toContainText(`Turn ${turn}`);
   await resume.click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 60_000 });
   expect((await empire(page)).cities).toBe(2);
@@ -362,7 +362,7 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   }));
   await page.reload();
   await expect(page.locator('.title-notice')).toContainText(`Your latest save (turn ${turn + 1}) could not be opened. Continue opens turn ${turn} instead.`);
-  await expect(resume).toContainText(`turn ${turn}`);
+  await expect(resume).toContainText(`Turn ${turn}`);
   await resume.click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 60_000 });
   expect((await empire(page)).cities).toBe(2);
