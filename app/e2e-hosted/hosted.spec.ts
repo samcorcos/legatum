@@ -49,7 +49,7 @@ function watch(page: Page, origin: string) {
 async function clear(page: Page) {
   await dismissInterstitials(page);
   for (let i = 0; i < 6; i++) {
-    const open = await page.locator('dialog[open], .moment-card, [data-celebrate-delta], [data-testid="alarm-screen"]').count();
+    const open = await page.locator('dialog[open], .moment-card, [data-celebrate-delta], [data-testid="alarm-screen"], [data-testid="meeting-takeover"]').count();
     const report = page.getByRole('button', { name: 'Close report', exact: true });
     if (await report.isVisible()) await report.click();
     else if (open) await page.keyboard.press('Escape');
