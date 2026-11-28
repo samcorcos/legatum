@@ -142,6 +142,8 @@ export function TechPanel() {
   const catalog = researchCatalog(r);
   const knownCount = catalog.filter((t) => r.known.includes(t.tech)).length;
   // With every technology known, the screen is the Science conversion choice: the This era view holds it.
+  const observerActive = useGame((s) => s.observer.active);
+  const locked = view.finished || observerActive;
   const shown = knownCount === catalog.length ? 'era' : mode;
   const schedule = queueSchedule(r, queue, science, view.turn);
   const selected = inspected && catalog.some((t) => t.tech === inspected) ? inspected : null;
@@ -149,26 +151,26 @@ export function TechPanel() {
   // editQueue commits the order, which carries its own feedback: a select first would swallow it (80 ms debounce).
   const announce = (tech: TechId) => setPicked({ tech, n: ++pickCount.current });
   const researchNow = (tech: TechId) => {
-    if (view.finished || queue[0] === tech) return;
+    if (locked || queue[0] === tech) return;
     editQueue(view, researchFirst(queue, tech));
     announce(tech);
   };
   const addToQueue = (tech: TechId) => {
-    if (view.finished || queue.includes(tech)) return;
+    if (locked || queue.includes(tech)) return;
     editQueue(view, appendToQueue(queue, tech));
     announce(tech);
   };
-  const remove = (tech: TechId) => editQueue(view, removeFromQueue(r, queue, tech));
+  const remove = (tech: TechId) => { if (!locked) editQueue(view, removeFromQueue(r, queue, tech)); };
   // The tree's Queue: a later technology goes in behind every technology it waits for.
   const queueOnTree = (tech: TechId) => {
-    if (view.finished || queue.includes(tech)) return;
+    if (locked || queue.includes(tech)) return;
     editQueue(view, queueThrough(r, queue, tech));
     announce(tech);
   };
   const goalOrder = orders?.findLast((o) => o.type === 'SetResearchGoal');
   const goal = goalOrder?.type === 'SetResearchGoal' ? goalOrder.tech : r.goal ?? null;
   const setGoal = (tech: TechId | null) => {
-    if (view.finished) return;
+    if (locked) return;
     feel.select();
     editOrders((current) => {
       const rest = current.filter((o) => o.type !== 'SetResearchGoal');
@@ -203,7 +205,7 @@ export function TechPanel() {
         <div className="research-head-actions"><button ref={closeButton} className="btn quiet" onClick={() => set({ techOpen: false })} aria-label="Close research">Close <kbd>Esc</kbd></button></div>
       </div>
       <ResearchQueue view={view} orders={orders} slotCount={cards.filter((c) => c.researchable && !r.known.includes(c.tech)).length} landed={picked?.tech} />
-      {shown === 'tree' ? <TechTree view={view} faction={faction} queue={queue} schedule={schedule} goal={goal} locked={view.finished} open={visible} onResearchNow={researchNow} onQueue={queueOnTree} onRemove={remove} onGoal={setGoal} /> :
+      {shown === 'tree' ? <TechTree view={view} faction={faction} queue={queue} schedule={schedule} goal={goal} locked={locked} open={visible} onResearchNow={researchNow} onQueue={queueOnTree} onRemove={remove} onGoal={setGoal} /> :
       <div className="research-scroll">
         {knownCount === catalog.length && <section className="science-conversion" aria-label="Science after research">
           <h3>After the last technology</h3>

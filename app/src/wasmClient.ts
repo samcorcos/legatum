@@ -30,6 +30,7 @@ import type {
 
 interface WasmGame {
   view(p: number): string;
+  observer_view?(): string;
   validate(p: number, ordersJson: string): string;
   forecast(p: number, unit: number, q: number, r: number, mode: AttackMode): string | null | undefined;
   assault(p: number, unit: number, q: number, r: number, mode: AttackMode, alongsideJson: string): string | null | undefined;
@@ -160,6 +161,14 @@ export class WasmClient implements GameClient, TrainingEngine {
     this.liveViews.set(v, { game: g, generation: gen, player });
     registerLiveView(v, player, g, () => this.game === g && this.generation === gen);
     return v;
+  }
+
+  observerView(): PlayerView {
+    const g = this.g;
+    if (typeof g.observer_view === 'function') {
+      return JSON.parse(g.observer_view()) as PlayerView;
+    }
+    return this.view(0);
   }
 
   hash(): string { return this.g.hash(); }

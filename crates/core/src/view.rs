@@ -2329,6 +2329,153 @@ pub fn player_view_cached(
     }
 }
 
+/// Omniscient view for AI-vs-AI observer mode: every tile explored and visible, all units,
+/// camps, aircraft and cities (with each city's owner detail), and every empire marked as met.
+pub fn observer_view(state: &GameState) -> PlayerView {
+    let mut view = player_view(state, PlayerId(0));
+    let tiles: Vec<TileView> = state
+        .map
+        .tiles
+        .iter()
+        .enumerate()
+        .map(|(i, t)| TileView {
+            explored: true,
+            visible: true,
+            terrain: Some(t.terrain),
+            ruin: t.ruin,
+            wonder: t.wonder,
+            landmark: t.landmark,
+            wonder_found: t.wonder.is_some()
+                && state.wonders_discovered.contains(&state.map.hex_at(i)),
+            owner: t.owner,
+            resource: t.resource,
+            improvement: improvement_view(
+                state,
+                t.owner.unwrap_or(PlayerId(0)),
+                t,
+                Some(t.improved),
+            ),
+            road: t.road,
+        })
+        .collect();
+    view.tiles = tiles.into();
+
+    view.units = state
+        .units
+        .values()
+        .map(|u| unit_view(state, u.owner, u))
+        .collect();
+    view.barbarian_camps = state
+        .barbarians
+        .as_ref()
+        .map(|b| {
+            b.camps
+                .iter()
+                .map(|c| BarbarianCampView {
+                    pos: c.pos,
+                    visible: true,
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let mut territory: BTreeMap<CityId, Vec<Hex>> = BTreeMap::new();
+    for (i, t) in state.map.tiles.iter().enumerate() {
+        if let Some(cid) = t.city {
+            territory.entry(cid).or_default().push(state.map.hex_at(i));
+        }
+    }
+    let mut owner_ctx = BTreeMap::new();
+    let mut cities: Vec<CityView> = state
+        .cities
+        .values()
+        .map(|c| {
+            let (gold_per_turn, forecasts, supply, cache) =
+                owner_ctx.entry(c.owner).or_insert_with(|| {
+                    let income = economy::player_income(state, c.owner);
+                    let forecasts = forecast::forecast_cities(state, c.owner, &income);
+                    let supply = crate::resources::ViewSupply::new(state, c.owner);
+                    let mut cache = crate::yields_cache::ViewCache::default();
+                    cache.begin(state);
+                    (income.gold.total, forecasts, supply, cache)
+                });
+            let military_units = forecasts.military_units;
+            let observation = CityMemory::from(c);
+            let mut observed = CityView::observed(
+                &observation,
+                c.pos,
+                true,
+                Some(city_detail(
+                    state,
+                    c,
+                    territory.remove(&c.id).unwrap_or_default(),
+                    forecasts.production_costs.remove(&c.id),
+                    forecasts.stalls.remove(&c.id),
+                    military_units,
+                    *gold_per_turn,
+                    ViewDetail::Full,
+                    supply,
+                    cache,
+                )),
+                state.player(c.owner).faction,
+                state.setup.rule_experiments,
+                state.era_of(c.owner),
+            );
+            observed.great_works = c
+                .buildings
+                .iter()
+                .copied()
+                .filter(|building| data::is_great_work(*building))
+                .collect();
+            observed.original_capital = c.original_capital;
+            observed.original_capital_of = observed.original_capital.then_some(c.founder);
+            observed.founder = Some(c.founder);
+            observed.walls_building = matches!(
+                c.producing,
+                Some(ProductionItem::Building {
+                    building: BuildingKind::Walls | BuildingKind::UpgradeWalls
+                })
+            );
+            if let Some(ProductionItem::Wonder { building, tile }) = c.producing {
+                let cost = economy::city_production_cost(state, c, c.producing.unwrap()).max(1);
+                let progress = ((c.production_stored.max(0) as i64 * 1000) / cost as i64)
+                    .clamp(0, 1000) as u16;
+                observed.construction = Some(ConstructionView {
+                    building,
+                    tile,
+                    stage: if progress >= 750 {
+                        3
+                    } else if progress >= 400 {
+                        2
+                    } else if progress >= 100 {
+                        1
+                    } else {
+                        0
+                    },
+                    progress,
+                });
+            }
+            if state.player(c.owner).faction == Faction::Switzerland {
+                observed.capture_bounty = Some(crate::economy::swiss_capture_bounty(state, c));
+            }
+            observed
+        })
+        .collect();
+    cities.sort_by_key(|c| c.id);
+    view.cities = cities.into();
+
+    let teams: BTreeSet<TeamId> = state.players.iter().map(|p| p.team).collect();
+    view.aircraft = teams
+        .iter()
+        .flat_map(|&team| aircraft_views(state, team))
+        .collect();
+    view.air_sightings = Vec::new();
+    let mut diplomacy = (*view.diplomacy).clone();
+    diplomacy.met = teams.into_iter().filter(|&t| t != view.team).collect();
+    view.diplomacy = diplomacy.into();
+    view
+}
+
 fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
     let stats = state.unit_stats_of(u);
     let own = u.owner == me;

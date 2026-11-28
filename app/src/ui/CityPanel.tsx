@@ -212,7 +212,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     ? <Tip content={capitalLine(view, capMark)} placement={placement}><CapitalStarGlyph mark={capMark} size={11} /></Tip> : <KickerDot />;
   // A replacement capital says what it is on hover: it is the current capital, but capturing it scores nothing.
   const replacedLine = replacementKickerLine(view, city);
-  const kickerLabel = city.owner === view.me ? <>Your {city.visible && city.is_capital ? 'capital' : 'city'} <PlayerBadge id={city.owner} /></>
+  const observerActive = useGame((s) => s.observer.active);
+  const kickerLabel = !observerActive && city.owner === view.me ? <>Your {city.visible && city.is_capital ? 'capital' : 'city'} <PlayerBadge id={city.owner} /></>
     : <>{city.visible && city.is_capital ? 'Capital' : 'City'} of <PlayerBadge id={city.owner} /> {owner ? empireOfPlayer(view, owner.id) : 'the unknown'}</>;
   // The sticky head: name, three numbers and, for a city you can see into, its yields row, so scrolling to the build
   // cards never hides what the city makes (the 1000x600 laptop opened an idle city with the yields scrolled away).
@@ -302,7 +303,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
             'City and owner are current; other details are out of sight.'
           )}
         </div>}
-        {!teammate && <ForeignCityActions city={city} view={view} />}
+        {!teammate && !observerActive && <ForeignCityActions city={city} view={view} />}
       </div>
     );
   }
@@ -946,7 +947,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           </> : waitingQueue ? <>
             <span className="cp-now-item"><ItemArt item={queue[0]} faction={owner?.faction} size={16} /><span className="cp-now-name">{meterName(queue[0])}</span></span>
             <span className="cp-now-tag">{waitingTag(d) ?? 'waiting'}</span>
-          </> : null}{city.owner === view.me && queue.length > 0 && (producing || (waitingQueue && !raceLost)) && (() => {
+          </> : null}{!observerActive && city.owner === view.me && queue.length > 0 && (producing || (waitingQueue && !raceLost)) && (() => {
             // One click to stop the active build (user, 2026-11-01): the next queued item that can start takes over, or the city goes idle.
             const name = itemName(producing ?? queue[0], owner?.faction);
             const rest = queue.slice(1);
@@ -990,6 +991,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         </Tip>}
       </div>
 
+      {!observerActive && <>
       {/* The production queue: its own section under "Now producing", never hidden, with visible reorder and remove controls. */}
       {city.owner === view.me && <section className="cp-block production-queue" data-testid="production-queue" aria-label="Production queue">
         {/* The first item is the one in "Now producing" above, so it is not listed twice; the rows start at #2 and the up arrow on #2 swaps it in. */}
@@ -1080,6 +1082,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {/* Projects come last, as in Civ 6: the fallback when nothing else is worth building (Sam, 2026-11-22). */}
       {d.options.some((o) => o.item.kind === 'Project' && !isGrow(o.item)) && <><div className="cp-sub">Projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project' && !isGrow(o.item)).map((o) => renderOption(o))}</div></>}
 
+      </>}
       </>}
 
       <div className="cp-foot">

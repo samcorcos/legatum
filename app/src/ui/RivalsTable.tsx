@@ -50,12 +50,14 @@ export const COLUMN_TIPS = {
  * The rivals table (user, 2026-11-25, after Civ 6's rival list): every empire at a glance, ranked by VP, with its
  * Peace or War and its public Gold, army, cities and Science per turn. An empire you haven't met shows only its VP.
  */
-export function RivalsTable({ view, model, relationOf, onOpen }: {
+export function RivalsTable({ view, model, relationOf, onOpen, observerPerspective }: {
   view: PlayerView;
   model: VpModel;
   relationOf: (row: VpRow) => RowRelation | null;
   onOpen: (team: number) => void;
+  observerPerspective?: 'god' | number;
 }) {
+  const observing = observerPerspective !== undefined;
   const mine = model.rows.find((r) => r.isMine);
   const myArmy = mine ? teamStats(view, mine).army : 0;
   const target = model.rows[0]?.target ?? 10;
@@ -74,9 +76,12 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
         const rel = row.isMine ? null : relationOf(row);
         // A War names the enemy even before contact (`unmetTeam`), and so does your own declaration queued this turn.
         const unmet = row.unmet && !rel?.declared;
-        const strong = !row.isMine && !unmet && myArmy >= 0 && s.army > 0 && s.army >= myArmy * STRONG_ARMY_RATIO;
-        const label = row.isMine ? (row.members.length > 1 ? 'Your team' : 'You') : unmet ? 'Unknown' : row.unmet ? empireTitle(view, row.team) : row.label;
-        const vp = <span className="rv-num rv-vp" role="cell" data-celebration-counter={row.isMine ? 'vp' : undefined}><b>{row.vp}</b><small>/{row.target}</small>{row.isMine && <CounterDelta counter="vp" />}</span>;
+        const inspected = observing && observerPerspective !== 'god' && row.members.some((m) => m.id === observerPerspective);
+        const strong = !observing && !row.isMine && !unmet && myArmy >= 0 && s.army > 0 && s.army >= myArmy * STRONG_ARMY_RATIO;
+        const label = observing
+          ? (unmet ? 'Unknown' : empireTitle(view, row.team))
+          : row.isMine ? (row.members.length > 1 ? 'Your team' : 'You') : unmet ? 'Unknown' : row.unmet ? empireTitle(view, row.team) : row.label;
+        const vp = <span className="rv-num rv-vp" role="cell" data-celebration-counter={row.isMine ? 'vp' : undefined}><b>{row.vp}</b><small>/{row.target}</small>{row.isMine && !observing && <CounterDelta counter="vp" />}</span>;
         const cells = unmet
           ? <span className="rv-hidden rv-x" role="cell">Not met yet</span>
           : <>
@@ -85,8 +90,10 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
             <span className="rv-num rv-x" role="cell"><Tip hoverOnly content={`Cities: ${exact(s.cities)}`}>{shortNumber(s.cities)}</Tip></span>
             <span className="rv-num rv-x" role="cell"><Tip hoverOnly content={`Science per turn: ${exact(s.science)}`}>{shortNumber(s.science)}</Tip></span>
           </>;
-        // A rival's name says its AI level and that the row opens Diplomacy.
-        const nameTip = row.isMine || unmet ? null : `${row.members.filter((m) => m.aiLevel).map((m) => `${row.members.length > 1 ? `${empireOfPlayer(view, m.id)}: ` : ''}AI · ${m.aiLevel}. `).join('')}Click to open Diplomacy.`;
+        // A rival's name says its AI level and that the row opens Diplomacy (or switches perspective in Observer Mode).
+        const nameTip = observing
+          ? (inspected ? 'Click to return to God view.' : `Click to inspect ${empireTitle(view, row.team)}'s view.`)
+          : row.isMine || unmet ? null : `${row.members.filter((m) => m.aiLevel).map((m) => `${row.members.length > 1 ? `${empireOfPlayer(view, m.id)}: ` : ''}AI · ${m.aiLevel}. `).join('')}Click to open Diplomacy.`;
         const who = <span className="rv-who" role="cell">
           <span className="rv-crests">
             {unmet ? <span className="rv-unknown" aria-hidden="true">?</span>
@@ -108,12 +115,16 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
           <TombChip members={row.members} />
           <LeadChip members={row.members} rules={model.raceRules.rules} />
           <DecadenceChip members={row.members} rules={model.raceRules.rules} />
-          {!row.capitalStands && <CapitalChip row={row} nameOf={(e) => e.isMe ? 'You' : empireOfPlayer(view, e.id)} />}
+          {!row.capitalStands && <CapitalChip row={row} nameOf={(e) => !observing && e.isMe ? 'You' : empireOfPlayer(view, e.id)} />}
         </span>;
         const bar = <span className="rv-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (row.vp / Math.max(1, row.target)) * 100)}%` }} /></span>;
-        const cls = `rv-grid rv-row${row.isMine ? ' mine' : ''}${unmet ? ' unmet' : ''}${rel?.kind === 'war' ? ' at-war' : ''}${row.hold ? ' holding' : ''}`;
+        const highlight = observing ? inspected : row.isMine;
+        const cls = `rv-grid rv-row${highlight ? ' mine' : ''}${unmet ? ' unmet' : ''}${rel?.kind === 'war' ? ' at-war' : ''}${row.hold ? ' holding' : ''}`;
         const aria = `${label}: ${row.vp} of ${row.target} VP${rel && !unmet ? `, ${rel.text}` : ''}${unmet ? '' : `, Gold ${s.gold}, army points ${s.army}, ${s.cities} cities, Science ${s.science} per turn`}`;
         const style = unmet ? undefined : empireVars(row.members[0]);
+        if (observing) {
+          return <button key={row.team} type="button" className={cls} style={style} role="row" aria-label={`${aria}. ${inspected ? 'Return to God view' : 'Inspect view'}`} onClick={() => onOpen(row.team)}>{who}{vp}{cells}{chips}{bar}</button>;
+        }
         // A met rival's row opens Diplomacy with it; your own row and an unmet one are not buttons.
         return row.isMine || unmet
           ? <div key={row.team} className={cls} style={style} role="row" aria-label={aria}>{who}{vp}{cells}{chips}{bar}</div>

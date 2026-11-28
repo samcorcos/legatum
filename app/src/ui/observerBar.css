@@ -1,0 +1,108 @@
+.observer-bar {
+  position: absolute;
+  bottom: 16px;
+  right: calc(var(--race-width, 320px) + 28px);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  box-shadow: 0 3px 16px #211b1724;
+  max-width: calc(100% - var(--race-width, 320px) - 44px);
+}
+
+.obs-transport {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.obs-btn {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.obs-play {
+  min-width: 34px;
+}
+
+.obs-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--rule);
+  flex: none;
+}
+
+.obs-speed-wrap,
+.obs-view-wrap {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.obs-select {
+  height: 28px;
+  padding: 0 6px;
+  font: 600 12px/1 var(--sans);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.obs-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.obs-speed {
+  width: 54px;
+}
+
+.obs-perspective {
+  max-width: 136px;
+}
+
+.obs-god-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  font: 600 12px/1.2 var(--sans);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.obs-seat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  font: 600 11px/1.2 var(--sans);
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .observer-bar {
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100% - 24px);
+  }
+}

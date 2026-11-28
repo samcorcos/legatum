@@ -16,6 +16,8 @@ import { SidebarObjective } from './EraObjectives';
 export function VpTrack() {
   const phone = usePhoneLayout();
   const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const observer = useGame((s) => s.observer);
+  const setObserverPerspective = useGame((s) => s.observerSetPerspective);
   const set = useGame((s) => s.set);
   const seat = useGame((s) => s.seat);
   const orders = useGame((s) => s.orders);
@@ -39,6 +41,7 @@ export function VpTrack() {
   const nearRival = nearestRival(view);
   // A seat's relation with a team, as its row shows it; a declaration queued this turn reads as on the city card.
   const relationOf = (row: VpRow): RowRelation | null => {
+    if (observer.active && observer.perspective === 'god') return null;
     if (row.isMine) return null;
     if (declaredOn(row.team)) return { kind: 'war', declared: true, text: 'War declared', title: 'Your declaration of War, pending until the turn resolves' };
     const relation = relationWith(view, row.team);
@@ -51,6 +54,17 @@ export function VpTrack() {
       title: relation?.security ? `Alliance protected until turn ${relation.security.protected_until}` : relation?.guarantee_until ? `Peace guaranteed through turn ${relation.guarantee_until - 1}` : state,
     };
   };
+  const onRowClick = (team: number) => {
+    if (observer.active) {
+      const row = model!.rows.find((r) => r.team === team);
+      const target = row?.members[0]?.id;
+      if (target !== undefined) {
+        setObserverPerspective(observer.perspective === target ? 'god' : target);
+      }
+      return;
+    }
+    set({ diplomacyOpen: true, diplomacyTeam: team });
+  };
   const raceDetails = <>
       <header className="ph vhc-head">
         <h3>Victory race</h3>
@@ -59,15 +73,21 @@ export function VpTrack() {
       {!finished && model!.holds.length > 0 && <div className="race-headline">
         <HoldStrips model={model!} named />
       </div>}
-      {!finished && nearRival && <details className="sidebar-alerts">
+      {!finished && !observer.active && nearRival && <details className="sidebar-alerts">
         <summary><Icon name="ui-alert" size={14} />{rivalLine(view, nearRival).replace(/\.$/, '')}</summary>
         <RivalWin view={view} rival={nearRival} showSummary={false} />
       </details>}
-      <RivalsTable view={view} model={model!} relationOf={relationOf} onOpen={(team) => set({ diplomacyOpen: true, diplomacyTeam: team })} />
-      {!finished && <footer className="vp-foot rivals-foot">
+      <RivalsTable
+        view={view}
+        model={model!}
+        relationOf={relationOf}
+        onOpen={onRowClick}
+        observerPerspective={observer.active ? observer.perspective : undefined}
+      />
+      {!finished && !observer.active && <footer className="vp-foot rivals-foot">
         <button className="link" onClick={() => set({ diplomacyOpen: true })}>Diplomacy{incoming ? ` (${incoming})` : ''}</button>
       </footer>}
-      {!finished && model && <SidebarObjective view={view} model={model} />}
+      {!finished && !observer.active && model && <SidebarObjective view={view} model={model} />}
   </>;
   return (
     <>

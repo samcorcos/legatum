@@ -79,6 +79,33 @@ import { canUse3d, useMapView } from '../map3d/mapPrefs';
 export function handleGameKey(e: KeyboardEvent) {
   if (!gameplayKeyAllowed(e) || e.repeat) return;
   const s = useGame.getState();
+  // Observer mode: Space toggles Play/Pause, Left/Right step back/forward, Esc closes overlays/selection.
+  if (s.observer.active) {
+    if (e.key === ' ') {
+      e.preventDefault();
+      s.observerTogglePlay();
+      return;
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      s.observerStepBack();
+      return;
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      s.observerStepForward();
+      return;
+    }
+    if (e.key === 'Escape') {
+      const map = document.querySelector<HTMLElement>('[data-game-map]');
+      if (map && e.target !== map && e.target !== document.body) { map.focus({ preventScroll: true }); return; }
+      if (s.techOpen) s.set({ techOpen: false });
+      else if (s.citiesOpen) s.set({ citiesOpen: false });
+      else if (s.vpExpanded) s.set({ vpExpanded: false });
+      else s.select(null);
+    }
+    return;
+  }
   // Choosing a build tile is the only decision until the map receives a tile or Esc cancels.
   if (s.place && e.key !== 'Escape') return;
   switch (e.key) {

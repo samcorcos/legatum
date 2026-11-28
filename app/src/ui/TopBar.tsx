@@ -22,6 +22,7 @@ import { pendingSpend } from './productionPurchases';
 import { TrainingLine, TrainingTip } from './Training';
 import { hostedRoomId } from '../net/hosting';
 import { listedRoomName } from '../net/roomName';
+import { empireOfPlayer } from '../empires';
 
 /**
  * Desktop and tablet top bar compaction, in order: each step hides more secondary text (all of it
@@ -72,6 +73,7 @@ function hostTip(roomId: string | null): string {
 
 export function TopBar() {
   const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const observer = useGame((s) => s.observer);
   const orders = useGame((s) => s.orders[s.seat]);
   const errors = useGame((s) => s.errors[s.seat]);
   const set = useGame((s) => s.set);
@@ -80,6 +82,7 @@ export function TopBar() {
   const bar = useRef<HTMLElement>(null);
   useTopBarCompaction(bar, phone);
   if (!view) return null;
+  const godView = observer.active && observer.perspective === 'god';
   const e = view.economy;
   const gold = pendingSpend(view, orders ?? [], errors ?? []).gold;
   const bankruptcy = bankruptcyWarning(view);
@@ -114,6 +117,12 @@ export function TopBar() {
         <Wordmark height={24} />
       </div>
       <div className="tb-stats">
+        {godView ? (
+          <span className="obs-god-badge" data-testid="obs-god-badge">Observer · God view</span>
+        ) : <>
+        {observer.active && (
+          <span className="obs-seat-badge" data-testid="obs-seat-badge">{empireOfPlayer(view, view.me)}</span>
+        )}
         <Tip content={<>{phone && warning}<BreakdownTable b={e.gold_per_turn} title="Gold per turn" />{goldNotes}</>} summary={goldSummary ? `Gold per turn: ${e.gold_per_turn.total} · ${goldSummary}` : undefined} className={`stat gold-stat${phone && warning ? ' gold-stat-warn' : ''}`}>
           {/* Phones have no room for the warning cell: the Gold cell carries the alarm and its tip the details. */}
           {phone && warning && <span className="gold-warn-mark" role="img" aria-label="Treasury warning"><Icon name="ui-alert" size={14} /></span>}
@@ -162,7 +171,7 @@ export function TopBar() {
             {researching && <span className="research-phone-tech">{TECH_NAME[researching]}</span>}
             {researching ? <span className="research-chip-plan">
               {forecasts.slice(0, 2).map((f, i) => <span key={f.tech}><span className="research-queue-number">{i + 1}</span> {TECH_NAME[f.tech]} <small>{f.arrivalTurn === null ? noScience ? 'No Science yet' : 'Needs Science' : `T${f.arrivalTurn}`}</small>{i === 1 && queue.length > 2 && ` +${queue.length - 2}`}</span>)}
-            </span> : <b>Choose a technology</b>}
+            </span> : <b>{observer.active ? 'Idle' : 'Choose a technology'}</b>}
             {pending !== null && <span className="pending-dot" aria-label="Pending until Ready" />}
             {/* Progress toward the current technology, as the city panel shows production. */}
             {researching === r.current && r.current && r.cost ? <span className="research-progress" aria-hidden="true">
@@ -170,6 +179,7 @@ export function TopBar() {
             </span> : null}
           </button>
         </div>
+        </>}
       </div>
       <div className="tb-right">
         {net && (
@@ -186,7 +196,7 @@ export function TopBar() {
           <span className="turn-year" data-testid="turn-year">· {calendarLabel(view.turn)}</span>
           <TrainingLine />
         </Tip>
-        <CitiesButton />
+        {!godView && <CitiesButton />}
         <GameMenu />
       </div>
     </header>
