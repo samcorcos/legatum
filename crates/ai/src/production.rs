@@ -6648,9 +6648,9 @@ impl Planner<'_> {
         {
             return;
         }
-        let upkeep = self.marginal_military_upkeep();
+        let baseline_units = self.upkeep_unit_count() + self.planned_military_purchases();
+        let baseline_upkeep = self.military_upkeep_at(baseline_units);
         let max_buys = self.ctx.own_cities.len();
-        let mut bought_units: i32 = 0;
         for _ in 0..max_buys {
             // Each further 400 Gold of idle treasury funds one more unit beyond the
             // routine army: strength wins the Army title and breaks late stalemates.
@@ -6659,8 +6659,9 @@ impl Planner<'_> {
                 break;
             }
             // The added upkeep must stay payable for 60 Standard turns from income or treasury.
-            let deficit =
-                (upkeep * (bought_units + 1) - self.view().economy.gold_per_turn.total).max(0);
+            let next_units = self.upkeep_unit_count() + self.planned_military_purchases() + 1;
+            let added_upkeep = self.military_upkeep_at(next_units) - baseline_upkeep;
+            let deficit = (added_upkeep - self.view().economy.gold_per_turn.total).max(0);
             let buy_reserve = reserve + deficit * self.decisions.surplus_upkeep_turns;
             let mut best: Option<(
                 i32,
@@ -6725,7 +6726,6 @@ impl Planner<'_> {
                 self.gold_left -= cost;
                 self.orders.push(Order::BuyItem { city, item });
                 tally.add(item);
-                bought_units += 1;
             } else {
                 break;
             }
@@ -9357,6 +9357,80 @@ mod ai_caps_tests {
         assert!(
             war_score > peace_score && war_score >= 500,
             "AirDefence should score strongly under at-war air threat ({war_score} vs {peace_score})"
+        );
+    }
+
+    #[test]
+    fn swiss_surplus_army_reserves_cumulative_upkeep_across_free_boundary_and_tech_rounding() {
+        let spearman = ProductionItem::Unit {
+            unit: UnitKind::Spearman,
+        };
+        let run = |gold: i32, techs: &[TechId]| -> usize {
+            let mut view = ViewBuilder::new(30, 16)
+                .faction(Faction::Switzerland)
+                .known_techs(techs)
+                .gold(gold)
+                .city(1, ME, off(4, 5), 5)
+                .city(2, ME, off(12, 5), 5)
+                .city(3, ME, off(20, 5), 5)
+                // One existing upkeep-bearing unit: the 1st buy is still within the
+                // 2-free-unit allowance (0 upkeep), while the 2nd crosses it (+3 GPT).
+                .unit(10, ME, UnitKind::Spearman, off(4, 6))
+                .build();
+            view.economy.gold_per_turn.total = 0;
+            for c in &mut view.cities {
+                let d = c.detail.as_mut().unwrap();
+                d.options.retain(|o| o.item == spearman);
+                for o in &mut d.options {
+                    o.turns = 6;
+                    o.buy_cost = Some(100);
+                    o.buy_block = None;
+                }
+            }
+            let mut p = Planner::new(
+                &view,
+                Knobs::for_faction(Faction::Switzerland),
+                Faction::Switzerland,
+                7,
+            );
+            p.decisions.buy_hold = 0;
+            p.decisions.surplus_upkeep_turns = 88;
+            p.decisions.surplus_purchase_percent = 200;
+            let mut tally = empty_tally();
+            tally.army = 1;
+            p.buy_surplus_army(&mut tally, 0);
+            p.orders
+                .iter()
+                .filter(|o| matches!(o, Order::BuyItem { item, .. } if *item == spearman))
+                .count()
+        };
+
+        // Crossing the 2-free-unit boundary (1 -> 3 units => +3 GPT => 3 * 88 = 264 reserve).
+        // With 450 Gold: 1st buy leaves 350 (free), 2nd needs 350 - 200 >= 264 (fails).
+        assert_eq!(
+            run(450, &[]),
+            1,
+            "Switzerland must reserve stepped-up upkeep when a 2nd surplus buy crosses the free-unit boundary"
+        );
+        // With 600 Gold: 2nd buy has 500 - 200 = 300 >= 264 (succeeds), 3rd needs 400 - 200 >= 528 (fails).
+        assert_eq!(
+            run(600, &[]),
+            2,
+            "Switzerland should allow the 2nd surplus buy once treasury covers the 264-Gold runway"
+        );
+
+        // Technology rounding (MilitaryEngineering / Strategic Logistics):
+        // At 4 units (2 paid, base 6): rounded upkeep is (3 * 6 + 3) / 4 = 5 (440 reserve) vs 6 (528 reserve).
+        // With 860 Gold after 2 buys (660 left): 660 - 200 = 460 covers 440 (with tech) but not 528 (without).
+        assert_eq!(
+            run(860, &[]),
+            2,
+            "without MilitaryEngineering, 3rd buy needs 6 * 88 = 528 reserve"
+        );
+        assert_eq!(
+            run(860, &[TechId::MilitaryEngineering]),
+            3,
+            "with MilitaryEngineering rounding (5 * 88 = 440 reserve), 3rd buy should be affordable"
         );
     }
 }
