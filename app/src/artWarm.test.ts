@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { smallArtUrls, warmImages } from './artWarm';
+import { inFlightWarmCount, smallArtUrls, warmImages } from './artWarm';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -11,7 +11,7 @@ describe('background fetch of the small paintings', () => {
     expect(new Set(urls).size).toBe(urls.length);
   });
 
-  it('fetches every file, four at a time, and survives a file that fails', async () => {
+  it('fetches every file, four at a time, survives a file that fails, and releases image references on settle', async () => {
     let open = 0, most = 0;
     const made: { src: string; onload?: () => void; onerror?: () => void }[] = [];
     vi.stubGlobal('Image', class {
@@ -23,5 +23,6 @@ describe('background fetch of the small paintings', () => {
     await warmImages(urls, (cb) => setTimeout(cb, 0));
     expect(made.map((m) => m.src).sort()).toEqual([...urls].sort());
     expect(most).toBeLessThanOrEqual(4);
+    expect(inFlightWarmCount()).toBe(0);
   });
 });
