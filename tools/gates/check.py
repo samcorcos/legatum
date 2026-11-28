@@ -31,8 +31,8 @@ By changed path:
                                                objectives, eras: DESIGN_IMPACT)
   art, or art-related code  legatum-art-reviewer  (art files, or the names/kinds/wiring that art depends on:
                                                ART_IMPACT)
-  public front door       legatum-docs-reviewer and legatum-art-reviewer  (README.md, docs/media/, the link-preview
-                                               card: FRONT; the copy and every image or clip a visitor sees first)
+  public front door       legatum-docs-reviewer (README.md, docs/media/, the link-preview card: FRONT);
+                          legatum-art-reviewer also when docs/media/, app/public/og.jpg, or README.md media refs change
 Exit 1 when a check fails, or (with --pr-comments) a required review is missing or failed.
 """
 import argparse
@@ -69,15 +69,26 @@ COPY = re.compile(r"^app/src/(data|factionSheets|airText|buildLabel|notice|miles
 # A source line that adds player-facing prose: a string literal or JSX text of five or more words starting with a
 # capital letter. Comments are skipped. A false hit only costs a cheap plain-language review.
 APP_SOURCE = re.compile(r"^app/src/.*\.tsx?$")
-PROSE = re.compile(r"(['\"`]|>)\s*[A-Z][a-z']*(?:[ ,;:]+[A-Za-z0-9'$%{}.+-]+){4,}")
+PROSE = re.compile(
+    r"(?:[\"`>]\s*[A-Z][a-z']*(?:[ ,;:]+[A-Za-z0-9'$%{}.+-]+){4,}"
+    r"|'\s*[A-Z](?:[a-z]|\\')*(?:[ ,;:]+(?:[A-Za-z0-9$%{}.+-]|\\')+){4,})"
+)
 COMMENT = re.compile(r"^\s*(//|/?\*)")
 ENGINE = re.compile(r"^crates/(core|ai)/(src/|Cargo\.toml$)")
 # Cinematics (era films) are art too, though art.py has no video check: the art reviewer watches them.
 ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/src/assets/cinematics/|^app/public/(wonders|terrain)/"
                  r"|^tools/art/(distinctness\.(py|json)|render-sets\.mjs)$")
 # The public front door: what a visitor sees first (user, 2026-11-22: a generic boxes-and-arrows README diagram merged
-# with no reviewer because README.md and docs/ count as docs). Its copy and its visuals both get a review.
+# with no reviewer because README.md and docs/ count as docs). Its copy always gets a docs review; its visuals get
+# an art review when media files change or README.md adds, edits, or removes image/video/media references.
 FRONT = re.compile(r"^README\.md$|^docs/media/|^app/public/og\.jpg$")
+FRONT_MEDIA = re.compile(r"^docs/media/|^app/public/og\.jpg$")
+MEDIA_REF = re.compile(
+    r"!\[|<(?:img|video|picture|source|svg)\b|docs/media/|/media/"
+    r"|\.(?:mp4|webm|png|jpe?g|webp|gif|svg|avif|mov)\b"
+    r"|^\s*\[[^\]]+\]:\s*\S+",
+    re.I,
+)
 # Code that can make existing art stale or missing: names and kinds of things that have pictures, and the art wiring.
 ART_IMPACT = re.compile(r"^crates/core/src/(data|eras|units|buildings|factions?)\.rs$"
                         r"|^app/src/(unitArt|unlockArt|resourceIcons|landmarks|portraits|siegeProps|icons|wonders)\.ts$"
@@ -111,7 +122,8 @@ def classify(repo, base, tip, files=None):
     """{'code','ui','copy','engine','art','artimpact','scenario': [paths]} for BASE..TIP. A branch whose only code is AI measurement
     files is `scenario`: those files are not `code` or `copy` (the scenario check covers them instead)."""
     files = files if files is not None else [p for s, p in changed_files(repo, base, tip)]
-    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "advisor", "design", "scenario", "front")}
+    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "advisor", "design", "scenario",
+                           "front", "frontmedia")}
     scen = [f for f in files if f.startswith("scenarios/") and f.endswith(".json")]
     lab_only = bool(scen) and all(LAB_SCENARIO.match(f) for f in files if not NON_CODE.search(f))
     if lab_only:
@@ -141,6 +153,8 @@ def classify(repo, base, tip, files=None):
             out["design"].append(f)
         if FRONT.search(f):
             out["front"].append(f)
+        if FRONT_MEDIA.search(f) or (f == "README.md" and changes_media_ref(diff_changed_lines(repo, base, tip, f))):
+            out["frontmedia"].append(f)
     return out
 
 
@@ -148,6 +162,25 @@ def adds_prose(entry):
     """Whether a file's added lines (a diff_added entry) include a player-facing sentence."""
     lines, added = entry
     return any(PROSE.search(lines[n]) and not COMMENT.match(lines[n]) for n in added)
+
+
+def diff_changed_lines(repo, base, tip, path):
+    """Added and removed line texts for PATH in BASE..TIP, or None if the diff could not be read."""
+    out = git(repo, "diff", "-U0", "--no-renames", "--no-color", "--no-ext-diff", base, tip, "--", path)
+    if out is None:
+        return None
+    changed = []
+    for line in out.split("\n"):
+        if line.startswith(("+++ ", "--- ")):
+            continue
+        if line.startswith(("+", "-")):
+            changed.append(line[1:])
+    return changed
+
+
+def changes_media_ref(lines):
+    """Whether any added or removed line touches an image, video, or media reference (fail-closed if None)."""
+    return lines is None or any(MEDIA_REF.search(line) for line in lines)
 
 
 def run_checks(repo, base, tip, kinds, skip=()):
@@ -173,6 +206,7 @@ def required_reviews(kinds):
     """[(kind, reviewer agent, why)] for the reviews the changed paths call for."""
     out = []
     front = kinds.get("front", [])
+    front_media = kinds.get("frontmedia", [])
     if kinds["code"] or front:
         out.append(("docs", REVIEWERS["docs"], "code changed" if kinds["code"] else
                     "public front door changed: " + ", ".join(front[:4])))
@@ -181,11 +215,11 @@ def required_reviews(kinds):
         out.append(("plain", REVIEWERS["plain"], "player text changed: " + ", ".join(kinds["copy"][:4])))
     if kinds["ui"]:
         out.append(("ui", REVIEWERS["ui"], "UI changed"))
-    if kinds["art"] or kinds.get("artimpact") or front:
+    if kinds["art"] or kinds.get("artimpact") or front_media:
         # Art, changes that may make art stale, and the front door's images and clips (user, 2026-11-22): the art
         # reviewer judges all three.
         out.append(("art", REVIEWERS["art"], "art, art-related code or front-door media changed: "
-                    + ", ".join((kinds["art"] + kinds.get("artimpact", []) + front)[:4])))
+                    + ", ".join((kinds["art"] + kinds.get("artimpact", []) + front_media)[:4])))
     if kinds.get("advisor"):
         # The advisor teaches controls and rules: a change to them updates the advisor before merge (user, 2026-11-22).
         out.append(("advisor", REVIEWERS["advisor"], "what the advisor teaches may have changed: "
