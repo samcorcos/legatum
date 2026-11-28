@@ -48,9 +48,19 @@ export function observeHudLayout(
     })
     : null;
 
+  const onMotionEnd = (ev: Event) => {
+    const target = ev.target instanceof Element ? ev.target : null;
+    if (target && ignoreSelector && target.closest(ignoreSelector)) return;
+    schedule();
+  };
+
   syncObserved(ro);
   sample();
   mo?.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
+  root.addEventListener('animationend', onMotionEnd);
+  root.addEventListener('animationcancel', onMotionEnd);
+  root.addEventListener('transitionend', onMotionEnd);
+  root.addEventListener('transitioncancel', onMotionEnd);
   window.addEventListener('resize', schedule);
 
   return () => {
@@ -58,6 +68,10 @@ export function observeHudLayout(
     ro?.disconnect();
     mo?.disconnect();
     observed.clear();
+    root.removeEventListener('animationend', onMotionEnd);
+    root.removeEventListener('animationcancel', onMotionEnd);
+    root.removeEventListener('transitionend', onMotionEnd);
+    root.removeEventListener('transitioncancel', onMotionEnd);
     window.removeEventListener('resize', schedule);
   };
 }
