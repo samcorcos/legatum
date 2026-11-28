@@ -136,7 +136,9 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
   const lines = report && ctx ? filterLines(report.lines[seat] ?? [], filter, ctx) : [];
   const groups = groupLines(lines);
   if (!open || !report) return null;
-  const all = new Map(groupLines(report.lines[seat] ?? []).map((g) => [g.category, g.lines]));
+  // The category controls and event list must count the same Mine / Team / Everyone scope.
+  const shownGroups = groups.filter(({ category }) => !hidden.has(category));
+  const hiddenCount = groups.length - shownGroups.length;
   const index = history.findIndex((r) => r.turn === report.turn);
   const older = index > 0 ? history[index - 1] : null;
   const newer = index >= 0 && index < history.length - 1 ? history[index + 1] : null;
@@ -167,7 +169,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
         </div>
         {embedded && <button className="btn quiet report-filter-toggle" aria-expanded={filtersOpen} aria-controls="report-filters"
           onClick={() => setFiltersOpen(!filtersOpen)}>
-          Filter <span className="muted">{filter === 'mine' ? 'Mine' : filter === 'team' ? 'Team' : 'Everyone'}{[...all.keys()].some((c) => hidden.has(c)) ? ` · ${[...all.keys()].filter((c) => hidden.has(c)).length} hidden` : ''}</span> <Icon name={filtersOpen ? 'ui-chevron-up' : 'ui-chevron-down'} size={12} className="ui-mark" />
+          Filter <span className="muted">{filter === 'mine' ? 'Mine' : filter === 'team' ? 'Team' : 'Everyone'}{hiddenCount > 0 ? ` · ${hiddenCount} hidden` : ''}</span> <Icon name={filtersOpen ? 'ui-chevron-up' : 'ui-chevron-down'} size={12} className="ui-mark" />
         </button>}
         {!embedded && <button ref={closeButton} className="icon-btn" onClick={close} aria-label="Close report" title="Close (Esc, or L)">
           <Icon name="ui-cross" size={14} />
@@ -182,7 +184,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
           ))}
         </div>
         <div className="chips">
-          {[...all.keys()].map((c) => (
+          {groups.map(({ category: c, lines: categoryLines }) => (
             <button
               key={c}
               className={`chip ${hidden.has(c) ? '' : 'on'}`}
@@ -197,19 +199,17 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
             >
               <span aria-hidden="true" className="chip-icon"><RingMedallion icon={CATEGORY_ICON[c]} tone="neutral" size={18} /></span>
               {CATEGORY_LABEL[c]}{' '}
-              {chipCounts(all.get(c)!).map((p, i) => <span key={i} className={`chip-count ${p.tone}`}>{i > 0 && <span className="muted"> · </span>}{p.tone !== 'neutral' && <ToneIcon tone={p.tone} />}{p.text}</span>)}
+              {chipCounts(categoryLines).map((p, i) => <span key={i} className={`chip-count ${p.tone}`}>{i > 0 && <span className="muted"> · </span>}{p.tone !== 'neutral' && <ToneIcon tone={p.tone} />}{p.text}</span>)}
             </button>
           ))}
         </div>
       </div>
       <div className="report-body">
         {isLatest && <CoachLine />}
-        {groups.filter((g) => !hidden.has(g.category)).length === 0 && (
+        {shownGroups.length === 0 && (
           <div className="muted report-empty">Nothing to report with these filters.</div>
         )}
-        {groups
-          .filter((g) => !hidden.has(g.category))
-          .map((g, gi) => (
+        {shownGroups.map((g, gi) => (
             <div key={g.category} className="report-group" data-category={g.category}>
               {gi > 0 && <StarDivider className="report-sd" />}
               <div className="report-cat">

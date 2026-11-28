@@ -119,6 +119,33 @@ it('marks the line bad with an icon and a signed red HP change; clicking it cent
   expect(useGame.getState().reportArrow).toBeNull();
 });
 
+it('counts and offers only categories and events in the selected report scope', () => {
+  const rival = view.players.find((p) => p.team !== view.team)!.id;
+  const at = { q: 1, r: 2 };
+  const mixed = report(3, [
+    { type: 'TechResearched', player: 0, tech: 'BronzeWorking' },
+    { type: 'TechResearched', player: rival, tech: 'BronzeWorking' },
+    { type: 'UnitMoved', unit: 900, owner: rival, from: at, to: { q: 2, r: 2 } },
+  ]);
+  useGame.setState({ report: mixed, reportHistory: [mixed], reportOpen: true });
+  render();
+  const chipCount = (category: string) => $(`.chip[data-category="${category}"] .chip-count`)?.textContent;
+  const selectScope = (name: string) => act(() => [...host.querySelectorAll<HTMLButtonElement>('.report .seg button')].find((button) => button.textContent === name)!.click());
+
+  expect(chipCount('science')).toBe('1 good');
+  expect($('.chip[data-category="movement"]')).toBeNull();
+  selectScope('Everyone');
+  expect(chipCount('science')).toBe('1 good');
+  expect(host.querySelectorAll('.chip[data-category="science"] .chip-count')).toHaveLength(2);
+  expect(chipCount('movement')).toBe('1');
+  expect($('.report-group[data-category="movement"]')).toBeNull();
+  act(() => $<HTMLButtonElement>('.chip[data-category="movement"]')!.click());
+  expect($('.report-group[data-category="movement"]')).not.toBeNull();
+  selectScope('Mine');
+  expect(host.querySelectorAll('.chip[data-category="science"] .chip-count')).toHaveLength(1);
+  expect($('.chip[data-category="movement"]')).toBeNull();
+});
+
 it('history keeps the last 20 turns and a replayed turn replaces its entry', () => {
   let h: Report[] = [];
   for (let t = 1; t <= 25; t++) h = pushReport(h, report(t, []));
