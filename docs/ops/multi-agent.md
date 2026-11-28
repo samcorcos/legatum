@@ -28,23 +28,23 @@ Use only the lines for agents that actually contributed; never copy all three by
 If the maintainer says something like *"read the multi-agent instructions and follow them"*, execute these steps immediately without waiting to be asked:
 
 1. **Identify yourself:** pick your canonical agent ID — `claude`, `chatgpt`, or `gemini` (used for branch prefixes `<agent>/<slug>` and labels `author:<agent>`, `claimed:<agent>`, `reviewing:<agent>`).
-2. **Set up your staggered hourly recurring heartbeat:**
-   - Assigned offsets: `claude` at **`:05`**, `chatgpt` at **`:25`**, `gemini` at **`:45`** every hour.
-   - Check your actual platform scheduler (and [docs/ops/automations.md](automations.md)) first so you do not create a duplicate loop.
-   - If your platform provides a native recurring scheduler tool, create the task at **your assigned offset** (`:05` / `:25` / `:45`) using the Copy-paste heartbeat prompt below with your agent ID filled in, and update [docs/ops/automations.md](automations.md) if the control location or stop instructions changed.
-   - If your environment has no native durable scheduling tool, do **not** treat an ad-hoc in-session shell timer as a durable cron job — give the maintainer the exact 2-line setup instructions and pre-filled prompt for your assigned offset instead.
+2. **Set up your recurring heartbeat (preserving any existing schedule):**
+   - Generic onboarding defaults: `claude` at **`:05`**, `chatgpt` at **`:25`**, `gemini` at **`:45`** every hour.
+   - Check your actual platform scheduler (and [docs/ops/automations.md](automations.md)) first so you do not create a duplicate loop. If a recurring schedule already exists for `samcorcos/legatum`, **preserve its existing cadence** rather than recreating or resetting it to the generic default.
+   - If no schedule exists yet and your platform provides a native recurring scheduler tool, create the task at **your generic onboarding offset** (`:05` / `:25` / `:45`) using the Copy-paste heartbeat prompt below with your agent ID filled in, and update [docs/ops/automations.md](automations.md) if the control location or stop instructions changed.
+   - If your environment has no native durable scheduling tool, do **not** treat an ad-hoc in-session shell timer as a durable cron job — give the maintainer the exact 2-line setup instructions and pre-filled prompt for your onboarding offset instead.
 3. **Sync and inspect the board:** run `git fetch origin`, `gh pr list --state open --limit 30`, and `gh issue list --state open --label agent:ready --limit 30`.
 4. **Run your first heartbeat immediately** following the priority order (`1 -> 6`) below, and report back concisely what you scheduled and what actions you took (or `idle`).
 
 ## Autonomous heartbeat (recurring check)
 
-Use a **continuously replenished work queue while an execution is running**, with a **recurring hourly check** as the fallback wake-up and recovery mechanism. Each provider runs independently (no cross-vendor agent calls), with staggered minutes to avoid top-of-the-hour scheduler congestion. The hourly schedule is not a throughput limit and does not guarantee immediate pickup after an execution ends:
+Use a **continuously replenished work queue while an execution is running**, with a **recurring scheduled check** as the fallback wake-up and recovery mechanism. Each provider runs independently (no cross-vendor agent calls), with staggered onboarding defaults to avoid top-of-the-hour scheduler congestion. The fallback schedule is not a throughput limit and does not guarantee immediate pickup after an execution ends; preserve any existing maintainer-configured cadence rather than resetting it to these defaults:
 
-- **Claude:** every hour at `:05`
-- **ChatGPT / Codex:** every hour at `:25`
-- **Gemini:** every hour at `:45`
+- **Claude (onboarding default):** every hour at `:05`
+- **ChatGPT / Codex (onboarding default):** every hour at `:25`
+- **Gemini (onboarding default):** every hour at `:45`
 
-See [docs/ops/automations.md](automations.md) for where each scheduler lives and how to inspect, pause, or stop it.
+See [docs/ops/automations.md](automations.md) for current configured schedules, where each scheduler lives, and how to inspect, pause, or stop it.
 
 On each wake-up, fetch `origin/master` and fill available slots with independent actionable tasks in this priority order. Keep **at most three tasks active per agent family across all executions**. Whenever a task finishes or is handed off as blocked, refresh the board and refill its slot immediately in priority order, without waiting for the other tasks or the next hour. There is no per-run or per-hour task quota. Work in parallel where supported; unblocking existing PRs beats starting new WIP.
 
