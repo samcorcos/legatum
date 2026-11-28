@@ -4,7 +4,7 @@ import { WhyCard } from '../ui/WhyCard';
 import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
 import { AlarmScreen } from '../celebrate/AlarmScreen';
 import { PeopleIntro } from '../celebrate/PeopleIntro';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, memo, Suspense, useEffect, useState } from 'react';
 import { warmSmallArt } from '../artWarm';
 import { canUse3d, useMapView } from '../map3d/mapPrefs';
 import { useGame } from '../store';
@@ -53,14 +53,80 @@ export function GameErrorToast() {
   );
 }
 
-export function GameScreen() {
+// Memoized sibling panels: clicking a unit/city or updating training/busy/connection state does not re-render unrelated panels.
+const MemoMapCanvas = memo(MapCanvas);
+const MemoTopBar = memo(TopBar);
+const MemoMomentLane = memo(MomentLane);
+const MemoObjectiveSheet = memo(ObjectiveSheet);
+const MemoTurnReport = memo(TurnReport);
+const MemoDiplomacyPanel = memo(DiplomacyPanel);
+const MemoDeclareWarPrompt = memo(DeclareWarPrompt);
+const MemoGoalActionDialog = memo(GoalActionDialog);
+const MemoFreeTechPicker = memo(FreeTechPicker);
+const MemoDecisionNotice = memo(DecisionNotice);
+const MemoSaveNotice = memo(SaveNotice);
+const MemoTurnFailureDialog = memo(TurnFailureDialog);
+const MemoEraNotice = memo(EraNotice);
+const MemoTechPanel = memo(TechPanel);
+const MemoCitiesOverview = memo(CitiesOverview);
+const MemoGameOver = memo(GameOver);
+const MemoAlarmScreen = memo(AlarmScreen);
+const MemoPeopleIntro = memo(PeopleIntro);
+const MemoFreeTechsPrompt = memo(FreeTechsPrompt);
+const MemoAdvisor = memo(Advisor);
+const MemoWhyCard = memo(WhyCard);
+const MemoGameErrorToast = memo(GameErrorToast);
+
+const RightSidebar = memo(function RightSidebar() {
+  return (
+    <aside className="right-sidebar paper-grain" aria-label="Empire sidebar">
+      <SeatBar race={<VpTrack />} />
+      <Minimap />
+      <PingControl />
+    </aside>
+  );
+});
+
+const SelectionDock = memo(function SelectionDock() {
   const views = useGame((s) => s.views);
   const seat = useGame((s) => s.seat);
   const selection = useGame((s) => s.selection);
+  if (!views) return null;
+  const view = views[seat];
+  const unit = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id) : null;
+  const city = selection?.kind === 'city' ? view.cities.find((c) => c.id === selection.id) : null;
+  const plane = selection?.kind === 'air' ? view.aircraft?.find((a) => a.id === selection.id) : null;
+  const airCity = plane ? view.cities.find((c) => c.id === plane.city) : null;
+  return (
+    <div className="command-docks">
+      <div className="left-dock" data-overlay-slot="selection-dock">
+        {selection && <button className="btn quiet selection-close touch-only" onClick={() => useGame.getState().select(null)}>Close selection</button>}
+        {unit && <UnitPanel unit={unit} view={view} />}
+        {plane && airCity && <AirWing city={airCity} view={view} planeId={plane.id} />}
+        {city && <CityPanel city={city} view={view} />}
+      </div>
+    </div>
+  );
+});
+
+const BusyOverlay = memo(function BusyOverlay() {
   const busy = useGame((s) => s.busy);
-  const training = useGame((s) => s.training);
+  const trainingWaiting = useGame((s) => !!s.training?.waiting);
   const resolvingToEnd = useGame((s) => s.resolvingToEnd);
   const stopResolving = useGame((s) => s.stopResolving);
+  if (!busy) return null;
+  return (
+    <div className={`busy${trainingWaiting ? ' training-wait' : ''}`}>
+      <div className="busy-card" role="status">
+        {trainingWaiting ? <TrainingCard /> : <><div className="spinner" />{busy}</>}
+        {resolvingToEnd && <button className="btn" onClick={stopResolving}>Stop after this turn</button>}
+      </div>
+    </div>
+  );
+});
+
+export function GameScreen() {
+  const me = useGame((s) => s.views?.[s.seat]?.me ?? null);
   const conn = useGame((s) => (s.client?.kind === 'remote' ? s.net?.conn : null));
   const away = useGame((s) => awayLine(awayPlayers(s), 'until'));
   const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
@@ -89,54 +155,35 @@ export function GameScreen() {
   const mapKind = useMapView((m) => m.kind);
   const [can3d] = useState(canUse3d);
   const show3d = can3d && mapKind === '3d';
-  if (!views) return null;
-  const view = views[seat];
-  const unit = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id) : null;
-  const city = selection?.kind === 'city' ? view.cities.find((c) => c.id === selection.id) : null;
-  const plane = selection?.kind === 'air' ? view.aircraft?.find((a) => a.id === selection.id) : null;
-  const airCity = plane ? view.cities.find((c) => c.id === plane.city) : null;
+  if (me === null) return null;
 
   return (
-    <CelebrationProvider><div className="game" style={{ ['--seat' as string]: playerColor(view.me) }}>
-      {show3d ? <Suspense fallback={<MapCanvas />}><Map3DView /></Suspense> : <MapCanvas />}
+    <CelebrationProvider><div className="game" style={{ ['--seat' as string]: playerColor(me) }}>
+      {show3d ? <Suspense fallback={<MemoMapCanvas />}><Map3DView /></Suspense> : <MemoMapCanvas />}
       <div className="seat-frame" />
-      <TopBar />
-      <MomentLane />
-      <ObjectiveSheet />
-      <aside className="right-sidebar paper-grain" aria-label="Empire sidebar"><SeatBar race={<VpTrack />} /><Minimap /><PingControl /></aside>
-      <div className="command-docks">
-      <div className="left-dock" data-overlay-slot="selection-dock">
-        {selection && <button className="btn quiet selection-close touch-only" onClick={() => useGame.getState().select(null)}>Close selection</button>}
-        {unit && <UnitPanel unit={unit} view={view} />}
-        {plane && airCity && <AirWing city={airCity} view={view} planeId={plane.id} />}
-        {city && <CityPanel city={city} view={view} />}
-      </div>
-      </div>
-      <TurnReport />
-      <DiplomacyPanel />
-      <DeclareWarPrompt />
-      <GoalActionDialog />
-      <FreeTechPicker />
-      <DecisionNotice />
-      <SaveNotice />
-      <TurnFailureDialog />
-      <EraNotice />
-      <TechPanel />
-      <CitiesOverview />
-      <GameOver />
-      <AlarmScreen />
-      <PeopleIntro />
-      <FreeTechsPrompt />
-      <Advisor />
-      <WhyCard />
-      {busy && (
-        <div className={`busy${training?.waiting ? ' training-wait' : ''}`}>
-          <div className="busy-card" role="status">
-            {training?.waiting ? <TrainingCard /> : <><div className="spinner" />{busy}</>}
-            {resolvingToEnd && <button className="btn" onClick={stopResolving}>Stop after this turn</button>}
-          </div>
-        </div>
-      )}
+      <MemoTopBar />
+      <MemoMomentLane />
+      <MemoObjectiveSheet />
+      <RightSidebar />
+      <SelectionDock />
+      <MemoTurnReport />
+      <MemoDiplomacyPanel />
+      <MemoDeclareWarPrompt />
+      <MemoGoalActionDialog />
+      <MemoFreeTechPicker />
+      <MemoDecisionNotice />
+      <MemoSaveNotice />
+      <MemoTurnFailureDialog />
+      <MemoEraNotice />
+      <MemoTechPanel />
+      <MemoCitiesOverview />
+      <MemoGameOver />
+      <MemoAlarmScreen />
+      <MemoPeopleIntro />
+      <MemoFreeTechsPrompt />
+      <MemoAdvisor />
+      <MemoWhyCard />
+      <BusyOverlay />
       {credentialRejected ? (
         <div className="conn-banner">
           Your saved seat credential is no longer valid.
@@ -166,7 +213,7 @@ export function GameScreen() {
           </div>
         )
       )}
-      {conn !== 'taken' && <GameErrorToast />}
+      {conn !== 'taken' && <MemoGameErrorToast />}
     </div></CelebrationProvider>
   );
 }
