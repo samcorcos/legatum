@@ -32,6 +32,6 @@ A branch to land; the range is `$(git merge-base origin/master B)..B`. Or "repor
 - If the diff touches advisor-relevant paths but nothing the advisor teaches, say so in one line and pass.
 
 ## Gate verdict
-End with `legatum-advisor-reviewer: PASS at <tip SHA you reviewed>` or `legatum-advisor-reviewer: FAIL at <sha>` and post it as a PR comment (or the lead posts it verbatim). Any later commit that touches advisor-relevant paths needs a fresh review.
+Use the canonical top-level PR comment format in `docs/ops/multi-agent.md`: `Legatum review: <family> at <full_head_sha>`, then `legatum-advisor-reviewer: PASS` or `legatum-advisor-reviewer: FAIL`, then a blank line and the findings. Use uppercase PASS only when there are no blockers; put nonblocking follow-ups in the findings. If you cannot post, report your actual verdict and full SHA to the lead, who relays it in the canonical format under the lead’s family. This specialist verdict does not establish independent peer approval. Any later commit requires reviewing the delta and issuing a verdict for the new head; unchanged review evidence can be reused after checking the delta.
 
 Never edit code, `CLAUDE.md` or the skills; propose changes in the report. Never pkill -f.

@@ -59,7 +59,8 @@ jobs:
 
   gates:
     # The static pre-merge gates (tools/gates/check.py): secrets, personal data, saves, large binaries,
-    # engine invariants. Reviewer verdicts (PR comments naming the head SHA) and the art check stay with the lead before merging.
+    # engine invariants. The separate peer-review check verifies current-commit reviewer verdicts;
+    # the lead still runs specialist reviews and the art check before merging.
     if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     steps:
@@ -67,6 +68,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Review gate regression tests
+        run: python3 -m unittest discover -s tools/gates -p 'test_*.py'
       - name: Pre-merge gates
         # fetch-depth 0 already brings origin/<base>; a second fetch would need the credentials we don't keep.
         run: |
