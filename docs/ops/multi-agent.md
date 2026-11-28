@@ -33,7 +33,7 @@ If the maintainer says something like *"read the multi-agent instructions and fo
    - If your platform provides a tool to create recurring/scheduled tasks or automations (for example, ChatGPT/Codex scheduled tasks or Claude scheduled tasks), **check whether one already exists for `samcorcos/legatum`, and if not, create it automatically** using the Copy-paste heartbeat prompt below with your agent ID filled in.
    - If your environment has no scheduling tool, do not silently skip it — give the maintainer the exact 2-line setup instructions and pre-filled prompt for your platform so they can enable it in 10 seconds.
 3. **Sync and inspect the board:** run `git fetch origin`, `gh pr list --state open --limit 30`, and `gh issue list --state open --label agent:ready --limit 30`.
-4. **Run your first heartbeat immediately** following the priority order (`1 -> 7`) below, and report back concisely what you scheduled and what actions you took (or `idle`).
+4. **Run your first heartbeat immediately** following the priority order (`0 -> 7`) below, and report back concisely what you scheduled and what actions you took (or `idle`).
 
 ## Autonomous heartbeat (recurring check)
 
@@ -45,17 +45,18 @@ Use a **continuously replenished work queue while an execution is running**, wit
 
 On each wake-up, fetch `origin/master` and fill available slots with independent actionable tasks in this priority order. Keep **at most three tasks active per agent family across all executions**. Whenever a task finishes or is handed off as blocked, refresh the board and refill its slot immediately in priority order, without waiting for the other tasks or the next hour. There is no per-run or per-hour task quota. Work in parallel where supported; unblocking existing PRs beats starting new WIP.
 
+0. **Keep `master` deployable:** query `CI` and `Deploy web` (`deploy-web.yml`) explicitly: `gh run list --branch master --workflow ci.yml --limit 2 --json workflowName,status,conclusion,headSha,databaseId` and `gh run list --branch master --workflow deploy-web.yml --limit 2 --json workflowName,status,conclusion,headSha,databaseId`. Treat pending or missing runs as **unverified** (not healthy), and inspect the last completed run when a new run is still in progress. If the latest completed `CI` or `Deploy web` run on `origin/master` failed and no open issue or PR already tracks that failure, inspect `gh run view <id> --log-failed` and prioritize a repair within the existing three-active-task and visible-claim rules (open a concise `bug` + `claimed:<agent>` + `lane:*` issue and Draft PR). Finish all independent diagnosis and preparation first; apply `needs-human` only when a concrete maintainer action or access is needed now, with evidence, options, and a recommendation.
 1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, `headRepositoryOwner` is `samcorcos`, including human-only PRs that need agent review; review those but never merge them.
 2. **Unblock your own PRs:** `gh pr list --state open --label author:<self>` that has `changes-requested`, a failing `ci-ok`, merge conflicts or a branch that fell behind `master` and needs updating, or a green ready PR that is missing `needs-review`.
 3. **Recover stale locks:** if any `reviewing:*` lock has had no comment or merge for >2 hours, release `reviewing:*` so another reviewer can pick it up. If a `claimed:*` Draft PR has had no commits or comments for >6 hours, post a brief status note or flag `needs-human` (never overwrite another agent's work silently).
 4. **Pick up a paused handoff:** `gh issue list --state open --label status:handoff` (or PRs with `status:handoff`).
 5. **Claim new work:** `gh issue list --state open --label agent:ready` in a lane that does not collide with open PRs (respecting the `lane:core` 1-PR lock).
 6. **Triage unlabeled open issues:** `gh issue list --state open` for issues lacking `agent:ready`, `claimed:*`, `needs-review`, `reviewing:*`, `status:handoff`, `mode:bakeoff`, `needs-info`, and `needs-human`, and with no linked active PR (see [Triage unlabeled open issues](#triage-unlabeled-open-issues)).
-7. **Exit cleanly if idle:** do not invent speculative features or refactors just to stay busy (Pillar 1: anti-bloat). If nothing in 1–6 is actionable, report `idle` and stop.
+7. **Exit cleanly if idle:** do not invent speculative features or refactors just to stay busy (Pillar 1: anti-bloat). If nothing in 0–6 is actionable, report `idle` and stop.
 
 ### Continuous work with a concurrency limit
 
-- **Three active tasks, not three completed tasks.** Three is a ceiling, not a quota. Refill a free slot after each completion or blocked handoff; do not wait for a batch to finish. Re-read priorities 1–6 before each claim. Subtasks and specialist reviews within one PR count as that same task. Do not invent work when nothing qualifies.
+- **Three active tasks, not three completed tasks.** Three is a ceiling, not a quota. Refill a free slot after each completion or blocked handoff; do not wait for a batch to finish. Re-read priorities 0–6 before each claim. Subtasks and specialist reviews within one PR count as that same task. Do not invent work when nothing qualifies.
 - **No review-backlog cutoff.** The number of finished PRs awaiting review or human action does not block new independent work. Prioritize actionable reviews and fixes, then use free slots for eligible work while retaining lane/file collision safeguards. This supersedes the former five-finished-branches WIP limit.
 - **Count overlapping executions.** Count `claimed:<self>` and `reviewing:<self>` tasks across all runs toward the same three-slot limit, checking their latest activity. Never duplicate or take over a still-running task; use the documented stale-lock thresholds. If this execution owns active tasks, continue them and refill as they finish. If other executions occupy every slot, report that existing work is active and stop; do not create another coordinator or duplicate schedule.
 - **Claim serially, then delegate.** Refresh GitHub state and active-count checks before each claim; add the visible lock and an ownership note, then recheck both conflicts and the family-wide count before starting. If a concurrent claim exceeds capacity, yield the new claim before doing work. New implementations still require an Issue and Draft PR; existing fixes use `claimed:<self>`. Delegate independent tasks to same-provider subagents where available, otherwise work sequentially. Subagents stay within their assigned task; the lead refills slots.
@@ -80,7 +81,7 @@ When adopting this policy, update the prompt of each existing scheduled heartbea
 ```text
 Run one autonomous heartbeat on samcorcos/legatum as <claude|chatgpt|gemini>:
 1. Fetch origin and read current instructions on origin/master; preserve existing work and use isolated worktrees.
-2. Read docs/ops/multi-agent.md and follow the Autonomous heartbeat priority order (1 -> 7).
+2. Read docs/ops/multi-agent.md and follow the Autonomous heartbeat priority order (0 -> 7).
 3. Keep at most three tasks active per agent family across overlapping executions. Fill free slots in priority order and refill each slot immediately when its task finishes or is handed off as blocked; there is no per-run/hour quota. Claim serially, recheck locks and capacity, then delegate independent tasks using separate worktrees and CARGO_TARGET_DIRs. Preserve lane:core serialization and serialize actual merges.
 4. Follow all 5 peer-merge guardrails strictly (never merge your own PR, forks/outside PRs, or governance/security files).
 5. Continue owned work and refill slots while actionable work remains. Skip unchanged blockers; release claims only after saving work and stopping/transferring active local execution. If only other executions occupy capacity, report existing work active and stop. If no work remains, report outcomes or "idle"; use the handoff procedure if execution must end early. The hourly schedule is fallback discovery/recovery, not a throughput limit. Do not create another recurring automation.
@@ -90,8 +91,10 @@ Run one autonomous heartbeat on samcorcos/legatum as <claude|chatgpt|gemini>:
 ## Pre-flight check (mandatory before starting any task)
 
 1. Fetch the latest trunk: `git fetch origin`.
-2. Inspect active work so you do not duplicate or collide with it:
+2. Inspect active work and `master` health (`CI` and `Deploy web`) so you do not duplicate or miss a broken deploy:
    ```sh
+   gh run list --branch master --workflow ci.yml --limit 2
+   gh run list --branch master --workflow deploy-web.yml --limit 2
    gh pr list --state open --limit 30
    gh issue list --state open --label agent:ready --limit 30
    ```
