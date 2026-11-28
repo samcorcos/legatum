@@ -67,7 +67,7 @@ On each wake-up, fetch `origin/master` and fill available slots with independent
 
 Anyone running Claude, ChatGPT/Codex, and Gemini on a GitHub repo can replicate this setup in four steps:
 
-1. **GitHub repository ruleset (`Protect master`):** Enable a branch ruleset on the default branch that blocks deletions and force-pushes, requires a pull request, requires a single aggregated CI status check (`ci-ok` from GitHub Actions), and turns on **Require branches to be up to date before merging** (`strict_required_status_checks_policy: true`). This mechanically prevents two agents from merging back-to-back PRs that were never tested together.
+1. **GitHub repository ruleset (`Protect master`):** Enable a branch ruleset on the default branch that blocks deletions and force-pushes, requires a pull request, requires a single aggregated CI status check (`ci-ok` from GitHub Actions), and requires the review check once activated. On this personal-account repository native Merge Queue is unavailable; `strict_required_status_checks_policy` is currently `false` to avoid forced branch-update/re-review churn. Do not change protection settings as part of a heartbeat. Use the interaction checks in guardrail 4; separate green PR checks do not prove their combined result was tested.
 2. **Claude (`:05` hourly — runs in the cloud):** In `claude.ai` (or Claude Code Desktop), open **Scheduled** -> **New task** -> **Set up manually** (formerly Routines). Attach the `samcorcos/legatum` repo (and any needed connectors), choose **Schedule -> Hourly at `:05`**, and paste the heartbeat prompt below with `claude`.
 3. **ChatGPT / Codex (`:25` hourly):** In the ChatGPT/Codex desktop app, create a **Scheduled task** (formerly Codex Automations) targeting `samcorcos/legatum` set to **Hourly at `:25`** with the heartbeat prompt below using `chatgpt`. Note: desktop scheduled tasks require the machine to stay awake; for laptop-closed execution, schedule `codex cloud exec` or `codex exec` on an always-on host.
 4. **Gemini / Antigravity (`:45` hourly):** In the Antigravity app, open **Automations** (formerly Scheduled Tasks) -> **New automation**, select the `samcorcos/legatum` project, set **Hourly at `:45`**, and paste the heartbeat prompt below with `gemini`. Each run creates a sidebar conversation you can step into if `needs-human` is raised.
@@ -234,16 +234,19 @@ legatum-docs-reviewer: PASS
 
 If a run fails or a comment was posted using an Actions `GITHUB_TOKEN` (which does not trigger another Actions workflow), use the same **Run workflow** control to reevaluate current state. Do not rerun an old approval or remove the required check to treat a missing review as passed. Repository administration permission is required to change required checks; merging this code alone does not activate branch protection.
 
-### 4. Prevent concurrent merge races (GitHub Merge Queue)
+### 4. Serialize merges without unnecessary branch updates
 Before merging:
 1. Confirm the PR is not a draft, has no merge conflicts, and `ci-ok` is `SUCCESS` on the exact head SHA you reviewed.
-2. **Do not speculatively run `gh pr update-branch` on open PRs just because `master` moved** — that churns CI and invalidates exact-head reviews. Only merge `origin/master` into a branch if it has actual git conflicts (`DIRTY`), or if Merge Queue is not yet enabled on the repository.
-3. Enqueue the PR cleanly with squash commit and branch deletion:
+2. **Do not speculatively run `gh pr update-branch` on open PRs just because `master` moved** — that churns CI and invalidates exact-head reviews. The absence of native Merge Queue is not a reason to update. Integrate master only for actual conflicts (`DIRTY`), a concrete compatibility concern requiring combined validation, or an enforced branch-protection requirement. Being behind master alone does not invalidate a reviewed head.
+3. Before each merge, refetch master and inspect changes since the PR's merge base for interactions with the reviewed diff: shared APIs, callers, dependencies, configuration, rules and generated artifacts, not merely overlapping filenames. If unrelated, record the inspected base/head and short rationale in the existing review or handoff, retain current-head approvals, and do not push a synchronization commit or rerun unchanged specialist work. If related or uncertain, integrate and run relevant checks; review the integration delta and affected behavior, reusing still-applicable evidence. Any changed PR head still needs exact-head CI and canonical verdicts; never automatically copy approval to a different SHA. An unrelated master advance alone must not remove `needs-human` from an otherwise decision-ready PR.
+4. Merge serially with an expected-head check, refetching master and reassessing any intervening changes before each merge. This reduces collisions but is not an atomic lock across providers; post-merge CI remains necessary. Enqueue when native Merge Queue is available, otherwise squash-merge the eligible PR:
    ```sh
    gh pr merge <N> --squash --delete-branch
    ```
    When GitHub Merge Queue is enabled on `master`, this command automatically adds the PR to the merge queue (`merge_group` CI tests it against the latest `master` and any earlier queued PRs, then merges it without another review round). If `ci-ok` is still running on the exact head you already `PASS`-reviewed (outside the human-only fence), you may pass `--auto` (`gh pr merge <N> --squash --delete-branch --auto`); **never** arm `--auto` or enqueue your own family's PR, an unreviewed or `changes-requested` PR, a fork/outside PR, or any human-only governance/security fence PR.
-4. Remove `needs-review` and `reviewing:<self>` labels once merged or enqueued.
+5. Remove `needs-review` and `reviewing:<self>` labels once merged or enqueued.
+
+A future DIY queue should test a temporary integration candidate while preserving the reviewed PR head; a workflow that repeatedly updates PR branches reproduces the churn. Track the need and concrete design in #414. No queue may bypass independent review, exact-head checks or the human-only merge fence.
 
 ### 5. Continue productive reviews; escalate when stuck
 - If blocking issues are found: swap `needs-review` + `reviewing:<self>` -> `changes-requested` and list concrete blockers.
