@@ -73,6 +73,7 @@ export interface FxView {
   w: number;
   h: number;
   colorOf(owner: number): string;
+  cityGround?(id: number): Pt | null;
 }
 
 const easeOut = (k: number) => 1 - (1 - k) * (1 - k);
@@ -457,6 +458,25 @@ export function drawCombatFx(ctx: CanvasRenderingContext2D, plan: CombatPlan, t:
     if (on(at)) drawDeath(ctx, d, t, v, at);
   }
   for (const c of plan.captures) if (t >= c.t && t < c.t + CAPTURE_MS * 1.5 && on(c.at)) drawCapture(ctx, c, t, v);
+  // A short engraved fracture at the front of the city's ring, then falling masonry. No glow or particle emitter.
+  for (const b of plan.breaches) {
+    const dt = t - b.t;
+    if (dt < 0 || dt > 900 || !on(b.at)) continue;
+    const p = v.cityGround?.(b.city);
+    if (!p) continue;
+    const r = v.hexPx * 0.22;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - dt / 900);
+    ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, v.hexPx / 45);
+    ctx.beginPath();
+    ctx.moveTo(p.x - r * .25, p.y - r * .25);
+    ctx.lineTo(p.x + r * .08, p.y + r * .05);
+    ctx.lineTo(p.x - r * .10, p.y + r * .20);
+    ctx.lineTo(p.x + r * .22, p.y + r * .45);
+    ctx.stroke();
+    if (!v.far) debris(ctx, b.city, t, b.t + 120, p.x, p.y + r * .3, r * .55, 7, INK2);
+    ctx.restore();
+  }
   // Missiles in flight, all in three strokes: trails under shafts under heads.
   ctx.globalAlpha = 0.45; ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.stroke(trails);
   ctx.globalAlpha = 1; ctx.strokeStyle = VELLUM; ctx.lineWidth = 3.4; ctx.stroke(shafts);

@@ -47,6 +47,7 @@ import { pickerClick, pickerOpen, useAirPicker, useImproveOverlay, usePlacePicke
 import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from './orderMarks';
 import { CompassRose } from './CompassRose';
 import { placeCompass as compassPlace, type Rect } from './compass';
+import { observeHudLayout } from './hudObserver';
 import { gameplayFocusAllowed, gameplayKeyAllowed } from '../gameplayKeys';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { usePhoneLayout } from '../ui/usePhoneLayout';
@@ -712,29 +713,29 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   }, []);
 
   // Compass: keep clear of panels and the labels actually drawn in the current frame.
-  // Panel rects are sampled a few times a second rather than read every frame.
+  // Panel rects are updated when panels mount, resize, or toggle rather than polled on an interval.
   const placeCompass = () => {
     const el = compassRef.current;
     const v = frame.current.view;
     if (!el || !v) return;
     const { x, y, covered } = compassPlace(worldBounds(v), cam.current, size.current.w, size.current.h, [...panels.current, ...labels.current]);
-    el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-    el.classList.toggle('covered', covered);
+    const transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    if (el.style.transform !== transform) el.style.transform = transform;
+    if (el.classList.contains('covered') !== covered) el.classList.toggle('covered', covered);
   };
   useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const selector = '.game .panel, .game .vp, .game .report, .map-lenses, .advisor-card, .topbar';
     const sample = () => {
-      const wrap = wrapRef.current;
-      if (!wrap) return;
       const o = wrap.getBoundingClientRect();
-      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .map-lenses, .advisor-card, .topbar')].map((e) => {
+      panels.current = [...document.querySelectorAll(selector)].map((e) => {
         const r = e.getBoundingClientRect();
         return { x: r.left - o.left, y: r.top - o.top, w: r.width, h: r.height };
       });
       placeCompass();
     };
-    sample();
-    const t = window.setInterval(sample, 250);
-    return () => window.clearInterval(t);
+    return observeHudLayout(wrap, selector, sample);
   }, []); // placeCompass reads refs only
 
   // Draw loop.
@@ -997,9 +998,10 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       banners.current = bannerRects ?? [];
       bannerHits.current = hits ?? [];
       liftedHits.current = lifted ?? [];
-      placeCompass();
       const c = cam.current;
-      if (c.x !== lastCam.x || c.y !== lastCam.y || c.zoom !== lastCam.zoom) {
+      const camMoved = c.x !== lastCam.x || c.y !== lastCam.y || c.zoom !== lastCam.zoom;
+      if (!pulseOnly || camMoved) placeCompass();
+      if (camMoved) {
         lastCam = { x: c.x, y: c.y, zoom: c.zoom };
         placeInspector.current?.();
       }

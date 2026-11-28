@@ -34,7 +34,7 @@ export interface FxRoad { origin: Hex; t: number; reach: number; tiles: Map<numb
 export type SealKind = 'vp' | 'alliance' | 'peace' | 'war';
 export interface FxSeal { kind: SealKind; at: Hex; owner: number; vp: number; t: number; seed: number; /** Where it stands over its city: 0 above the banner, then left and right of it, so nothing overlaps. */ slot: number }
 /** Walls finished, or raised a level, in sight: light runs once along the town's new ring. */
-export interface FxWalls { city: number; at: Hex; tile: number; t: number }
+export interface FxWalls { city: number; at: Hex; tile: number; t: number; fromHp: number; toHp: number }
 /** A unit promoted or upgraded: a glint across its counter. */
 export interface FxGlint { unit: number; t: number; seed: number }
 export interface FxImprove { tile: number; hex: Hex; before: PlayerView['tiles'][number]['improvement']; t: number; seed: number }
@@ -289,9 +289,12 @@ export function buildMomentPlan(events: readonly Event[], before: PlayerView | n
   const walls: FxWalls[] = [];
   for (const c of after.cities) {
     const old = before.cities.find((x) => x.id === c.id);
-    if (!old || !old.visible || old.owner !== c.owner || !visible(c.pos) || wallTierOf(c) <= wallTierOf(old)) continue;
+    const damage = events.reduce((sum, e) => sum + (e.type === 'Battle' && e.defender.kind === 'City' && e.defender.city === c.id ? e.damage_to_defender : 0), 0);
+    const fromHp = Math.max(0, (old?.walls_hp ?? 0) - damage);
+    const repaired = events.some((e) => e.type === 'ProductionCompleted' && e.city === c.id && e.item.kind === 'Building' && e.item.building === 'UpgradeWalls');
+    if (!old || !old.visible || old.owner !== c.owner || !visible(c.pos) || (wallTierOf(c) <= wallTierOf(old) && (c.walls_hp ?? 0) <= fromHp && !repaired)) continue;
     const b = CONSTRUCTION_ANIMATION ? builds.find((x) => x.city === c.id && x.walls) : undefined;
-    walls.push({ city: c.id, at: c.pos, tile: tileIndex(c.pos, W, H), t: b ? b.t + buildPhases(b).done : econ + 250 + Math.min(walls.length * STAGGER, STAGGER_CAP) });
+    walls.push({ city: c.id, at: c.pos, fromHp, toHp: c.walls_hp ?? 0, tile: tileIndex(c.pos, W, H), t: b ? b.t + buildPhases(b).done : econ + 250 + Math.min(walls.length * STAGGER, STAGGER_CAP) });
   }
 
   if (!walls.length && !glints.length && !seals.length && !founds.length && !builds.length && !tiles.length && !flips.length && !grows.length && !roads.length && !improves.length && !reveals.length) return null;
@@ -309,6 +312,14 @@ export function buildMomentPlan(events: readonly Event[], before: PlayerView | n
     ...reveals.map((x) => x.t + RESOURCE_REVEAL_MS),
   ];
   return { total: Math.max(0, ...ends) + TAIL, founds, builds, tiles, flips, grows, roads, improves, reveals, seals, glints, walls, capitals };
+}
+
+/** A repaired Walls bar waits for its payoff, then fills with the existing light sweep. */
+export function repairedWallsHp(plan: MomentPlan, city: number, t: number): number | undefined {
+  const wall = plan.walls.find((x) => x.city === city && x.toHp > x.fromHp);
+  if (!wall) return undefined;
+  const k = Math.max(0, Math.min(1, (t - wall.t) / WALLS_MS));
+  return Math.round(wall.fromHp + (wall.toHp - wall.fromHp) * (1 - (1 - k) ** 2));
 }
 
 /** Is any moment still playing at `t`? */

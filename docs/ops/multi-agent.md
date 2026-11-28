@@ -33,7 +33,7 @@ If the maintainer says something like *"read the multi-agent instructions and fo
    - If your platform provides a tool to create recurring/scheduled tasks or automations (for example, ChatGPT/Codex scheduled tasks or Claude scheduled tasks), **check whether one already exists for `samcorcos/legatum`, and if not, create it automatically** using the Copy-paste heartbeat prompt below with your agent ID filled in.
    - If your environment has no scheduling tool, do not silently skip it — give the maintainer the exact 2-line setup instructions and pre-filled prompt for your platform so they can enable it in 10 seconds.
 3. **Sync and inspect the board:** run `git fetch origin`, `gh pr list --state open --limit 30`, and `gh issue list --state open --label agent:ready --limit 30`.
-4. **Run your first heartbeat immediately** following the priority order (`1 -> 6`) below, and report back concisely what you scheduled and what actions you took (or `idle`).
+4. **Run your first heartbeat immediately** following the priority order (`0 -> 6`) below, and report back concisely what you scheduled and what actions you took (or `idle`).
 
 ## Autonomous heartbeat (recurring check)
 
@@ -45,8 +45,8 @@ Use a **continuously replenished work queue while an execution is running**, wit
 
 On each wake-up, fetch `origin/master` and fill available slots with independent actionable tasks in this priority order. Keep **at most three tasks active per agent family across all executions**. Whenever a task finishes or is handed off as blocked, refresh the board and refill its slot immediately in priority order, without waiting for the other tasks or the next hour. There is no per-run or per-hour task quota. Work in parallel where supported; unblocking existing PRs beats starting new WIP.
 
-0. **Keep `master` deployable:** run `gh run list --branch master --limit 5 --json workflowName,conclusion,headSha,databaseId`. If the latest `deploy-web.yml` or `CI` run on `origin/master` failed and no open issue or PR already tracks that failure, inspect `gh run view <id> --log-failed`, open a concise `bug` + `claimed:<agent>` + `lane:*` issue, and fix it immediately (or escalate `needs-human` for infra, secrets, or hosting failures).
-1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, `headRepositoryOwner` is `samcorcos`, and no governance/security fence path is touched.
+0. **Keep `master` deployable:** query `CI` and `Deploy web` (`deploy-web.yml`) explicitly: `gh run list --branch master --workflow ci.yml --limit 2 --json workflowName,status,conclusion,headSha,databaseId` and `gh run list --branch master --workflow deploy-web.yml --limit 2 --json workflowName,status,conclusion,headSha,databaseId`. Treat pending or missing runs as **unverified** (not healthy), and inspect the last completed run when a new run is still in progress. If the latest completed `CI` or `Deploy web` run on `origin/master` failed and no open issue or PR already tracks that failure, inspect `gh run view <id> --log-failed` and prioritize a repair within the existing three-active-task and visible-claim rules (open a concise `bug` + `claimed:<agent>` + `lane:*` issue and Draft PR). Finish all independent diagnosis and preparation first; apply `needs-human` only when a concrete maintainer action or access is needed now, with evidence, options, and a recommendation.
+1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, `headRepositoryOwner` is `samcorcos`, including human-only PRs that need agent review; review those but never merge them.
 2. **Unblock your own PRs:** `gh pr list --state open --label author:<self>` that has `changes-requested`, a failing `ci-ok`, merge conflicts or a branch that fell behind `master` and needs updating, or a green ready PR that is missing `needs-review`.
 3. **Recover stale locks:** if any `reviewing:*` lock has had no comment or merge for >2 hours, release `reviewing:*` so another reviewer can pick it up. If a `claimed:*` Draft PR has had no commits or comments for >6 hours, post a brief status note or flag `needs-human` (never overwrite another agent's work silently).
 4. **Pick up a paused handoff:** `gh issue list --state open --label status:handoff` (or PRs with `status:handoff`).
@@ -68,7 +68,7 @@ On each wake-up, fetch `origin/master` and fill available slots with independent
 
 Anyone running Claude, ChatGPT/Codex, and Gemini on a GitHub repo can replicate this setup in four steps:
 
-1. **GitHub repository ruleset (`Protect master`):** Enable a branch ruleset on the default branch that blocks deletions and force-pushes, requires a pull request, requires a single aggregated CI status check (`ci-ok` from GitHub Actions), and turns on **Require branches to be up to date before merging** (`strict_required_status_checks_policy: true`). This mechanically prevents two agents from merging back-to-back PRs that were never tested together.
+1. **GitHub repository ruleset (`Protect master`):** Enable a branch ruleset on the default branch that blocks deletions and force-pushes, requires a pull request, requires a single aggregated CI status check (`ci-ok` from GitHub Actions), and requires the review check once activated. On this personal-account repository native Merge Queue is unavailable; `strict_required_status_checks_policy` is currently `false` to avoid forced branch-update/re-review churn. Do not change protection settings as part of a heartbeat. Use the interaction checks in guardrail 4; separate green PR checks do not prove their combined result was tested.
 2. **Claude (`:05` hourly — runs in the cloud):** In `claude.ai` (or Claude Code Desktop), open **Scheduled** -> **New task** -> **Set up manually** (formerly Routines). Attach the `samcorcos/legatum` repo (and any needed connectors), choose **Schedule -> Hourly at `:05`**, and paste the heartbeat prompt below with `claude`.
 3. **ChatGPT / Codex (`:25` hourly):** In the ChatGPT/Codex desktop app, create a **Scheduled task** (formerly Codex Automations) targeting `samcorcos/legatum` set to **Hourly at `:25`** with the heartbeat prompt below using `chatgpt`. Note: desktop scheduled tasks require the machine to stay awake; for laptop-closed execution, schedule `codex cloud exec` or `codex exec` on an always-on host.
 4. **Gemini / Antigravity (`:45` hourly):** In the Antigravity app, open **Automations** (formerly Scheduled Tasks) -> **New automation**, select the `samcorcos/legatum` project, set **Hourly at `:45`**, and paste the heartbeat prompt below with `gemini`. Each run creates a sidebar conversation you can step into if `needs-human` is raised.
@@ -90,9 +90,10 @@ Run one autonomous heartbeat on samcorcos/legatum as <claude|chatgpt|gemini>:
 ## Pre-flight check (mandatory before starting any task)
 
 1. Fetch the latest trunk: `git fetch origin`.
-2. Inspect active work and `master` health so you do not duplicate or miss a broken deploy:
+2. Inspect active work and `master` health (`CI` and `Deploy web`) so you do not duplicate or miss a broken deploy:
    ```sh
-   gh run list --branch master --limit 5
+   gh run list --branch master --workflow ci.yml --limit 2
+   gh run list --branch master --workflow deploy-web.yml --limit 2
    gh pr list --state open --limit 30
    gh issue list --state open --label agent:ready --limit 30
    ```
@@ -121,13 +122,45 @@ Split parallel work across disjoint lanes whenever possible:
 | `author:claude` / `author:chatgpt` / `author:gemini` | Identifies which model family authored the PR (required because all agents may share one GitHub account). |
 | `needs-review` | Author finished implementation and CI is green; ready for a different model family (`reviewer != author`) to review and merge. |
 | `reviewing:claude` / `reviewing:chatgpt` / `reviewing:gemini` | Active peer-review lock so two reviewers do not review/merge the same PR simultaneously. |
-| `changes-requested` | Peer reviewer found blocking issues; author should address them (max 2 rounds). |
+| `changes-requested` | Peer reviewer found blocking issues; author should address them while review is making progress. |
 | `status:handoff` | WIP pushed to a branch with a Handoff Comment; ready for another agent to continue. |
 | `mode:bakeoff` | Multiple agents solve the same issue on separate Draft PRs from the same base commit for comparison. |
-| `needs-human` | Requires the maintainer (human-only governance/security fence, unsettled design question, outside PR, or 2+ failed review rounds). Direct notification is mandatory; see below. |
+| `needs-human` | Actionable human decision or merge needed now, after agent preparation and a readable recommendation. Never a marker for eventual human involvement. See readiness criteria below. |
 | `lane:core` / `lane:ai` / `lane:ui` / `lane:docs` | Primary area touched (determines collision risk). |
 
-### Human escalation: notify the maintainer directly
+### Human escalation: an actionable inbox
+
+`needs-human` means the maintainer can act **now** (user, 2026-11-28). Do not add it when opening a governance PR or merely predicting a future human merge. Use Draft/`claimed:*` during implementation, `changes-requested` during fixes and `needs-review` during agent review, including governance PRs. Identify the human-only merge restriction in the PR body; no extra interim label is needed, and absence of `needs-human` never authorizes an agent merge.
+
+Before adding `needs-human` for a merge decision, finish implementation, obtain required independent and specialist reviews on the current head, verify green CI and merge readiness, and post the readable summary with agent recommendations and the concrete human action. Then remove `needs-review` and notify the maintainer. A queued review, running CI or an agent-fixable failure is not a human action.
+
+For an actual blocking decision/access problem or stuck review, finish every review/check that can proceed independently first, prepare the evidence, options and recommendation, and explicitly identify what cannot complete without that decision. Do not demand a passing approval for the very disagreement being escalated. Escalate only when the decision is ready for the maintainer now, not for a future evaluation date.
+
+Remove `needs-human` when its action is resolved or a new revision invalidates merge readiness, and route back to the appropriate agent state. Restore it only when the current revision is decision-ready again. Reassess older labels using these criteria without repeating unchanged notifications.
+
+### Issue decisions use the same actionable inbox
+
+For issue tickets, `needs-human` also means a decision is ready now, after agent evaluation (maintainer, 2026-11-28). `needs-review` routes agent review; it is not a second human inbox. Resolve issues autonomously when existing authority and settled policy suffice. Do not escalate every suggestion simply because it is new.
+
+Before escalating a feature proposal, faction idea or other unresolved choice, inspect the relevant code, rules and settled design guidance, complete applicable reviews, and post a readable issue comment containing:
+- **Proposal/problem:** what is being requested and why it matters, in plain language.
+- **Agent recommendation and rationale:** implement, reject/close, revise, defer, or choose a specific option. Name the agent, explain the tradeoffs and evidence, and distinguish judgment from measured results. Include actual differing agent opinions when present; do not invent consensus or require multiple agents for every ticket.
+- **Decision needed:** the precise question only the maintainer can resolve, with options and a recommended next step. State missing evidence or inaccessible design context and how it limits the recommendation.
+
+For a proposed faction, assess its identity, distinctive rule, compensating drawback, strategic counters and fit with settled design. A plausible idea is not automatically a good addition; recommend rejection or revision when warranted, without claiming unrun balance simulations. The issue recommendation is about whether/how to proceed, not whether to merge code. Issue decisions do not require PR commit hashes or CI unless those are relevant to the decision.
+
+Once that preparation is complete, add `needs-human` and notify the maintainer. After a decision, remove the label and close, revise or route approved scoped work to `agent:ready` as appropriate. Record the maintainer's reasoning and corrections in the matching skill (and the design decision log when applicable), distinguishing their decision from the agent's earlier recommendation, so future autonomous decisions use the feedback. Recommendations should expose the agent's judgment for calibration, not merely repeat the proposal.
+
+### Notify the maintainer directly
+
+When handing a PR to the maintainer, finish with a readable top-level conversation comment. Lead with what the change does for the game or workflow and the recommendation, not process jargon. Include:
+- **What changes:** one or two plain-language sentences explaining the behavior and benefit.
+- **Agent recommendations:** each involved model family's actual recommendation (merge, request changes, or not yet reviewed), distinguishing author recommendation from independent review. Say “Gemini and ChatGPT recommend merging” only when both actually do for the current revision; link the supporting reviews. Do not imply consensus from labels, passing CI or an outdated approval.
+- **Checks and remaining concerns:** concise current-head check status, unresolved findings and material limitations. Name the reviewed commit so later changes cannot silently inherit the recommendation.
+- **Your action:** the concrete decision or merge needed and why it requires a human.
+
+Make this the final handoff comment from the agent at that point; do not continually repost it just to keep it last when bots or others comment. Update the summary when the revision, recommendations or requested action materially changes. This readable summary supplements canonical review verdicts; it never substitutes for them or waives a gate.
+
 
 Whenever work needs human input or action, including every `needs-human` escalation, **assign the relevant issue or PR to `samcorcos`, or post a comment that directly mentions `@samcorcos`**. A label or an agent-chat status alone is not a handoff. Make the notification on GitHub so the maintainer can find the request in assigned work or notifications.
 
@@ -144,7 +177,7 @@ Because Claude, ChatGPT, and Gemini may authenticate via the same GitHub user, e
 - Before claiming a review (`needs-review` -> add `reviewing:<self>`), verify **`my_agent != author_agent`**. Never review or merge your own model family's PR.
 
 ### 2. Human-only fence (never peer-merged by agents)
-Do **not** merge autonomously — review if helpful, then label `needs-human`, notify the maintainer directly as above, and stop — if a PR matches **any** of these:
+Do **not** merge autonomously if a PR matches **any** of these. Complete permissible agent review and preparation first; apply `needs-human` and notify the maintainer only when the action is ready under the criteria above:
 - **Outside / fork PR:** `headRepositoryOwner != samcorcos` or branch is not an agent branch (`claude/*`, `chatgpt/*`, `gemini/*`).
 - **Governance or security paths:** touches `.github/workflows/`, `tools/gates/`, `infra/`, `SECURITY.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or `docs/ops/multi-agent.md`.
 - **Unsettled design / new mechanic** that requires reading the private Design Doc and has no Claude `legatum-design-reviewer` verdict or maintainer sign-off.
@@ -155,37 +188,77 @@ Default stance is **skeptical**, never polite rubber-stamping. Read the **full d
 1. **Philosophy & game alignment:** Does this fit `CLAUDE.md`'s 11 pillars, `.claude/agents/legatum-design-reviewer.md`, and `.claude/skills/legatum-design/SKILL.md` (no contradicted decisions or re-proposed rejected ideas; serves explore -> expand -> build -> compete)?
 2. **Simplicity & anti-bloat (Pillar 1 / 3 / 9):** Does this earn its complexity? Reject scope creep, speculative abstractions, unnecessary settings/flags, and UI clutter. Prefer deleting or simplifying over adding knobs.
 3. **Correctness & security:** Full diff checked for bugs, determinism violations (`crates/core`), missing tests (fail-before / pass-after), secrets/personal data, or unsafe patterns.
-4. **Gates & CI:** Confirm `ci-ok` is `SUCCESS` on the **exact** head commit SHA, and every reviewer required by `tools/gates/check.py` (docs, plain-language, UI, art, advisor, design) has a `PASS` comment naming that exact head SHA.
+4. **Gates & CI:** Confirm `ci-ok` is `SUCCESS` on the **exact** head commit SHA, and every reviewer required by `tools/gates/check.py` (docs, plain-language, UI, art, advisor, design) has a canonical `PASS` comment naming that exact head SHA. Confirm the required `peer-review` check passes before merging.
 
-Post a signed comment in this exact format:
+Post a review as a **top-level PR conversation comment** using this exact format (no enclosing code fence). Replace the family and full 40-character lowercase SHA; include only specialist roles actually performed. A specialist-only review can omit `peer: PASS`. Keep verdict lines together above the blank line, followed by nonempty findings:
 
-```markdown
-Peer-review (<reviewer_agent> reviewing <author_agent>) at <full_head_sha>
+```text
+Legatum review: gemini at <full_head_sha>
+peer: PASS
+legatum-docs-reviewer: PASS
 
-- **Philosophy & alignment:** <specific check against CLAUDE.md pillars / legatum-design>
-- **Simplicity & anti-bloat:** <does it earn its complexity? any scope creep or deletable code?>
-- **Correctness & tests:** <diff findings and test coverage>
-- **Gates & CI:** `ci-ok` <status> at `<short_sha>`; `tools/gates/check.py` required reviewers: <list / satisfied>
-- **Verdict:** <PASS — merging | REQUEST CHANGES — blockers listed | NEEDS HUMAN — reason>
+Philosophy & alignment: <specific checks against the pillars and settled decisions>
+Simplicity & anti-bloat: <what was simplified or why the remaining complexity is needed>
+Correctness & tests: <findings and evidence>
+Gates & CI: ci-ok passed at <full_head_sha>; required reviewers: <roles / satisfied>
+Written by Gemini (Google).
 ```
 
-*(If your review also fulfills a required reviewer role from `tools/gates/check.py` that you actually executed — e.g. `legatum-docs-reviewer`, `legatum-design-reviewer`, `legatum-plain-language-reviewer` — name that role and the exact head SHA explicitly in the comment so `check.py --pr-comments` recognizes it.)*
+Use `FAIL` instead of `PASS` for blocking findings. Name the applicable role(s), or `peer` for the overall peer review. The lead may relay a specialist's actual verdict under the lead's family; doing so does not make it independent peer approval. A review covers only that commit; never copy an old verdict onto a new SHA without reviewing the changes. After a clean update from master, review the merge delta and interactions with the new base, then issue a new current-head verdict. Reuse earlier specialist evidence when the relevant implementation is unchanged; do not repeat an entire UI tour solely because the SHA changed. A matching patch alone cannot prove that changed base code is compatible, so approval is never carried forward automatically.
 
-### 4. Prevent concurrent merge races
+“Signed” means attributed to the declared model family, not a cryptographic signature. All contributing families must have `author:<family>` labels, including after a handoff. An agent peer must differ from **every** contributing family; specialist reviews may come from an author's family. The maintainer may instead personally approve using `human` as described below; agents must never declare themselves human or relay an agent review under that identity.
+
+### Required `peer-review` check
+
+The `Peer review` workflow publishes a check named `peer-review` on the current PR head. Once configured as required alongside `ci-ok`, GitHub blocks ordinary merges until both pass. On `merge_group` events (when GitHub Merge Queue is enabled), `peer-review.yml` resolves every constituent PR in the queue entry, validates each PR's exact reviewed head SHA using the same trusted evaluator, and publishes the aggregated `peer-review` check on the merge-group commit. Labels such as `needs-review` route work; they do not approve a PR. GitHub may still display a disabled merge control, and administrator bypass settings are unchanged.
+
+The evaluator reads current comments on PR open/reopen, new commits, relevant PR/label changes, and comment creation/edit/deletion. It accepts only the canonical format above, posted by the configured trusted GitHub account (`samcorcos`), and only verdicts naming the exact current SHA. It requires every specialist listed by the trusted default branch's `tools/gates/check.py` plus an independent agent peer PASS or an explicit maintainer PASS. For each family/role the most recently updated verdict wins; outstanding FAIL verdicts block until that family clears them. `changes-requested` also blocks until addressed and removed. Removing or editing an approval causes reevaluation; as with CI, event processing is asynchronous.
+
+`check.py --pr-comments` remains a legacy specialist sanity check with permissive matching; it cannot certify the required `peer-review` check or independent approval. Only top-level conversation comments count; inline comments, formal review bodies, labels, abbreviated SHAs, quoted examples, and older free-form signed comments do not. Agents must post the canonical comment after actually performing the review. Model identity remains self-declared because accounts are shared: this is an accidental-merge safeguard, not proof of which model ran. Do not create a separate “approved” label.
+
+The write-enabled workflow checks out `master` and reads PR git objects as data; it never executes code from the PR. It reads all comment pages, marks the check in progress before evaluating, fails the initialized check on evaluation errors, and checks for changes before publishing success. A GitHub outage before the check can be initialized cannot revoke an earlier passing result; wait for successful reevaluation before merging after a review changes. Closed or merged PRs are skipped before creating a check, so later conversation does not turn their head checks red. Publishing an ordinary missing-review result completes the workflow successfully while the head-bound `peer-review` check remains unsuccessful; evaluator/API errors still fail the workflow. Its check does not replace `ci-ok`, the five guardrails, human-only merge decisions, or a substantive review. Governance/security PRs can pass the check but must still be merged by the maintainer. Forks, outside authors, missing or inconsistent author labels, and branches outside the agent naming convention require explicit human approval instead of an agent peer PASS. The trusted classifier still reads their git objects as data and never executes their code. These PRs remain human-merged under guardrail 2.
+
+**Maintainer approval without administrator bypass:** the actual maintainer, using the trusted `samcorcos` account, can post the following top-level comment for the current commit. Include every required specialist role only after personally performing or verifying that review; a human peer PASS alone does not waive specialist checks or unresolved FAIL verdicts. This also permits review of human-authored or fork PRs without changing the ruleset. Because accounts are shared, `human` is an explicit authorship convention, not cryptographic proof of a human; agents must not use it.
+
+```text
+Legatum review: human at <full_head_sha>
+peer: PASS
+legatum-docs-reviewer: PASS
+
+<What I reviewed, evidence, and why I approve this exact commit.>
+```
+
+**One-time activation (maintainer):**
+
+1. Review and merge the workflow PR under the existing human-only policy. The new workflow must be on `master` before its comment triggers can run; do not require a nonexistent check for this bootstrap PR.
+2. In **Actions → Peer review → Run workflow**, choose `master` and enter an open agent PR number. Confirm its `peer-review` check appears on the PR. It should fail if required approvals are absent. Repeat for existing open PRs; future PR events initialize it automatically.
+3. In **Settings → Rules → Rulesets → [Protect master](https://github.com/samcorcos/legatum/settings/rules/27857382)**, enable **Require status checks to pass**, preserve all existing required checks including `ci-ok`, and add **`peer-review`**, selecting GitHub Actions as its source where available. Save without changing administrator bypass behavior.
+4. Verify an unreviewed PR reports merging blocked by `peer-review`. After genuine current-commit approvals arrive, verify the check passes and ordinary merging becomes available when all other requirements pass. A new commit must require new reviews.
+
+If a run fails or a comment was posted using an Actions `GITHUB_TOKEN` (which does not trigger another Actions workflow), use the same **Run workflow** control to reevaluate current state. Do not rerun an old approval or remove the required check to treat a missing review as passed. Repository administration permission is required to change required checks; merging this code alone does not activate branch protection.
+
+### 4. Serialize merges without unnecessary branch updates
 Before merging:
-1. Confirm the PR is not a draft, has no merge conflicts, and is up to date with `origin/master`.
-2. If `origin/master` moved since CI ran and both sides changed code, update the branch (`gh pr update-branch <N>`) and wait for `ci-ok` to go green on the new head SHA before merging (re-confirming the diff if conflict resolution occurred).
-3. Merge cleanly with squash commit and delete the branch:
+1. Confirm the PR is not a draft, has no merge conflicts, and `ci-ok` is `SUCCESS` on the exact head SHA you reviewed.
+2. **Do not speculatively run `gh pr update-branch` on open PRs just because `master` moved** — that churns CI and invalidates exact-head reviews. The absence of native Merge Queue is not a reason to update. Integrate master only for actual conflicts (`DIRTY`), a concrete compatibility concern requiring combined validation, or an enforced branch-protection requirement. Being behind master alone does not invalidate a reviewed head.
+3. Before each merge, refetch master and inspect changes since the PR's merge base for interactions with the reviewed diff: shared APIs, callers, dependencies, configuration, rules and generated artifacts, not merely overlapping filenames. If unrelated, record the inspected base/head and short rationale in the existing review or handoff, retain current-head approvals, and do not push a synchronization commit or rerun unchanged specialist work. If related or uncertain, integrate and run relevant checks; review the integration delta and affected behavior, reusing still-applicable evidence. Any changed PR head still needs exact-head CI and canonical verdicts; never automatically copy approval to a different SHA. An unrelated master advance alone must not remove `needs-human` from an otherwise decision-ready PR.
+4. Merge serially with an expected-head check, refetching master and reassessing any intervening changes before each merge. This reduces collisions but is not an atomic lock across providers; post-merge CI remains necessary. Enqueue when native Merge Queue is available, otherwise squash-merge the eligible PR:
    ```sh
    gh pr merge <N> --squash --delete-branch
    ```
-4. Remove `needs-review` and `reviewing:<self>` labels (if GitHub did not auto-close them cleanly).
+   When GitHub Merge Queue is enabled on `master`, this command automatically adds the PR to the merge queue (`merge_group` CI tests it against the latest `master` and any earlier queued PRs, then merges it without another review round). If `ci-ok` is still running on the exact head you already `PASS`-reviewed (outside the human-only fence), you may pass `--auto` (`gh pr merge <N> --squash --delete-branch --auto`); **never** arm `--auto` or enqueue your own family's PR, an unreviewed or `changes-requested` PR, a fork/outside PR, or any human-only governance/security fence PR.
+5. Remove `needs-review` and `reviewing:<self>` labels once merged or enqueued.
 
-### 5. Max 2 review rounds (no infinite ping-pong)
+A future DIY queue should test a temporary integration candidate while preserving the reviewed PR head; a workflow that repeatedly updates PR branches reproduces the churn. Track the need and concrete design in #414. No queue may bypass independent review, exact-head checks or the human-only merge fence.
+
+### 5. Continue productive reviews; escalate when stuck
 - If blocking issues are found: swap `needs-review` + `reviewing:<self>` -> `changes-requested` and list concrete blockers.
 - Keep `author:<agent>` on the PR. Address the author by canonical agent ID in the review and give an actionable revision checklist; that author's next heartbeat picks up its own `changes-requested` PR under priority 2. There is no assumed GitHub bot account to @mention for a model. Use `status:handoff` instead when transferring unfinished implementation to a different agent, with the Handoff Comment below. Neither label bypasses a human-only merge fence.
 - When the author fixes them and CI is green on the new head SHA, the author swaps `changes-requested` -> `needs-review`.
-- If a PR still fails peer review after **2 rounds**, stop iterating, swap to `needs-human`, and summarize the disagreement with a direct maintainer notification as above.
+- **No fixed round limit** (maintainer, 2026-11-28). Continue when revisions resolve findings, experiments add useful evidence, or remaining work is concrete and reasonably bounded. Another round, a newly discovered issue, or a corrected documentation omission is not by itself a reason to escalate.
+- Exercise judgment after each review: what changed, what remains, and is the next attempt likely to move this toward resolution? Put that assessment in the existing review or revision comment; do not add a separate tracking system. Reviewers should consolidate known blockers early and acknowledge findings they missed previously.
+- Escalate when the same substantive disagreement repeats without new evidence, revisions cycle or stop reducing blockers, likely remaining effort is unreasonable for the benefit, or resolution needs a human decision/access. Do not keep trying indefinitely merely because another approach is imaginable. Set `needs-human`, notify the maintainer once, and summarize the attempts, unresolved question and recommended next step. Human-only fences always prohibit agent merge; apply the action-readiness criteria before escalating.
+- For PRs escalated solely because of the former round cap, reassess the latest revision. If there is a concrete productive next step and no other human-only reason, explain the reassessment, remove that obsolete `needs-human` reason and resume the normal review/fix flow. Never clear a current FAIL without actually reviewing the fix, or waive exact-head verdicts, CI, independence or merge-race safeguards.
 
 ## Other work modes
 
@@ -194,7 +267,7 @@ Whenever the maintainer asks an agent directly in chat to make a change to the r
 1. Run the pre-flight check (`gh pr list` / `gh issue list`) to verify no other agent is already working on it and that you do not violate the `lane:core` lock.
 2. If no GitHub issue exists yet, **open a concise GitHub Issue first** (using the brief format below) labeled `claimed:<agent>` + `lane:*` (keeping personal details, secrets, and quota/budget numbers out).
 3. Cut branch `<agent>/<slug>` from `origin/master` and open a **Draft PR** immediately with `author:<agent>`, `lane:*`, and `Refs #<issue>` (switching to `Fixes #<issue>` when ready) so the other two agents see the lock via `gh pr list` and can pick up a `status:handoff` or peer-review it.
-4. When done and `ci-ok` is green, mark **Ready for review** and swap `claimed:<agent>` -> `needs-review` (or `needs-human` if it hits the human-only fence).
+4. When done and `ci-ok` is green, mark **Ready for review** and swap `claimed:<agent>` -> `needs-review` including human-only PRs; add `needs-human` only after review and preparation make the human action ready.
 
 ### Normal parallel claim (`agent:ready`)
 1. Pick an unclaimed issue in a lane that does not collide with open PRs.

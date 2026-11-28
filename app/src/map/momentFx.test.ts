@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILD_MS, CONSTRUCTION_ANIMATION, FLIP_MS, FOUND, LINGER, WALLS_MS, buildMomentPlan, buildPhases, holdAt, momentTime, momentsLive, movesEnd } from './momentFx';
+import { BUILD_MS, CONSTRUCTION_ANIMATION, FLIP_MS, FOUND, LINGER, WALLS_MS, buildMomentPlan, buildPhases, holdAt, momentTime, momentsLive, movesEnd, repairedWallsHp } from './momentFx';
 import { buildCombatPlan } from './combatFx';
 import { tileIndex } from '../hex';
 import type { Event, Hex, PlayerView } from '../types';
@@ -222,4 +222,31 @@ describe('payoff moments plan', () => {
     expect(plan.glints).toEqual([expect.objectContaining({ unit: 3 })]);
     expect(plan.glints[0].t).toBeGreaterThan(600);
   });
+});
+
+
+it('glints and refills repaired Walls at the same level, but not a captured or hidden city', () => {
+  const old = view(tiles(), [{ id: 4, owner: 0, pos: CITY }]);
+  Object.assign(old.cities[0], { walls: true, walls_level: 9, walls_hp: 80, walls_max_hp: 500 });
+  const after = { ...old, cities: [{ ...old.cities[0], walls_hp: 500 }] };
+  const plan = buildMomentPlan([], old, after, 0)!;
+  expect(plan.walls).toHaveLength(1);
+  expect(repairedWallsHp(plan, 4, 0)).toBe(80);
+  expect(repairedWallsHp(plan, 4, plan.walls[0].t + WALLS_MS / 2)).toBeGreaterThan(80);
+  expect(repairedWallsHp(plan, 4, plan.total)).toBe(500);
+  expect(buildMomentPlan([], old, { ...after, cities: [{ ...after.cities[0], owner: 2 }] }, 0)?.walls ?? []).toHaveLength(0);
+  old.cities[0].visible = false;
+  expect(buildMomentPlan([], old, after, 0)?.walls ?? []).toHaveLength(0);
+});
+
+
+it('starts a same-turn repair from the Walls left after combat, not their pre-turn value', () => {
+  const old = view(tiles(), [{ id: 4, owner: 0, pos: CITY }]);
+  Object.assign(old.cities[0], { walls: true, walls_level: 9, walls_hp: 100, walls_max_hp: 500 });
+  const after = { ...old, cities: [{ ...old.cities[0], walls_hp: 500 }] };
+  const damage = { type: 'Battle', defender: { kind: 'City', city: 4, owner: 0 }, damage_to_defender: 70 } as Event;
+  const plan = buildMomentPlan([damage], old, after, 600)!;
+  expect(plan.walls[0].fromHp).toBe(30);
+  expect(repairedWallsHp(plan, 4, plan.walls[0].t)).toBe(30);
+  expect(repairedWallsHp(plan, 4, plan.total)).toBe(500);
 });

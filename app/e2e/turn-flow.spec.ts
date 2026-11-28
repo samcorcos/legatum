@@ -1,6 +1,7 @@
+import type { Page } from '@playwright/test';
 import { newestAutosave, newestGameState } from './autosave';
 import { test, expect } from './fixtures';
-import { endPlanning } from './turnActions';
+import { dismissInterstitials, endPlanning } from './turnActions';
 import { turnFlowFixture } from '../src/test/turnFlowFixture';
 import { coreFixture } from '../src/test/coreFixture';
 
@@ -164,4 +165,77 @@ test('the turn button counts the selected last idle unit, then the selected idle
   if (await page.locator('dialog.tech-modal').isVisible()) await page.keyboard.press('Escape');
   await expect(page.locator('[data-game-map]')).toBeFocused();
   await expect(page.getByTestId('turn-number')).toHaveText('2');
+});
+
+type QueuedCard = { testId: 'era-takeover' | 'score-check' | 'meeting-takeover'; people?: string; era?: string; label: string };
+
+async function mountInterstitialQueue(page: Page, queue: QueuedCard[]) {
+  await page.goto('about:blank');
+  await page.setContent('<div id="lane"></div>');
+  await page.evaluate((cards) => {
+    const lane = document.getElementById('lane')!;
+    const dismissed: string[] = [];
+    (window as unknown as { __dismissed: string[] }).__dismissed = dismissed;
+    let index = 0;
+    const render = () => {
+      lane.replaceChildren();
+      const card = cards[index];
+      if (!card) return;
+      const el = document.createElement('div');
+      el.setAttribute('data-testid', card.testId);
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', card.label);
+      if (card.people) el.setAttribute('data-people', card.people);
+      if (card.era) el.setAttribute('data-era', card.era);
+      el.textContent = card.label;
+      if (card.testId === 'score-check') {
+        const btn = document.createElement('button');
+        btn.setAttribute('data-primary-action', '');
+        btn.textContent = 'Continue';
+        btn.addEventListener('click', advance);
+        el.appendChild(btn);
+      }
+      lane.appendChild(el);
+    };
+    const advance = () => {
+      const card = cards[index];
+      if (!card) return;
+      dismissed.push(`${card.testId}:${card.people ?? card.era ?? ''}`);
+      index += 1;
+      render();
+    };
+    window.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const card = cards[index];
+      if (card && (card.testId === 'era-takeover' || card.testId === 'meeting-takeover')) {
+        e.preventDefault();
+        advance();
+      }
+    }, true);
+    render();
+  }, queue);
+}
+
+test('dismissInterstitials drains consecutive meetings and era/score-to-meeting queues', async ({ page }) => {
+  await mountInterstitialQueue(page, [
+    { testId: 'meeting-takeover', people: 'rome', label: 'You meet Rome' },
+    { testId: 'meeting-takeover', people: 'sparta', label: 'You meet Sparta' },
+  ]);
+  await dismissInterstitials(page);
+  expect(await page.evaluate(() => (window as unknown as { __dismissed: string[] }).__dismissed)).toEqual([
+    'meeting-takeover:rome',
+    'meeting-takeover:sparta',
+  ]);
+
+  await mountInterstitialQueue(page, [
+    { testId: 'era-takeover', era: '2', label: 'The Classical era begins' },
+    { testId: 'score-check', era: '2', label: 'Score check: the Classical Age begins' },
+    { testId: 'meeting-takeover', people: 'egypt', label: 'You meet Egypt' },
+  ]);
+  await dismissInterstitials(page);
+  expect(await page.evaluate(() => (window as unknown as { __dismissed: string[] }).__dismissed)).toEqual([
+    'era-takeover:2',
+    'score-check:2',
+    'meeting-takeover:egypt',
+  ]);
 });
