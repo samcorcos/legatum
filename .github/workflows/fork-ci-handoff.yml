@@ -32,4 +32,6 @@ jobs:
       - name: Update fork PR handoff labels
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
         run: python3 tools/gates/fork_ci_handoff.py
