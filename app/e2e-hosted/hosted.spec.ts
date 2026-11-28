@@ -6,6 +6,7 @@
 // lands in the real bucket, and checks that the game was sent.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { setMapSeed } from '../e2e/mapSeed';
 import { dismissInterstitials, endPlanning } from '../e2e/turnActions';
 import type { useGame } from '../src/store';
 import type { Hex } from '../src/types';
@@ -231,18 +232,18 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
 
   // The licence notices open inside the Credits.
   await page.getByRole('button', { name: /^How to Play/ }).click();
-  await page.getByRole('navigation', { name: 'Guide chapters' }).getByRole('button', { name: /Credits/ }).click();
+  await page.getByRole('navigation', { name: 'How to Play chapters' }).getByRole('button', { name: /Credits/ }).click();
   await expect(page.getByText('not affiliated with or endorsed by Take-Two Interactive or Firaxis Games')).toBeVisible();
   await page.getByText('Open-source licences', { exact: true }).click();
   await expect(page.locator('.guide-licences pre')).toContainText('Legatum: third-party licence notices');
-  await page.getByRole('button', { name: 'Close guide' }).click();
+  await page.getByRole('button', { name: 'Close How to Play' }).click();
 
   // Single player on a small map, as Athens.
   await page.getByRole('button', { name: /^Single Player/ }).click();
   await expect(page.getByRole('heading', { name: 'Single Player', exact: true })).toBeVisible();
   await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
-  await page.getByRole('radiogroup', { name: 'AI level (all AI empires)', exact: true }).getByRole('radio', { name: /^Easy/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await page.getByRole('radiogroup', { name: 'AI level', exact: true }).getByRole('radio', { name: /^Easy/ }).click();
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Seat 1 faction:/ }).click();
   const picker = page.locator('dialog[data-testid="faction-stage"][open]');
   await picker.getByRole('option', { name: /Athens/ }).click();
