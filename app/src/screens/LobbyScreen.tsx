@@ -143,6 +143,8 @@ export function LobbyScreen() {
     }
     const setup = buildSetup(lobby);
     if (mode === 'host') { hostNewGame(setup); return; }
+    // Observer games do not overwrite the player's human autosave, so start immediately.
+    if (lobby.observer) { startGame(setup, { training: false }); return; }
     // A saved game is only replaced after asking; the new game's first save is what replaces it.
     if (checking.current) return;
     checking.current = true;
@@ -164,7 +166,7 @@ export function LobbyScreen() {
         ))}
       </div>
       <button className="btn big primary lobby-go" disabled={blockers.length > 0 || !!busy} onClick={start}>
-        {busy ? busy : mode === 'host' && !room ? 'Host the game' : 'Start game'}
+        {busy ? busy : mode === 'host' && !room ? 'Host the game' : lobby.observer ? 'Watch AI vs AI' : 'Start game'}
         <span className="btn-sub">
           {activeCount(lobby)} empires · {mapSizeLabel(lobby.mapSize).toLowerCase()} map
         </span>

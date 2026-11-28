@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { offeredLevels, DIFFICULTY_INFO, MAP_SIZES, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type MapSizeId } from '../../lobby';
+import { offeredLevels, DIFFICULTY_INFO, MAP_SIZES, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, setObserver, type AiLevel, type Lobby, type MapSizeId } from '../../lobby';
 import { randomSeed } from './randomSeed';
 
 const LEVEL_SUB: Record<AiLevel, string> = { Easy: 'Forgiving', Normal: 'Standard', Hard: 'Ruthless', Training: 'Research tool' };
@@ -93,14 +93,20 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
         if (seedNeedsFix && !e.currentTarget.open) e.currentTarget.open = true;
         else setAdvancedOpen(e.currentTarget.open);
       }}>
-        <summary onClick={(e) => { if (seedNeedsFix) e.preventDefault(); }}>Advanced settings{lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
+        <summary onClick={(e) => { if (seedNeedsFix) e.preventDefault(); }}>Advanced settings{lobby.observer ? <span className="lobby-advanced-on"> · AI vs AI observer</span> : lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
         {change && lobby.mode !== 'host' && (
+          <Segmented label="AI vs AI observer" value={lobby.observer ? 'On' : 'Off'} options={[
+            { id: 'Off', label: 'Off', sub: 'Play normally' },
+            { id: 'On', label: 'On', sub: 'Watch all AI empires' },
+          ]} onChange={(value: 'On' | 'Off') => onChange(setObserver(lobby, value === 'On'))} />
+        )}
+        {change && lobby.mode !== 'host' && !lobby.observer && (
           <Segmented label="Coach questions" value={lobby.training ? 'On' : 'Off'} options={[
             { id: 'Off', label: 'Off', sub: 'Play normally' },
             { id: 'On', label: 'On', sub: 'Asks why you differ from Hard' },
           ]} onChange={(value: 'On' | 'Off') => onChange?.(value === 'On' ? { ...setDifficulty(lobby, 'Hard'), training: true } : { ...lobby, training: false })} />
         )}
-        {change && lobby.mode !== 'host' && lobby.training && <div className="muted lobby-level-note" data-testid="training-note">The AI empires play Hard. In the background Hard also plays your seat; when you do something very different from it, a question asks why and you answer in a text box. Answers are saved on this computer.</div>}
+        {change && lobby.mode !== 'host' && !lobby.observer && lobby.training && <div className="muted lobby-level-note" data-testid="training-note">The AI empires play Hard. In the background Hard also plays your seat; when you do something very different from it, a question asks why and you answer in a text box. Answers are saved on this computer.</div>}
         <div className="lobby-field">
           <div className="lbl">Map seed</div>
           <div className="seed">

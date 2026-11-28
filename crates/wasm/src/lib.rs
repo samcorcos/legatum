@@ -481,6 +481,10 @@ impl Game {
         Ok(json)
     }
 
+    pub fn observer_view_json(&self) -> Result<String, String> {
+        to_json(&legatum_core::view::observer_view(&self.session.state))
+    }
+
     pub fn validate_json(&self, player: u8, orders_json: &str) -> Result<String, String> {
         let p = self.check_player(player)?;
         let orders: Vec<Order> =
@@ -1077,6 +1081,11 @@ impl Game {
     /// PlayerView JSON for `player`.
     pub fn view(&self, player: u8) -> Result<String, JsError> {
         js(guard(|| self.view_json(player)))
+    }
+
+    /// Omniscient PlayerView JSON for AI-vs-AI observer mode.
+    pub fn observer_view(&self) -> Result<String, JsError> {
+        js(guard(|| self.observer_view_json()))
     }
 
     /// `Vec<OrderError>` JSON for a list of orders.
@@ -2216,6 +2225,62 @@ mod bicycle_two_tests {
                 .unwrap(),
             units_can_reach_for_view(&view, &ids_json, pos.q, pos.r).unwrap()
         );
+    }
+
+    #[test]
+    fn observer_mode_zero_human_views_and_rewind() {
+        let mut setup: serde_json::Value = serde_json::from_str(
+            &standard_setup_json("42", "Rome", "Egypt", "AI 1", "AI 2").unwrap(),
+        )
+        .unwrap();
+        let players = setup["players"].as_array_mut().unwrap();
+        let team_count = players
+            .iter()
+            .map(|p| p["team"].as_u64().unwrap())
+            .collect::<std::collections::BTreeSet<_>>()
+            .len();
+        for p in players {
+            p["is_human"] = serde_json::Value::Bool(false);
+        }
+        let mut g = Game::from_setup_json(&setup.to_string()).unwrap();
+        let snap1 = g.save_json();
+        let hash1 = g.session.state_hash();
+
+        // Omniscient God view sees every tile, all units, and marks all rivals as met.
+        let god: PlayerView = serde_json::from_str(&g.observer_view_json().unwrap()).unwrap();
+        assert!(god.tiles.iter().all(|t| t.explored && t.visible));
+        assert_eq!(god.units.len(), g.session.state.units.len());
+        assert_eq!(god.cities.len(), g.session.state.cities.len());
+        assert!(god.cities.iter().all(|c| c.visible && c.detail.is_some()));
+        assert_eq!(god.diplomacy.met.len(), team_count - 1);
+
+        // Per-faction view for an AI seat is fogged and shows only that AI's own perspective.
+        let p1: PlayerView = serde_json::from_str(&g.view_json(1).unwrap()).unwrap();
+        assert_eq!(p1.me, PlayerId(1));
+        assert!(p1.tiles.iter().any(|t| !t.explored));
+
+        // Step forward 2 turns with empty human orders; AI seats resolve deterministically.
+        let r1: serde_json::Value = serde_json::from_str(&g.end_turn_json("{}").unwrap()).unwrap();
+        let snap2 = g.save_json();
+        let hash2 = g.session.state_hash();
+        assert_eq!(r1["turn"], 1);
+        assert_eq!(g.session.state.turn, 2);
+
+        let _r2 = g.end_turn_json("{}").unwrap();
+        let hash3 = g.session.state_hash();
+        assert_eq!(g.session.state.turn, 3);
+
+        // Rewind to turn 1 snapshot and replay: identical state hashes.
+        let mut rewound = Game::from_save_json(&snap1).unwrap();
+        assert_eq!(rewound.session.state_hash(), hash1);
+        let _ = rewound.end_turn_json("{}").unwrap();
+        assert_eq!(rewound.session.state_hash(), hash2);
+        let _ = rewound.end_turn_json("{}").unwrap();
+        assert_eq!(rewound.session.state_hash(), hash3);
+
+        // Rewind to turn 2 snapshot directly: exact match.
+        let rewound2 = Game::from_save_json(&snap2).unwrap();
+        assert_eq!(rewound2.session.state_hash(), hash2);
     }
 }
 

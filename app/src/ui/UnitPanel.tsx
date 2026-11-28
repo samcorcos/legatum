@@ -70,9 +70,10 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const leads = useUnitCardLeads();
   const errors = useGame((s) => s.errors[s.seat]);
   const mode = useGame((s) => s.mode);
-  const mine = unit.owner === view.me;
-  // The game is decided: the map stays open to look around, but no unit awaits orders and none can be given.
-  const over = view.finished || view.winner !== null;
+  const observerActive = useGame((s) => s.observer.active);
+  const mine = !observerActive && unit.owner === view.me;
+  // The game is decided (or we are in Observer Mode): the map stays open to look around, but no unit awaits orders and none can be given.
+  const over = view.finished || view.winner !== null || observerActive;
   // The map's strength chips need a key while they show (canvas marks have no hover).
   const strengthTargets = mine && !over && unit.military ? attackableEnemies(view, unit) : [];
   const strengthKey = strengthTargets.length > 0;

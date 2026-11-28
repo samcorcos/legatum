@@ -119,6 +119,7 @@ function commitReady(seat: Seat) {
 
 export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDetails?: boolean; onOpenDetails?: () => void; race?: ReactNode }) {
   const views = useGame((s) => s.views);
+  const observerActive = useGame((s) => s.observer.active);
   const humans = useGame((s) => s.humans);
   const seat = useGame((s) => s.seat);
   const ready = useGame((s) => s.ready);
@@ -159,6 +160,13 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const hostCanOpenSeat = remote && net?.status.is_local && net.seats.some((st) =>
     st.seat !== net.mySeat && !st.connected && st.reserved !== false);
   if (!views) return null;
+  if (observerActive) {
+    return (
+      <div className="panel seatbar" data-overlay-slot="turn-bar">
+        <div ref={sidebarScroll} className="sidebar-scroll">{race}</div>
+      </div>
+    );
+  }
   const view = views[seat];
   const eliminated = isEliminated(view);
   const observerCanAdvance = canResolveToEnd(view, remote ? net : null);

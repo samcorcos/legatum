@@ -21,6 +21,9 @@ export interface GameClient {
   newGame(setup: GameSetup): Promise<void>;
   standardSetup(seed: string, faction1: Faction, faction2: Faction, name1: string, name2: string): Promise<GameSetup>;
   view(player: number): PlayerView;
+  /** Omniscient view for AI-vs-AI observer mode (local WASM engine only). */
+  observerView?(): PlayerView;
+  hash?(): string;
   settlementSites?(view: PlayerView, unit: number, reserved: Hex[]): SettlementScore[];
   settlementSite?(view: PlayerView, unit: number, pos: Hex, reserved: Hex[]): SettlementSite | null;
   /** Why a hex is not a legal city site (core `site_blocker`), or null when it is one. */

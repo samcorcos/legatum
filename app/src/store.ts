@@ -70,6 +70,15 @@ import { NO_WHY, answerLine, remember as rememberWhy, MAX_SAVED_ANSWERS, withAns
 import { TrainingDriver, reportLine as trainingReportLine, trainingCapMs, writeTrainingLog, type TrainingEngine, type TrainingProgress, type TrainingUi } from './training';
 import { setSeatFactions } from './theme';
 import { PING_MIN_GAP_MS, pingAvailable, withPing, type TeamPing } from './teamPing';
+import {
+  createObserverState,
+  INACTIVE_OBSERVER,
+  OBSERVER_INTERVAL_MS,
+  readObserverView,
+  type ObserverPerspective,
+  type ObserverSpeed,
+  type ObserverState,
+} from './observer';
 
 function isMissingWasmError(message: string): boolean {
   return message.startsWith('The game engine (WASM) is missing from this build.');
@@ -409,6 +418,15 @@ export interface State {
   reopenUnlock(tech: TechId): void;
   /** Show an era-up takeover again (from the turn report). */
   reopenEra(era: number, first: boolean, age?: PlayerId): void;
+  /** AI-vs-AI observer mode state (inactive in human games). */
+  observer: ObserverState;
+  observerPlay(): void;
+  observerPause(): void;
+  observerTogglePlay(): void;
+  observerSetSpeed(speed: ObserverSpeed): void;
+  observerStepForward(): void;
+  observerStepBack(): void;
+  observerSetPerspective(perspective: ObserverPerspective): void;
   set(p: Partial<State>): void;
 }
 
@@ -683,6 +701,30 @@ export const useGame = create<State>((set, get) => {
     }
   };
 
+  let observerTimer: ReturnType<typeof setTimeout> | null = null;
+  const clearObserverTimer = () => {
+    if (observerTimer !== null) {
+      clearTimeout(observerTimer);
+      observerTimer = null;
+    }
+  };
+  const stopObserverPlayback = () => {
+    clearObserverTimer();
+    if (get().observer.playing) set({ observer: { ...get().observer, playing: false } });
+  };
+  const scheduleObserverStep = () => {
+    clearObserverTimer();
+    const { observer, screen, views } = get();
+    if (!observer.active || !observer.playing || screen !== 'game' || views?.[0]?.finished) return;
+    observerTimer = setTimeout(() => {
+      observerTimer = null;
+      const cur = get();
+      if (!cur.observer.active || !cur.observer.playing || cur.screen !== 'game') return;
+      cur.observerStepForward();
+      if (get().observer.playing && !get().views?.[0]?.finished) scheduleObserverStep();
+    }, OBSERVER_INTERVAL_MS[observer.speed]);
+  };
+
   const afterLoad = (client: GameClient) => {
     const previous = get().client;
     if (previous !== client && previous?.archive) {
@@ -694,16 +736,22 @@ export const useGame = create<State>((set, get) => {
       catch (error) { set({ error: String(error) }); }
     }
     stopResolving();
+    clearObserverTimer();
     // A local game replaces any online session: its socket must not reinstall itself later.
     dropRemote();
     remember(client);
     const firstView = client.view(0);
-    const humans = humanIds(firstView);
-    const views = readViews(client, humans, firstView);
+    const isObserver = firstView.players.every((p) => !p.is_human);
+    const humans = isObserver ? [] : humanIds(firstView);
+    const observer = isObserver
+      ? createObserverState(firstView.turn, client.save(), client.hash?.() ?? '')
+      : INACTIVE_OBSERVER;
+    const views = isObserver ? [readObserverView(client, 'god')] : readViews(client, humans, firstView);
     const hex = capitalOrUnit(views[0]);
     set({
       client,
       humans,
+      observer,
       views,
       goalDecisionSeen: {},
       outcomeDismissed: false, outcomeStage: 'reveal',
@@ -711,7 +759,7 @@ export const useGame = create<State>((set, get) => {
       eliminationTurns: {},
       screen: 'game',
       seat: 0,
-      ...emptySeats(humans.length),
+      ...emptySeats(isObserver ? 1 : humans.length),
       selection: null,
       mode: 'normal',
       unlockReopen: null,
@@ -734,10 +782,12 @@ export const useGame = create<State>((set, get) => {
       error: null,
       focus: hex ? { hex, seq: ++focusSeq } : null,
     });
-    const first = nextUnitNeedingOrders(views[0], [], null);
-    if (first) get().select({ kind: first.kind, id: first.id }, true);
-    startTraining();
-    startPlanningAhead();
+    if (!isObserver) {
+      const first = nextUnitNeedingOrders(views[0], [], null);
+      if (first) get().select({ kind: first.kind, id: first.id }, true);
+      startTraining();
+      startPlanningAhead();
+    }
   };
 
   // The AI empires decide while the player plans: one empire per idle moment (client.planAhead), so End Turn only has
@@ -1279,6 +1329,7 @@ export const useGame = create<State>((set, get) => {
     setupMode: 'solo',
     client: null,
     humans: [],
+    observer: INACTIVE_OBSERVER,
     views: null,
     seat: 0,
     ...emptySeats(0),
@@ -1371,7 +1422,10 @@ export const useGame = create<State>((set, get) => {
     meetingPeople: null,
 
     goto: (screen) => {
-      if (screen !== 'game') stopResolving();
+      if (screen !== 'game') {
+        stopResolving();
+        stopObserverPlayback();
+      }
       if (screen === 'title') {
         endHosting();
         endRelaySession();
@@ -1656,7 +1710,8 @@ export const useGame = create<State>((set, get) => {
 
     startGame: async (setup, options) => {
       stopResolving();
-      if (setup.players.filter((player) => player.is_human).length !== 1) {
+      stopObserverPlayback();
+      if (setup.players.filter((player) => player.is_human).length > 1) {
         set({ error: 'Play with other people through Multiplayer, then Host Game.' });
         return;
       }
@@ -1665,6 +1720,11 @@ export const useGame = create<State>((set, get) => {
         const client = await createClient();
         await client.newGame(setup);
         afterLoad(client);
+        const isObserver = get().observer.active;
+        if (isObserver) {
+          set({ rewinds: [], introSeats: [] });
+          return;
+        }
         const first = get().views?.[0];
         const capital = first?.cities.find((city) => city.owner === first.me && city.is_capital);
         if (capital) get().select({ kind: 'city', id: capital.id }, true);
@@ -1782,8 +1842,8 @@ export const useGame = create<State>((set, get) => {
     setMode: (mode) => set({ mode }),
 
     editOrders: (fn, feedback) => {
-      const { seat, views, orders, ready, errors } = get();
-      if (!views || views[seat].finished || isEliminated(views[seat])) return;
+      const { seat, views, orders, ready, errors, observer } = get();
+      if (observer.active || !views || views[seat].finished || isEliminated(views[seat])) return;
       const next = fn(orders[seat], views[seat]);
       // Match the remote client's deduplication: no changed payload means the server stays Ready.
       if (JSON.stringify(next) === JSON.stringify(orders[seat])) return;
@@ -1885,8 +1945,8 @@ export const useGame = create<State>((set, get) => {
     },
 
     toggleReady: async (which) => {
-      const { seat, ready, errors, orders, busy, views } = get();
-      if (busy || !views || views[0].finished) return;
+      const { seat, ready, errors, orders, busy, views, observer: obs } = get();
+      if (obs.active || busy || !views || views[0].finished) return;
       const s = which ?? seat;
       const observer = isEliminated(views[s]);
       if (observer && !canResolveToEnd(views[s], get().client?.kind === 'remote' ? get().net : null)) return;
@@ -1952,6 +2012,145 @@ export const useGame = create<State>((set, get) => {
 
     reopenUnlock: (tech) => set({ unlockReopen: tech, eraReopen: null, unlockReopenSeq: get().unlockReopenSeq + 1 }),
     reopenEra: (era, first, age) => set({ eraReopen: { era, first, age }, unlockReopen: null, unlockReopenSeq: get().unlockReopenSeq + 1 }),
+
+    observerPlay: () => {
+      const { observer, views } = get();
+      if (!observer.active || observer.playing || views?.[0]?.finished) return;
+      set({ observer: { ...observer, playing: true } });
+      scheduleObserverStep();
+    },
+
+    observerPause: () => {
+      stopObserverPlayback();
+    },
+
+    observerTogglePlay: () => {
+      if (get().observer.playing) get().observerPause();
+      else get().observerPlay();
+    },
+
+    observerSetSpeed: (speed) => {
+      const { observer } = get();
+      if (!observer.active || observer.speed === speed) return;
+      set({ observer: { ...observer, speed } });
+      if (observer.playing) scheduleObserverStep();
+    },
+
+    observerStepForward: () => {
+      const { client, observer, views } = get();
+      if (!client || !observer.active || !views) return;
+      const prevView = views[0];
+      // If rewound, replay the cached deterministic snapshot instantly.
+      if (observer.cursor < observer.history.length - 1) {
+        const nextCursor = observer.cursor + 1;
+        const snap = observer.history[nextCursor];
+        try {
+          client.load(snap.save);
+        } catch (e) {
+          stopObserverPlayback();
+          set({ error: `Could not step forward: ${String(e)}` });
+          return;
+        }
+        const nextView = readObserverView(client, observer.perspective);
+        const sel = get().selection;
+        const keepSel = sel && (
+          (sel.kind === 'city' && nextView.cities.some((c) => c.id === sel.id)) ||
+          (sel.kind === 'unit' && nextView.units.some((u) => u.id === sel.id)) ||
+          (sel.kind === 'air' && nextView.aircraft?.some((a) => a.id === sel.id))
+        ) ? sel : null;
+        set({
+          views: [nextView],
+          selection: keepSel,
+          observer: { ...observer, cursor: nextCursor, playing: nextView.finished ? false : observer.playing },
+          lastHash: snap.hash || null,
+          error: null,
+        });
+        if (nextView.finished) clearObserverTimer();
+        return;
+      }
+      if (prevView.finished) {
+        stopObserverPlayback();
+        return;
+      }
+      let result: TurnResult;
+      try {
+        result = client.endTurn({});
+      } catch (e) {
+        stopObserverPlayback();
+        set({ error: `Could not resolve turn: ${String(e)}` });
+        return;
+      }
+      const nextView = readObserverView(client, observer.perspective);
+      const snap = { turn: nextView.turn, save: client.save(), hash: result.hash };
+      const history = [...observer.history, snap];
+      const sel = get().selection;
+      const keepSel = sel && (
+        (sel.kind === 'city' && nextView.cities.some((c) => c.id === sel.id)) ||
+        (sel.kind === 'unit' && nextView.units.some((u) => u.id === sel.id)) ||
+        (sel.kind === 'air' && nextView.aircraft?.some((a) => a.id === sel.id))
+      ) ? sel : null;
+      set({
+        views: [nextView],
+        selection: keepSel,
+        observer: {
+          ...observer,
+          history,
+          cursor: history.length - 1,
+          playing: nextView.finished ? false : observer.playing,
+        },
+        lastHash: result.hash,
+        error: null,
+      });
+      if (nextView.finished) clearObserverTimer();
+    },
+
+    observerStepBack: () => {
+      const { client, observer } = get();
+      if (!client || !observer.active || observer.cursor <= 0) return;
+      clearObserverTimer();
+      const prevCursor = observer.cursor - 1;
+      const snap = observer.history[prevCursor];
+      try {
+        client.load(snap.save);
+      } catch (e) {
+        set({ error: `Could not step back: ${String(e)}`, observer: { ...observer, playing: false } });
+        return;
+      }
+      const nextView = readObserverView(client, observer.perspective);
+      const sel = get().selection;
+      const keepSel = sel && (
+        (sel.kind === 'city' && nextView.cities.some((c) => c.id === sel.id)) ||
+        (sel.kind === 'unit' && nextView.units.some((u) => u.id === sel.id)) ||
+        (sel.kind === 'air' && nextView.aircraft?.some((a) => a.id === sel.id))
+      ) ? sel : null;
+      set({
+        views: [nextView],
+        selection: keepSel,
+        observer: { ...observer, cursor: prevCursor, playing: false },
+        lastHash: snap.hash || null,
+        error: null,
+      });
+    },
+
+    observerSetPerspective: (perspective) => {
+      const { client, observer } = get();
+      if (!client || !observer.active || observer.perspective === perspective) return;
+      const nextView = readObserverView(client, perspective);
+      const sel = get().selection;
+      const keepSel = sel && (
+        (sel.kind === 'city' && nextView.cities.some((c) => c.id === sel.id)) ||
+        (sel.kind === 'unit' && nextView.units.some((u) => u.id === sel.id)) ||
+        (sel.kind === 'air' && nextView.aircraft?.some((a) => a.id === sel.id))
+      ) ? sel : null;
+      set({
+        views: [nextView],
+        selection: keepSel,
+        observer: { ...observer, perspective },
+        // Close single-empire modals when switching to God view so stale tech/city views don't linger.
+        techOpen: perspective === 'god' ? false : get().techOpen,
+        citiesOpen: perspective === 'god' ? false : get().citiesOpen,
+      });
+    },
 
   };
 });
@@ -2020,7 +2219,7 @@ let ordersAtRisk = false;
 function keepOrdersNow() {
   ordersTimer = null;
   const s = useGame.getState();
-  if (!s.client || s.client.kind === 'remote' || !s.views) { ordersAtRisk = false; return; }
+  if (!s.client || s.client.kind === 'remote' || !s.views || s.observer.active) { ordersAtRisk = false; return; }
   const turn = s.views[0].turn;
   const pending = s.orders.some((list) => list.length > 0);
   const text = pending ? JSON.stringify(s.orders) : null;

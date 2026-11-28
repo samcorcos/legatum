@@ -156,7 +156,7 @@ function SeatRow({
           <span className="seat-you">You</span>
         ) : slot.kind === 'you' ? (
           <span className="seat-you">{youLabel}</span>
-        ) : readOnly ? (
+        ) : readOnly || index === 0 ? (
           <span className="seat-text muted">{kindLabel(slot.kind)}</span>
         ) : (
           <select

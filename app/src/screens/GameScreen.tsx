@@ -39,6 +39,7 @@ import { handleAircraftKey, handleGameKey } from './gameKeyHandler';
 import { handleOverlayKey, notePointerDown, returnFocusAfterPointer } from '../gameplayKeys';
 import { playerColor } from '../theme';
 import { Advisor } from '../ui/Advisor';
+import { ObserverBar } from '../ui/ObserverBar';
 import { ReclaimSeatButton } from '../ui/ReclaimSeatButton';
 import '../ui/sidebar.css';
 
@@ -76,6 +77,7 @@ const MemoAlarmScreen = memo(AlarmScreen);
 const MemoPeopleIntro = memo(PeopleIntro);
 const MemoFreeTechsPrompt = memo(FreeTechsPrompt);
 const MemoAdvisor = memo(Advisor);
+const MemoObserverBar = memo(ObserverBar);
 const MemoWhyCard = memo(WhyCard);
 const MemoGameErrorToast = memo(GameErrorToast);
 
@@ -129,6 +131,7 @@ const BusyOverlay = memo(function BusyOverlay() {
 
 export function GameScreen() {
   const me = useGame((s) => s.views?.[s.seat]?.me ?? null);
+  const observerActive = useGame((s) => s.observer.active);
   const conn = useGame((s) => (s.client?.kind === 'remote' ? s.net?.conn : null));
   const away = useGame((s) => awayLine(awayPlayers(s), 'until'));
   const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
@@ -192,7 +195,8 @@ export function GameScreen() {
       <MemoAlarmScreen />
       <MemoPeopleIntro />
       <MemoFreeTechsPrompt />
-      <MemoAdvisor />
+      {!observerActive && <MemoAdvisor />}
+      <MemoObserverBar />
       <MemoWhyCard />
       <BusyOverlay />
       {credentialRejected ? (

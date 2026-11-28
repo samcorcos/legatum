@@ -39,6 +39,8 @@ export interface Lobby {
   search?: boolean;
   /** Coach questions: Hard plus "why did you do that?" for the human seat. App-side only; never in the game setup. */
   training?: boolean;
+  /** AI-vs-AI observer mode: every seat is AI-controlled (solo lobby only). */
+  observer?: boolean;
 }
 
 
@@ -177,7 +179,7 @@ function ai(i: number, team: number, level: AiLevel): Slot {
  */
 export function applyPreset(l: Lobby, preset: PresetId): Lobby {
   if (preset === 'custom') return { ...l, preset };
-  const humans = l.mode === 'solo' ? 1 : 2;
+  const humans = l.mode === 'solo' ? (l.observer ? 0 : 1) : 2;
   const keep = l.slots.filter((s) => humanKind(s.kind));
   const slots: Slot[] = [];
   const seats = preset === 'ffa' ? MAP_SIZES[typeof l.mapSize === 'string' ? l.mapSize : 'Standard'].default : MAX_PLAYERS;
@@ -238,6 +240,23 @@ export function removeSlot(l: Lobby, i: number): Lobby {
 export function setDifficulty(l: Lobby, level: AiLevel): Lobby {
   const fields = levelFields(level);
   return { ...l, ...fields, slots: l.slots.map((s) => (s.kind === 'ai' ? { ...s, ...fields } : s)) };
+}
+
+/** Toggle AI-vs-AI observer mode (solo lobby only): switches seat 0 between You and AI. */
+export function setObserver(l: Lobby, observer: boolean): Lobby {
+  if (l.mode !== 'solo' || !!l.observer === observer) return l;
+  const slots = l.slots.map((s, i) => {
+    if (i !== 0) return s;
+    const kind: SlotKind = observer ? 'ai' : 'you';
+    const next: Slot = {
+      ...s,
+      kind,
+      ...(observer ? levelFields(levelOf(l)) : {}),
+    };
+    if (isDefaultName(s.name)) next.name = defaultName(kind, 0);
+    return next;
+  });
+  return { ...l, observer, training: observer ? false : l.training, slots };
 }
 
 export function activeCount(l: Lobby): number {
