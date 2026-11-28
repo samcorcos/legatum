@@ -80,10 +80,15 @@ ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/src/assets/cin
                  r"|^tools/art/(distinctness\.(py|json)|render-sets\.mjs)$")
 # The public front door: what a visitor sees first (user, 2026-11-22: a generic boxes-and-arrows README diagram merged
 # with no reviewer because README.md and docs/ count as docs). Its copy always gets a docs review; its visuals get
-# an art review only when media files change or README.md adds image/media references.
+# an art review when media files change or README.md adds, edits, or removes image/video/media references.
 FRONT = re.compile(r"^README\.md$|^docs/media/|^app/public/og\.jpg$")
 FRONT_MEDIA = re.compile(r"^docs/media/|^app/public/og\.jpg$")
-MEDIA_REF = re.compile(r"!\[|<img\b|docs/media/", re.I)
+MEDIA_REF = re.compile(
+    r"!\[|<(?:img|video|picture|source|svg)\b|docs/media/|/media/"
+    r"|\.(?:mp4|webm|png|jpe?g|webp|gif|svg|avif|mov)\b"
+    r"|^\s*\[[^\]]+\]:\s*\S+",
+    re.I,
+)
 # Code that can make existing art stale or missing: names and kinds of things that have pictures, and the art wiring.
 ART_IMPACT = re.compile(r"^crates/core/src/(data|eras|units|buildings|factions?)\.rs$"
                         r"|^app/src/(unitArt|unlockArt|resourceIcons|landmarks|portraits|siegeProps|icons|wonders)\.ts$"
@@ -125,7 +130,7 @@ def classify(repo, base, tip, files=None):
         out["scenario"] = scen
         scen = []
     prose_candidates = [f for f in files if APP_SOURCE.match(f) and not TESTS.search(f) and not COPY.search(f)]
-    added = diff_added(repo, base, tip) if scen or prose_candidates or "README.md" in files else {}
+    added = diff_added(repo, base, tip) if scen or prose_candidates else {}
     for f in files:
         test = bool(TESTS.search(f))
         if lab_only and f in out["scenario"]:
@@ -148,7 +153,7 @@ def classify(repo, base, tip, files=None):
             out["design"].append(f)
         if FRONT.search(f):
             out["front"].append(f)
-        if FRONT_MEDIA.search(f) or (f == "README.md" and adds_media_ref(added.get(f, ({}, set())))):
+        if FRONT_MEDIA.search(f) or (f == "README.md" and changes_media_ref(diff_changed_lines(repo, base, tip, f))):
             out["frontmedia"].append(f)
     return out
 
@@ -159,10 +164,23 @@ def adds_prose(entry):
     return any(PROSE.search(lines[n]) and not COMMENT.match(lines[n]) for n in added)
 
 
-def adds_media_ref(entry):
-    """Whether a file's added lines (a diff_added entry) add an image or media reference."""
-    lines, added = entry
-    return any(MEDIA_REF.search(lines[n]) for n in added)
+def diff_changed_lines(repo, base, tip, path):
+    """Added and removed line texts for PATH in BASE..TIP, or None if the diff could not be read."""
+    out = git(repo, "diff", "-U0", "--no-renames", "--no-color", "--no-ext-diff", base, tip, "--", path)
+    if out is None:
+        return None
+    changed = []
+    for line in out.split("\n"):
+        if line.startswith(("+++ ", "--- ")):
+            continue
+        if line.startswith(("+", "-")):
+            changed.append(line[1:])
+    return changed
+
+
+def changes_media_ref(lines):
+    """Whether any added or removed line touches an image, video, or media reference (fail-closed if None)."""
+    return lines is None or any(MEDIA_REF.search(line) for line in lines)
 
 
 def run_checks(repo, base, tip, kinds, skip=()):

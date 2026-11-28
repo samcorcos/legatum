@@ -122,8 +122,12 @@ class Reviews(unittest.TestCase):
             self.assertTrue(check.adds_prose(({1: line}, {1})), f"expected PROSE match: {line}")
 
     def test_readme_prose_edit_does_not_require_art_reviewer(self):
-        prose_diff = {"README.md": ({1: "Legatum is a historical 4X strategy game."}, {1})}
-        with mock.patch.object(check, "diff_added", return_value=prose_diff):
+        prose_lines = [
+            "Legatum is a historical 4X strategy game.",
+            '<p align="center"><b><a href="https://playlegatum.com">Play free in your browser</a></b></p>',
+            "There is no stable release yet; see [Status](#status).",
+        ]
+        with mock.patch.object(check, "diff_changed_lines", return_value=prose_lines):
             kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
         self.assertEqual(kinds["front"], ["README.md"])
         self.assertEqual(kinds["frontmedia"], [])
@@ -134,18 +138,64 @@ class Reviews(unittest.TestCase):
             "![Banner](docs/media/banner.jpg)",
             '<img src="app/public/og.jpg" alt="Legatum" />',
             "Watch the clip at docs/media/intro.mp4",
+            '  <a href="https://playlegatum.com/media/legatum-teaser-v2.mp4">',
+            '  <a href="https://example.com/other-clip.webm">',
+            "[banner]: https://example.com/banner-v2.png",
+            "[banner]: https://cdn.example.com/hero",
         ]:
-            media_diff = {"README.md": ({1: line}, {1})}
-            with mock.patch.object(check, "diff_added", return_value=media_diff):
+            with mock.patch.object(check, "diff_changed_lines", return_value=[line]):
                 kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
             self.assertEqual(kinds["frontmedia"], ["README.md"], f"expected frontmedia for: {line}")
             self.assertEqual([r for _, r, _ in check.required_reviews(kinds)],
                              ["legatum-docs-reviewer", "legatum-art-reviewer"])
 
+        # Removed media references (including the real README teaser link) must also trigger art review.
+        removed_diff = (
+            "diff --git a/README.md b/README.md\n"
+            "--- a/README.md\n"
+            "+++ b/README.md\n"
+            "@@ -15 +14,0 @@\n"
+            '-  <a href="https://playlegatum.com/media/legatum-teaser.mp4">\n'
+        )
+        with mock.patch.object(check, "git", return_value=removed_diff):
+            kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
+        self.assertEqual(kinds["frontmedia"], ["README.md"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(kinds)],
+                         ["legatum-docs-reviewer", "legatum-art-reviewer"])
+
+        # Unreadable diff fails closed to art review.
+        with mock.patch.object(check, "diff_changed_lines", return_value=None):
+            kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
+        self.assertEqual(kinds["frontmedia"], ["README.md"])
+
         og = check.classify(".", "HEAD", "HEAD", ["app/public/og.jpg"])
         self.assertEqual(og["frontmedia"], ["app/public/og.jpg"])
         self.assertEqual([r for _, r, _ in check.required_reviews(og)],
                          ["legatum-docs-reviewer", "legatum-ui-reviewer", "legatum-art-reviewer"])
+
+    def test_ci_art_distinct_selector_covers_runtime_and_workflow_inputs(self):
+        import re
+        ci_path = os.path.join(HERE, "..", "..", ".github", "workflows", "ci.yml")
+        with open(ci_path, encoding="utf-8") as f:
+            text = f.read()
+        m = re.search(r"grep -qE '([^']+)'[^\n]*\n\s+echo \"art=true\"", text)
+        self.assertIsNotNone(m, "art-distinct selector not found in ci.yml")
+        pat = re.compile(m.group(1))
+        for path in [
+            "app/src/assets/units/tank.png",
+            "app/public/wonders/pyramids.png",
+            "tools/art/distinctness.py",
+            "app/src/artDistinct.test.ts",
+            "app/package.json",
+            "app/package-lock.json",
+            "app/vite.config.ts",
+            "app/vitest.config.ts",
+            "app/src/test/setupWasm.ts",
+            ".github/workflows/ci.yml",
+        ]:
+            self.assertIsNotNone(pat.search(path), f"expected art-distinct to run for {path}")
+        for path in ["crates/core/src/lib.rs", "README.md", "app/src/ui/TopBar.tsx"]:
+            self.assertIsNone(pat.search(path), f"unexpected art-distinct match for {path}")
 
 
 if __name__ == "__main__":
