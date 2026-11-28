@@ -11,6 +11,8 @@ Current rules only, one line each with the date and who. Detail, the user's full
 
 ## Source of truth, merging and gates
 
+- Human-review summaries (user, 2026-11-28): end a human handoff with a readable PR comment explaining what changes, each involved agent’s actual merge/request-changes/not-yet-reviewed recommendation, current-head checks and concerns, and the precise human action. Distinguish author opinion from independent review; never invent joint approval. Refresh on material changes, not to compete with bot comments. Canonical verdicts still apply.
+
 - Productive review iterations (user, 2026-11-28): no fixed round cutoff. Continue while revisions resolve findings or experiments produce useful evidence and a reasonable path to completion remains. Exercise judgment to escalate repeated disagreements without new evidence, cycling/stalled revisions, unreasonable likely effort, or decisions/access requiring a human. Explain attempts and the next decision in the existing review; preserve all independent review, exact-head CI and human-only merge safeguards. See `docs/ops/multi-agent.md` for routing and resuming old round-cap escalations.
 
 - Required review before merge (user, 2026-11-27): use a required `peer-review` check alongside `ci-ok` so ordinary merges stay blocked until the current commit has the required specialist verdicts and independent model-family or explicit maintainer approval. Labels route work, not approval. Shared-account model attribution is an accepted convention; leave administrator bypass settings unchanged. Activation and review-comment format live in `docs/ops/multi-agent.md`.

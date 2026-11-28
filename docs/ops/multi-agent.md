@@ -127,6 +127,15 @@ Split parallel work across disjoint lanes whenever possible:
 
 ### Human escalation: notify the maintainer directly
 
+When handing a PR to the maintainer, finish with a readable top-level conversation comment. Lead with what the change does for the game or workflow and the recommendation, not process jargon. Include:
+- **What changes:** one or two plain-language sentences explaining the behavior and benefit.
+- **Agent recommendations:** each involved model family's actual recommendation (merge, request changes, or not yet reviewed), distinguishing author recommendation from independent review. Say “Gemini and ChatGPT recommend merging” only when both actually do for the current revision; link the supporting reviews. Do not imply consensus from labels, passing CI or an outdated approval.
+- **Checks and remaining concerns:** concise current-head check status, unresolved findings and material limitations. Name the reviewed commit so later changes cannot silently inherit the recommendation.
+- **Your action:** the concrete decision or merge needed and why it requires a human.
+
+Make this the final handoff comment from the agent at that point; do not continually repost it just to keep it last when bots or others comment. Update the summary when the revision, recommendations or requested action materially changes. This readable summary supplements canonical review verdicts; it never substitutes for them or waives a gate.
+
+
 Whenever work needs human input or action, including every `needs-human` escalation, **assign the relevant issue or PR to `samcorcos`, or post a comment that directly mentions `@samcorcos`**. A label or an agent-chat status alone is not a handoff. Make the notification on GitHub so the maintainer can find the request in assigned work or notifications.
 
 The issue body or comment must state the concrete blocker, the decision or action needed, and the agent's recommendation where useful. For a human-only PR, say what requires human review and whether checks are complete. Finish all work that can proceed independently before handing over a reviewable result.
