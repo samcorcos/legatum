@@ -85,12 +85,17 @@ impl Planner<'_> {
     pub(crate) fn sparta_opening_seeking(&self) -> bool {
         let enabled = self.faction == Faction::Rome
             || (self.faction == Faction::Sparta && self.decisions.sparta_opening_search > 0);
+        let last_turn = if self.faction == Faction::Rome {
+            self.rome_opening_last_turn()
+        } else {
+            crate::rome_finish::OPENING_LAST_TURN
+        };
         enabled
             && self.conquest_opening_faction()
             && self.difficulty == AiDifficulty::Hard
             && self.decisions.rome_opening_march > 0
             && self.campaigns.rome_opening_target.is_none()
-            && self.view().turn <= self.rome_opening_last_turn()
+            && self.view().turn <= last_turn
     }
 
     pub(crate) fn rome_opening_build(&self, city: &CityView) -> Option<ProductionItem> {
@@ -269,7 +274,7 @@ impl Planner<'_> {
             .filter(|u| {
                 data::unit_class(u.kind) == Some(UnitClass::Melee)
                     && u.hp >= 50
-                    && u.occupation_lock.is_none()
+                    && (self.faction != Faction::Rome || u.occupation_lock.is_none())
                     && !alone(self, u)
             })
             .take(2)
@@ -670,5 +675,32 @@ mod tests {
         planner.choose_rome_opening();
         let city = planner.rome_opening_city().unwrap();
         assert!(!planner.rome_opening_ready(city));
+    }
+
+    #[test]
+    fn sparta_opening_search_still_stops_after_turn_forty() {
+        let mut view = opening_view();
+        view.turn = 45;
+        view.cities.retain(|c| c.owner == ME);
+        view.players
+            .iter_mut()
+            .find(|p| p.id == ENEMY)
+            .unwrap()
+            .alive = false;
+        let mut planner = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Sparta),
+            Faction::Sparta,
+            1,
+        );
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.rome_opening_march = 1;
+        planner.decisions.sparta_rome_opening = 1;
+        planner.decisions.sparta_opening_search = 10;
+        planner.decisions.sparta_chain_opening = 1;
+        planner.campaigns.rome_victim = Some(ENEMY);
+        planner.choose_rome_opening();
+        assert_eq!(planner.rome_opening_last_turn(), 50);
+        assert!(!planner.sparta_opening_seeking());
     }
 }

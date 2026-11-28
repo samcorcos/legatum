@@ -148,10 +148,10 @@ impl Planner<'_> {
             .filter(|city| self.rome_second_soft(city))
             .collect();
         // Finish a reachable open city of the opening victim before choosing a new war.
-        // While the opening is still active it owns that siege; once the opening window ends
-        // (turn 51+), hand the living victim's open city straight to the second-war pass
-        // instead of dropping it.
-        let unfinished_victim = self.campaigns.rome_victim.and_then(|victim| {
+        // Non-Roman seats (Sparta) keep their prior deferral unconditionally; for Hard Rome,
+        // once the T50 opening window ends, hand the living victim's open city straight to
+        // `rome_second_war` instead of dropping it.
+        let victim_open = self.campaigns.rome_victim.and_then(|victim| {
             v.players
                 .iter()
                 .any(|p| p.id == victim && p.alive)
@@ -163,11 +163,14 @@ impl Planner<'_> {
                 })
                 .flatten()
         });
-        if unfinished_victim.is_some() && self.rome_opening_active() {
+        if victim_open.is_some() && (self.faction != Faction::Rome || self.rome_opening_active()) {
             self.campaigns.rome_second_target = None;
             self.campaigns.rome_second_enemy = None;
             return;
         }
+        let unfinished_victim = (self.faction == Faction::Rome)
+            .then_some(victim_open)
+            .flatten();
         if fit < 4 && self.campaigns.rome_second_enemy.is_none() && unfinished_victim.is_none() {
             return;
         }
@@ -540,5 +543,35 @@ mod tests {
         assert_eq!(p.campaigns.rome_second_target, Some(CityId(2)));
         assert_eq!(p.campaigns.rome_second_enemy, Some(TeamId(2)));
         assert!(p.rome_second_refuses_peace(TeamId(2)));
+    }
+
+    #[test]
+    fn sparta_still_defers_living_opening_victim_at_turn_51() {
+        let mut v = view();
+        v.turn = 51;
+        v.players[0].faction = Faction::Sparta;
+        v.diplomacy.relations.push(Relation {
+            a: TeamId(0),
+            b: TeamId(2),
+            state: RelationState::War,
+            effective_turn: 20,
+            guarantee_until: 0,
+            version: 1,
+            security: None,
+            war_id: None,
+            declarers: vec![],
+        });
+        let mut p = planner(&v, 9);
+        p.difficulty = AiDifficulty::Hard;
+        p.decisions.rome_opening_march = 1;
+        p.decisions.rome_opening_finish = 1;
+        p.decisions.rome_second_war = 1;
+        p.decisions.sparta_rome_opening = 1;
+        p.decisions.sparta_finish_60 = 0;
+        p.campaigns.rome_victim = Some(PlayerId(2));
+        p.choose_rome_opening();
+        p.choose_rome_second_war();
+        assert_eq!(p.campaigns.rome_second_target, None);
+        assert_eq!(p.campaigns.rome_second_enemy, None);
     }
 }
