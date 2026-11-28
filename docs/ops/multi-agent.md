@@ -45,7 +45,7 @@ Use a **continuously replenished work queue while an execution is running**, wit
 
 On each wake-up, fetch `origin/master` and fill available slots with independent actionable tasks in this priority order. Keep **at most three tasks active per agent family across all executions**. Whenever a task finishes or is handed off as blocked, refresh the board and refill its slot immediately in priority order, without waiting for the other tasks or the next hour. There is no per-run or per-hour task quota. Work in parallel where supported; unblocking existing PRs beats starting new WIP.
 
-1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, `headRepositoryOwner` is `samcorcos`, including human-only PRs that need agent review; review those but never merge them.
+1. **Review & merge eligible PRs:** `gh pr list --state open --label needs-review` where no `reviewing:*` label is held and (for same-repo agent PRs) `author:<other>` != yourself — including human-only governance PRs and fork/outside PRs. For fork/outside PRs (`headRepositoryOwner != samcorcos`), review **read-only** from the GitHub diff and hosted CI (never check out, build, or run locally, and never merge): swap `needs-review` + `reviewing:<self>` -> `changes-requested` on blockers, or -> `needs-human` with a readable merge recommendation and `samcorcos` assignment/mention when clean.
 2. **Unblock your own PRs:** `gh pr list --state open --label author:<self>` that has `changes-requested`, a failing `ci-ok`, merge conflicts or a branch that fell behind `master` and needs updating, or a green ready PR that is missing `needs-review`.
 3. **Recover stale locks:** if any `reviewing:*` lock has had no comment or merge for >2 hours, release `reviewing:*` so another reviewer can pick it up. If a `claimed:*` Draft PR has had no commits or comments for >6 hours, post a brief status note or flag `needs-human` (never overwrite another agent's work silently).
 4. **Pick up a paused handoff:** `gh issue list --state open --label status:handoff` (or PRs with `status:handoff`).
@@ -117,7 +117,7 @@ Split parallel work across disjoint lanes whenever possible:
 | `agent:ready` | Scoped and ready for any agent to claim. |
 | `claimed:claude` / `claimed:chatgpt` / `claimed:gemini` | Active implementation lock held by that agent. |
 | `author:claude` / `author:chatgpt` / `author:gemini` | Identifies which model family authored the PR (required because all agents may share one GitHub account). |
-| `needs-review` | Author finished implementation and CI is green; ready for a different model family (`reviewer != author`) to review and merge. |
+| `needs-review` | Author finished implementation and CI is green; ready for a different model family (`reviewer != author`) to review (and merge if outside the human-only fence; read-only review for fork/outside PRs). |
 | `reviewing:claude` / `reviewing:chatgpt` / `reviewing:gemini` | Active peer-review lock so two reviewers do not review/merge the same PR simultaneously. |
 | `changes-requested` | Peer reviewer found blocking issues; author should address them while review is making progress. |
 | `status:handoff` | WIP pushed to a branch with a Handoff Comment; ready for another agent to continue. |
@@ -134,6 +134,8 @@ Before adding `needs-human` for a merge decision, finish implementation, obtain 
 For an actual blocking decision/access problem or stuck review, finish every review/check that can proceed independently first, prepare the evidence, options and recommendation, and explicitly identify what cannot complete without that decision. Do not demand a passing approval for the very disagreement being escalated. Escalate only when the decision is ready for the maintainer now, not for a future evaluation date.
 
 Remove `needs-human` when its action is resolved or a new revision invalidates merge readiness, and route back to the appropriate agent state. Restore it only when the current revision is decision-ready again. Reassess older labels using these criteria without repeating unchanged notifications.
+
+**Fork PR chain of custody:** For a fork PR whose hosted CI requires maintainer approval, an agent first performs a read-only safety check of the diff and escalates to `needs-human` (assigned to `samcorcos`) so the maintainer can click **Approve and run**. The `Fork CI handoff` workflow (`.github/workflows/fork-ci-handoff.yml`, backed by `tools/gates/fork_ci_handoff.py`) runs trusted `master` code on `CI` `workflow_run` events: when `CI` enters `in_progress` on an open non-draft fork PR whose `peer-review` check is not already `success` on that head, it clears `needs-human` and unassigns `samcorcos` so the PR leaves the maintainer's inbox while CI runs; when `CI` finishes with `success` (and no `reviewing:*`, `changes-requested`, or `needs-review` label is held and `peer-review` is not already `success`), it adds `needs-review` so an agent picks up the PR under priority 1 for read-only review and either requests changes (`changes-requested`) or escalates to `needs-human` with a readable merge recommendation for final human merge. Failed or cancelled CI does not add `needs-review` or `needs-human` (fixing CI belongs to the fork author).
 
 ### Issue decisions use the same actionable inbox
 

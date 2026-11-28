@@ -1,0 +1,35 @@
+name: Fork CI handoff
+
+# Run only trusted default-branch code with the write token. Fork code is never
+# checked out or executed; all PR and workflow_run metadata is treated as untrusted data.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [in_progress, completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: read
+
+concurrency:
+  # Serialize in_progress and completed events for the same fork commit so label updates do not race.
+  group: fork-ci-handoff-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  handoff:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.head_repository.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: master
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Update fork PR handoff labels
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 tools/gates/fork_ci_handoff.py
