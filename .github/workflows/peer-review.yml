@@ -6,6 +6,7 @@ on:
   pull_request_target:
     branches: [master]
     types: [opened, reopened, synchronize, edited, labeled, unlabeled, ready_for_review, converted_to_draft]
+  merge_group:
   issue_comment:
     types: [created, edited, deleted]
   workflow_dispatch:
@@ -22,8 +23,8 @@ permissions:
   checks: write
 
 concurrency:
-  # All event types for a PR share one queue. Read current state when a run starts.
-  group: peer-review-${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
+  # All event types for a PR or merge group share one queue. Read current state when a run starts.
+  group: peer-review-${{ github.event.pull_request.number || github.event.issue.number || inputs.pr || github.event.merge_group.head_sha }}
   cancel-in-progress: false
 
 jobs:

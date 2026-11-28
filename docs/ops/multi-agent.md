@@ -175,7 +175,7 @@ Use `FAIL` instead of `PASS` for blocking findings. Name the applicable role(s),
 
 ### Required `peer-review` check
 
-The `Peer review` workflow publishes a check named `peer-review` on the current PR head. Once configured as required alongside `ci-ok`, GitHub blocks ordinary merges until both pass. Labels such as `needs-review` route work; they do not approve a PR. GitHub may still display a disabled merge control, and administrator bypass settings are unchanged.
+The `Peer review` workflow publishes a check named `peer-review` on the current PR head. Once configured as required alongside `ci-ok`, GitHub blocks ordinary merges until both pass. On `merge_group` events (when GitHub Merge Queue is enabled), `peer-review.yml` resolves every constituent PR in the queue entry, validates each PR's exact reviewed head SHA using the same trusted evaluator, and publishes the aggregated `peer-review` check on the merge-group commit. Labels such as `needs-review` route work; they do not approve a PR. GitHub may still display a disabled merge control, and administrator bypass settings are unchanged.
 
 The evaluator reads current comments on PR open/reopen, new commits, relevant PR/label changes, and comment creation/edit/deletion. It accepts only the canonical format above, posted by the configured trusted GitHub account (`samcorcos`), and only verdicts naming the exact current SHA. It requires every specialist listed by the trusted default branch's `tools/gates/check.py` plus an independent agent peer PASS or an explicit maintainer PASS. For each family/role the most recently updated verdict wins; outstanding FAIL verdicts block until that family clears them. `changes-requested` also blocks until addressed and removed. Removing or editing an approval causes reevaluation; as with CI, event processing is asynchronous.
 
@@ -202,15 +202,16 @@ legatum-docs-reviewer: PASS
 
 If a run fails or a comment was posted using an Actions `GITHUB_TOKEN` (which does not trigger another Actions workflow), use the same **Run workflow** control to reevaluate current state. Do not rerun an old approval or remove the required check to treat a missing review as passed. Repository administration permission is required to change required checks; merging this code alone does not activate branch protection.
 
-### 4. Prevent concurrent merge races
+### 4. Prevent concurrent merge races (GitHub Merge Queue)
 Before merging:
-1. Confirm the PR is not a draft, has no merge conflicts, and is up to date with `origin/master`.
-2. If `origin/master` moved since CI ran and both sides changed code, update the branch (`gh pr update-branch <N>`) and wait for `ci-ok` to go green on the new head SHA before merging (re-confirming the diff if conflict resolution occurred).
-3. Merge cleanly with squash commit and delete the branch:
+1. Confirm the PR is not a draft, has no merge conflicts, and `ci-ok` is `SUCCESS` on the exact head SHA you reviewed.
+2. **Do not speculatively run `gh pr update-branch` on open PRs just because `master` moved** — that churns CI and invalidates exact-head reviews. Only merge `origin/master` into a branch if it has actual git conflicts (`DIRTY`), or if Merge Queue is not yet enabled on the repository.
+3. Enqueue the PR cleanly with squash commit and branch deletion:
    ```sh
    gh pr merge <N> --squash --delete-branch
    ```
-4. Remove `needs-review` and `reviewing:<self>` labels (if GitHub did not auto-close them cleanly).
+   When GitHub Merge Queue is enabled on `master`, this command automatically adds the PR to the merge queue (`merge_group` CI tests it against the latest `master` and any earlier queued PRs, then merges it without another review round). If `ci-ok` is still running on the exact head you already `PASS`-reviewed (outside the human-only fence), you may pass `--auto` (`gh pr merge <N> --squash --delete-branch --auto`); **never** arm `--auto` or enqueue your own family's PR, an unreviewed or `changes-requested` PR, a fork/outside PR, or any human-only governance/security fence PR.
+4. Remove `needs-review` and `reviewing:<self>` labels once merged or enqueued.
 
 ### 5. Max 2 review rounds (no infinite ping-pong)
 - If blocking issues are found: swap `needs-review` + `reviewing:<self>` -> `changes-requested` and list concrete blockers.
