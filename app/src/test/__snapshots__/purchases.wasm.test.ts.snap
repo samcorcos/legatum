@@ -19191,7 +19191,7 @@ exports[`WASM purchase behavior > research queue validation, advance, save/load 
 [
   {
     "index": 0,
-    "message": "Mathematics is in the Classical era: finish the Ancient era first",
+    "message": "Mathematics is in the Classical era: queue the rest of the Ancient era before it",
   },
 ]
 `;
@@ -19200,7 +19200,7 @@ exports[`WASM purchase behavior > research queue validation, advance, save/load 
 [
   {
     "index": 0,
-    "message": "Mathematics is in the Classical era: finish the Ancient era first",
+    "message": "Mathematics is in the Classical era: queue the rest of the Ancient era before it",
   },
 ]
 `;

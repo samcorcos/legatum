@@ -7,7 +7,9 @@ import { itemKey } from '../data';
 import { useGame } from '../store';
 import type { PlayerView, UnitView } from '../types';
 import { Advisor, targetElement } from './Advisor';
-import { useAdvisor } from './advisorModel';
+import { readAdvisorPreferences, useAdvisor } from './advisorModel';
+import { setOverlay } from '../map/overlays';
+import { CitiesButton } from './CitiesOverview';
 import { CityPanel } from './CityPanel';
 import { UnitPanel } from './UnitPanel';
 import { TechTree } from './TechTree';
@@ -41,12 +43,31 @@ it('finds the queue strip and each current or future add-to-queue control', () =
   expect(queueTarget('Masonry')?.getAttribute('data-testid')).toBe('queue-add');
   expect(queueTarget('Writing')).toBeNull();
   mounted.rerender(<dialog className="tech-modal tree-mode" open><div className="tree-node" data-tech="Masonry">Masonry</div></dialog>);
-  expect(queueTarget('Masonry')?.className).toBe('tree-node');
-  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} }));
-  mounted.rerender(<dialog className="tech-modal tree-mode" open><button data-testid="research-view-era">This era</button><div className="tree-node" data-tech="Masonry">Masonry</div></dialog>);
-  expect(queueTarget('Masonry')?.textContent).toBe('This era');
-  mounted.rerender(<dialog className="tech-modal tree-mode" open><div className="tree-node" data-tech="Masonry"><button>+ Queue Masonry</button></div></dialog>);
-  expect(queueTarget('Masonry')?.textContent).toBe('+ Queue Masonry');
+  expect(queueTarget('Masonry')).toBeNull();
+});
+
+it.each([false, true])('targets real tree queue buttons and the later-era confirmation (touch: %s)', (touch) => {
+  vi.stubGlobal('matchMedia', () => ({ matches: touch, addEventListener: () => {}, removeEventListener: () => {} }));
+  const onQueue = vi.fn();
+  render(<dialog className="tech-modal tree-mode" open><button data-testid="research-view-era">This era</button>
+    <TechTree view={view} faction={view.players.find((p) => p.id === view.me)!.faction} queue={[]} schedule={[]} goal={null} locked={false}
+      onResearchNow={() => {}} onQueue={onQueue} onRemove={() => {}} onGoal={() => {}} /></dialog>);
+  const tech = view.research.available[0].tech;
+  const pick = (value: string) => targetElement({ kind: 'control', name: 'queueTech', value });
+  expect(pick(tech)?.getAttribute('data-testid')).toBe('tree-queue');
+  expect(pick(tech)?.closest('.tree-node')).toBeNull();
+  fireEvent.click(pick(tech)!);
+  expect(onQueue).toHaveBeenCalledWith(tech);
+  onQueue.mockClear();
+  const later = document.querySelector<HTMLElement>('.tree-node.locked');
+  expect(later).toBeTruthy();
+  const laterTech = later!.dataset.tech!;
+  fireEvent.click(pick(laterTech)!);
+  expect(onQueue).not.toHaveBeenCalled();
+  expect(screen.getByTestId('tree-ask').textContent).toContain('Finish');
+  expect(pick(laterTech)).toBe(screen.getByTestId('tree-ask-queue'));
+  fireEvent.click(pick(laterTech)!);
+  expect(onQueue).toHaveBeenCalledWith(laterTech);
 });
 
 it('finds real unit action buttons on mounted panels', () => {
@@ -82,7 +103,7 @@ it('points at the recommended technology: its tree node first, else its era card
   const tech = view.research.available[0].tech;
   const pick = () => targetElement({ kind: 'control', name: 'tech', value: tech });
   const tree = render(<dialog className="tech-modal" open><TechTree view={view} faction={view.players.find((p) => p.id === view.me)!.faction} queue={[]} schedule={[]} goal={null} locked={false}
-    onResearchNow={() => {}} onQueue={() => {}} onGoal={() => {}} /></dialog>);
+    onResearchNow={() => {}} onQueue={() => {}} onRemove={() => {}} onGoal={() => {}} /></dialog>);
   expect(pick()?.classList.contains('tree-node')).toBe(true);
   expect(pick()?.dataset.tech).toBe(tech);
   tree.unmount();
@@ -182,4 +203,33 @@ it('while a tile is being placed, shows only the tip that asked for it', () => {
   act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }], place: { city: city.id, building: null, intent: 'tile', pick: null } }));
   render(<Advisor />);
   expect(screen.queryByTestId('advisor')).toBeNull();
+});
+
+it('remembers Cities and Yields use after closing them, even with advice disabled', () => {
+  act(() => { useAdvisor.setState({ enabled: false, seen: [], discoveryTurn: -1 }); setOverlay('yields', false); });
+  const mounted = render(<><Advisor /><CitiesButton /></>);
+  fireEvent.click(screen.getByTestId('cities-button'));
+  expect(readAdvisorPreferences().seen).toContain('cities');
+  act(() => { useGame.setState({ citiesOpen: false }); setOverlay('yields', true); });
+  expect(readAdvisorPreferences().seen).toContain('mapYields');
+  act(() => setOverlay('yields', false));
+  mounted.unmount();
+  // Loading the saved preferences after remount retains learning even while closed.
+  act(() => useAdvisor.setState({ ...readAdvisorPreferences(), discoveryTurn: -1 }));
+  render(<Advisor />);
+  expect(useAdvisor.getState().seen).toEqual(expect.arrayContaining(['cities', 'mapYields']));
+});
+
+it('remembers an actually sent team ping, not entering ping mode or receiving a teammate ping', () => {
+  act(() => { useAdvisor.setState({ enabled: false, seen: [], discoveryTurn: -1 }); useGame.setState({ canPing: () => true }); });
+  render(<Advisor />);
+  act(() => useGame.getState().setPingMode(true));
+  expect(useAdvisor.getState().seen).not.toContain('teamPing');
+  const teammate = view.players.find((p) => p.id !== view.me)!;
+  act(() => useGame.setState({ pings: [{ from: teammate.id, team: view.team, hex: { q: 0, r: 0 }, turn: view.turn, seq: 1 }] }));
+  expect(useAdvisor.getState().seen).not.toContain('teamPing');
+  act(() => { expect(useGame.getState().sendPing({ q: 1, r: 1 })).toBe(true); });
+  expect(readAdvisorPreferences().seen).toContain('teamPing');
+  act(() => useGame.setState({ pings: [] }));
+  expect(readAdvisorPreferences().seen).toContain('teamPing');
 });

@@ -1099,132 +1099,6 @@ impl Planner<'_> {
         })
     }
 
-    /// A human city's one delegated choice, using Hard's production valuation over its fogged
-    /// view (Sam, 2026-11-22: Military, Economy, or a Gold, Science or Food stream). A stream
-    /// focus runs its project and nothing else. Military trains the best land unit of each line
-    /// the empire can build with its strategic resources (`composition::best_buildable_in_line`),
-    /// never an outdated one; Economy builds buildings, Great Works and improvements, never units.
-    /// Either falls back to the other kind of build only when its own kind has nothing, and to a
-    /// project once nothing is left. Focus picks a category; it never changes the rules.
-    fn automated_choice(
-        &self,
-        city: CityId,
-        focus: CityBuildFocus,
-        planned: &[ProductionItem],
-    ) -> Option<ProductionItem> {
-        let (ci, c) = self
-            .ctx
-            .own_cities
-            .iter()
-            .enumerate()
-            .find(|(_, c)| c.id == city)?;
-        let d = c.detail.as_ref()?;
-        if let Some(project) = focus.stream() {
-            // Nile Egypt's Food stream is Grow, which turns all of its surplus Food into growth.
-            let project = if project == legatum_core::IndustryProject::Food
-                && self.faction == Faction::Egypt
-                && self.view().rule_experiments.egypt_nile()
-            {
-                legatum_core::IndustryProject::Grow
-            } else {
-                project
-            };
-            let item = ProductionItem::Project { project };
-            return d.options.iter().any(|o| o.item == item).then_some(item);
-        }
-        let mut tally = Tally {
-            army: 0,
-            rangers: 0,
-            scouts: 0,
-            heir_pipeline: 0,
-            settler_pipeline: 0,
-            slow_settlers: 0,
-            relay_started: false,
-            sites: self.count_good_sites(4),
-        };
-        for u in &self.ctx.own_units {
-            tally.add(ProductionItem::Unit { unit: u.kind });
-        }
-        for own in &self.ctx.own_cities {
-            if let Some(item) = own.detail.as_ref().and_then(|detail| detail.producing) {
-                // The build completing this turn does not remain in the pipeline.
-                if own.id != city {
-                    tally.add(item);
-                }
-            }
-        }
-        for item in planned {
-            tally.add(*item);
-        }
-        let era = self.view().era_of(self.view().me);
-        let open = |item: ProductionItem| {
-            self.view()
-                .rule_experiments
-                .available_to_player(self.faction, era, item)
-        };
-        // What this city can train right now, strategic resources included.
-        let buildable = |unit: UnitKind| {
-            let item = ProductionItem::Unit { unit };
-            open(item)
-                && d.options
-                    .iter()
-                    .any(|o| o.item == item && o.resource_blocker.is_none())
-        };
-        // Military's own kind is fighting units; Economy's is everything but units. Each fills in
-        // with the other's kind only when its own has nothing (user, 2026-11-01: a Military city
-        // built a Farm and a Granary). Economy never trains units, and neither focus trains
-        // Settlers, Scouts or other civilians: expansion and exploring stay the player's call.
-        let scored: Vec<(bool, i32, ProductionItem)> = d
-            .options
-            .iter()
-            .filter_map(|opt| {
-                let unit = match opt.item {
-                    ProductionItem::Unit { unit } => Some(unit),
-                    _ => None,
-                };
-                if matches!(opt.item, ProductionItem::Project { .. })
-                    || unit.is_some_and(|u| {
-                        focus == CityBuildFocus::Economy || !composition::is_combat(u)
-                    })
-                    || unit.is_some_and(|u| composition::outdated_by_buildable(u, buildable))
-                    || opt.resource_blocker.is_some()
-                    || !open(opt.item)
-                    || unit.is_some_and(|u| self.troop_unfunded(ci, c, u))
-                    || (d.producing == Some(opt.item) && unit.is_none())
-                {
-                    return None;
-                }
-                let favored = (focus == CityBuildFocus::Military) == is_military_unit(opt.item);
-                let value = self.item_value(ci, c, opt, &tally) - self.wonder_tile_penalty(opt);
-                // Hard may see no use for one more unit in peacetime; the player's focus says otherwise.
-                let value = if favored { value.max(1) } else { value };
-                if value <= 0 {
-                    return None;
-                }
-                let score = value * 60 / (opt.turns.clamp(0, 400) + 60)
-                    + value * opt.production_banked.clamp(0, opt.cost.max(1)) / opt.cost.max(1) / 2;
-                Some((favored, score, opt.item))
-            })
-            .collect();
-        let any_favored = scored.iter().any(|(favored, _, _)| *favored);
-        // Military trains the newest generation it can (Sam: "the most advanced military units");
-        // value only chooses within it. A unit floored at value 1 scores 0, so value alone would
-        // fall back to enum order (a Cataphract over a Knight).
-        let generation = |item: ProductionItem| match item {
-            ProductionItem::Unit { unit } if focus == CityBuildFocus::Military => {
-                composition::quality(unit)
-            }
-            _ => 0,
-        };
-        scored
-            .iter()
-            .filter(|(favored, _, _)| *favored || !any_favored)
-            .max_by_key(|(_, score, item)| (generation(*item), *score, *item))
-            .map(|(_, _, item)| *item)
-            // Nothing left worth building: a project, never a filler unit.
-            .or_else(|| self.idle_project(d, None))
-    }
-
     pub(crate) fn production_defense_trace(&self) -> Vec<ProductionDefenseTrace> {
         self.ctx
             .own_cities
@@ -6878,13 +6752,8 @@ pub fn city_automation_choice_with_pipeline(
     focus: CityBuildFocus,
     planned: &[ProductionItem],
 ) -> Option<ProductionItem> {
-    let faction = view.players.iter().find(|p| p.id == view.me)?.faction;
-    let brain =
-        crate::scripted::ScriptedBrain::with_difficulty(faction, 0, view.me, AiDifficulty::Hard);
-    let mut planner = crate::scripted::Planner::new(view, brain.knobs, faction, 0);
-    planner.difficulty = AiDifficulty::Hard;
-    planner.decisions = brain.planner_decisions();
-    planner.automated_choice(city, focus, planned)
+    let _ = (focus, planned); // Saved legacy focuses all delegate to the same economic policy.
+    crate::economic_automation::choose(view, city)
 }
 
 #[cfg(test)]
@@ -6957,103 +6826,20 @@ mod automation_tests {
     }
 
     #[test]
-    fn focus_changes_hards_city_pick_and_is_deterministic() {
+    fn legacy_focus_values_use_the_same_deterministic_economy_policy() {
         let view = ViewBuilder::new(20, 20)
             .known_techs(&[TechId::Writing, TechId::Currency])
             .city(1, ME, off(8, 8), 4)
-            .unit(2, ME, UnitKind::Spearman, off(8, 8))
             .build();
-        let pick = |focus| city_automation_choice(&view, CityId(1), focus);
-        assert!(
-            matches!(
-                pick(CityBuildFocus::Economy),
-                Some(ProductionItem::Building { .. })
-            ),
-            "{:?}",
-            pick(CityBuildFocus::Economy)
-        );
-        assert_eq!(pick(CityBuildFocus::Economy), pick(CityBuildFocus::Economy));
-        let threatened = ViewBuilder::new(20, 20)
-            .known_techs(&[TechId::Writing, TechId::Currency])
-            .city(1, ME, off(8, 8), 4)
-            .unit(2, ME, UnitKind::Spearman, off(8, 8))
-            .unit(3, ENEMY, UnitKind::Spearman, off(10, 8))
-            .build();
-        assert!(
-            matches!(city_automation_choice(&threatened, CityId(1), CityBuildFocus::Military), Some(item) if is_military_unit(item))
-        );
-    }
-
-    /// A Gold, Science or Food stream runs that project and nothing else, even in an empty or
-    /// threatened city with buildings left to build (Sam, 2026-11-22: "I pick one of the 3
-    /// passive streams").
-    #[test]
-    fn a_stream_runs_its_project_even_in_an_empty_or_threatened_city() {
-        use legatum_core::IndustryProject::{Food, Gold, Science};
-        for enemy in [false, true] {
-            let mut b = ViewBuilder::new(20, 20)
-                .known_techs(&[TechId::Writing, TechId::Currency])
-                .city(1, ME, off(8, 8), 4);
-            if enemy {
-                b = b.unit(3, ENEMY, UnitKind::Spearman, off(10, 8));
-            }
-            let view = b.build();
-            for (focus, project) in [
-                (CityBuildFocus::Gold, Gold),
-                (CityBuildFocus::Science, Science),
-                (CityBuildFocus::Food, Food),
-            ] {
-                assert_eq!(
-                    city_automation_choice(&view, CityId(1), focus),
-                    Some(ProductionItem::Project { project }),
-                    "enemy {enemy}"
-                );
-            }
-        }
-    }
-
-    /// Nile Egypt's Food stream is Grow: Egypt has no Food project.
-    #[test]
-    fn egypts_food_stream_is_grow() {
-        let mut view = ViewBuilder::new(20, 20)
-            .faction(legatum_core::Faction::Egypt)
-            .city(1, ME, off(8, 8), 3)
-            .build();
-        let d = view.cities[0].detail.as_mut().unwrap();
-        d.options.retain(|o| {
-            o.item
-                != ProductionItem::Project {
-                    project: legatum_core::IndustryProject::Food,
-                }
-        });
-        let grow = ProductionOption {
-            item: ProductionItem::Project {
-                project: legatum_core::IndustryProject::Grow,
-            },
-            ..d.options[0].clone()
-        };
-        d.options.push(grow);
-        assert_eq!(
-            city_automation_choice(&view, CityId(1), CityBuildFocus::Food),
-            Some(ProductionItem::Project {
-                project: legatum_core::IndustryProject::Grow
-            })
-        );
-    }
-
-    /// A Military city trains a unit even in peacetime, when Hard would rather grow (user, 2026-11-01: a
-    /// Military capital at population 2 built a Granary and a Farm instead).
-    #[test]
-    fn military_focus_trains_a_unit_in_peacetime() {
-        for pop in [1, 2, 4] {
-            let view = ViewBuilder::new(20, 20)
-                .city(1, ME, off(8, 8), pop)
-                .unit(2, ME, UnitKind::Spearman, off(8, 8))
-                .build();
-            assert!(
-                matches!(city_automation_choice(&view, CityId(1), CityBuildFocus::Military), Some(item) if is_military_unit(item)),
-                "population {pop}"
-            );
+        let expected = city_automation_choice(&view, CityId(1), CityBuildFocus::Economy);
+        assert!(expected.is_some());
+        for focus in [
+            CityBuildFocus::Military,
+            CityBuildFocus::Gold,
+            CityBuildFocus::Science,
+            CityBuildFocus::Food,
+        ] {
+            assert_eq!(city_automation_choice(&view, CityId(1), focus), expected);
         }
     }
 
@@ -7092,60 +6878,6 @@ mod automation_tests {
                 "explore {explore}"
             );
         }
-    }
-
-    /// Military trains the best unit of a line it can build with its strategic resources, never
-    /// an outdated one (Sam, 2026-11-22: late-game automation built outdated units), and drops to
-    /// the older unit when the newer one lacks its resource.
-    #[test]
-    fn military_focus_trains_the_best_unit_its_resources_allow() {
-        let view = ViewBuilder::new(20, 20)
-            .known_techs(&[
-                TechId::Mathematics,
-                TechId::Engineering,
-                TechId::IronWorking,
-                TechId::Machinery,
-                TechId::Feudalism,
-                TechId::Chivalry,
-            ])
-            .city(1, ME, off(8, 8), 6)
-            .unit(2, ME, UnitKind::Spearman, off(8, 8))
-            .build();
-        let d = view.cities[0].detail.as_ref().unwrap();
-        let buildable = |unit| {
-            d.options
-                .iter()
-                .any(|o| o.item == ProductionItem::Unit { unit } && o.resource_blocker.is_none())
-        };
-        let pick = city_automation_choice(&view, CityId(1), CityBuildFocus::Military);
-        let Some(ProductionItem::Unit { unit }) = pick else {
-            panic!("a unit: {pick:?}");
-        };
-        assert!(
-            !composition::outdated_by_buildable(unit, buildable),
-            "{unit:?} is outdated"
-        );
-        // Block every resource-hungry option: the pick is still the best of what remains.
-        let mut starved = view.clone();
-        for o in &mut starved.cities[0].detail.as_mut().unwrap().options {
-            if matches!(o.item, ProductionItem::Unit { .. })
-                && legatum_core::resources::item_need(o.item).is_some()
-            {
-                o.resource_blocker = Some("needs Iron".into());
-            }
-        }
-        let d = starved.cities[0].detail.as_ref().unwrap();
-        let open = |unit| {
-            d.options
-                .iter()
-                .any(|o| o.item == ProductionItem::Unit { unit } && o.resource_blocker.is_none())
-        };
-        let pick = city_automation_choice(&starved, CityId(1), CityBuildFocus::Military);
-        let Some(ProductionItem::Unit { unit }) = pick else {
-            panic!("a unit without resources: {pick:?}");
-        };
-        assert!(open(unit), "{unit:?} needs a resource");
-        assert!(!composition::outdated_by_buildable(unit, open), "{unit:?}");
     }
 
     /// Economy never trains a unit, even for an empty or threatened city.

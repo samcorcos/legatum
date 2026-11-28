@@ -10,6 +10,7 @@
 // RuntimeError "unreachable" (real message on console.error); recreate from the last save.
 import { engineWork, type TurnFrameTime } from './frameTelemetry';
 import type { GameClient } from './client';
+import { registerLiveView } from './settlement';
 import type { WhyCategory, WhyQuestion } from './why';
 import type { TrainingEngine, TrainingFinish, TrainingProgress } from './training';
 import type { SettlementScore, SettlementSite, SiteBlocker } from './types';
@@ -32,6 +33,11 @@ interface WasmGame {
   validate(p: number, ordersJson: string): string;
   forecast(p: number, unit: number, q: number, r: number, mode: AttackMode): string | null | undefined;
   assault(p: number, unit: number, q: number, r: number, mode: AttackMode, alongsideJson: string): string | null | undefined;
+  player_settlement_sites?(player: number, unit: number, reserved: string): string;
+  player_settlement_site?(player: number, unit: number, q: number, r: number, reserved: string): string;
+  player_site_blocker?(player: number, q: number, r: number): string;
+  player_site_blockers?(player: number): string;
+  player_units_can_reach?(player: number, units: string, q: number, r: number): string;
   end_turn(humanOrdersJson: string): string;
   plan_ahead?(): number;
   save(): string;
@@ -121,6 +127,8 @@ function timedClient(client: WasmClient): GameClient {
 export class WasmClient implements GameClient, TrainingEngine {
   readonly kind = 'wasm' as const;
   private game: WasmGame | null = null;
+  private generation = 0;
+  private liveViews = new WeakMap<PlayerView, { game: WasmGame; generation: number; player: number }>();
   constructor(private readonly Game: WasmGameClass) {}
 
   private get g(): WasmGame {
@@ -128,10 +136,16 @@ export class WasmClient implements GameClient, TrainingEngine {
     return this.game;
   }
 
+  private isLiveView(view: PlayerView): number | null {
+    const entry = this.liveViews.get(view);
+    return entry && entry.game === this.game && entry.generation === this.generation ? entry.player : null;
+  }
+
   async newGame(setup: GameSetup): Promise<void> {
     const replacement = new this.Game(JSON.stringify(setup));
     const previous = this.game;
     this.game = replacement;
+    this.generation++;
     previous?.free?.();
   }
 
@@ -140,7 +154,12 @@ export class WasmClient implements GameClient, TrainingEngine {
   }
 
   view(player: number): PlayerView {
-    return JSON.parse(this.g.view(player));
+    const g = this.g;
+    const gen = this.generation;
+    const v = JSON.parse(g.view(player)) as PlayerView;
+    this.liveViews.set(v, { game: g, generation: gen, player });
+    registerLiveView(v, player, g, () => this.game === g && this.generation === gen);
+    return v;
   }
 
   hash(): string { return this.g.hash(); }
@@ -162,14 +181,26 @@ export class WasmClient implements GameClient, TrainingEngine {
   }
 
   settlementSites(view: PlayerView, unit: number, reserved: Hex[]): SettlementScore[] {
+    const livePlayer = this.isLiveView(view);
+    if (livePlayer !== null && this.g.player_settlement_sites) {
+      return JSON.parse(this.g.player_settlement_sites(livePlayer, unit, JSON.stringify(reserved)));
+    }
     return JSON.parse(this.Game.settlement_sites(JSON.stringify(view), unit, JSON.stringify(reserved)));
   }
 
   settlementSite(view: PlayerView, unit: number, pos: Hex, reserved: Hex[]): SettlementSite | null {
+    const livePlayer = this.isLiveView(view);
+    if (livePlayer !== null && this.g.player_settlement_site) {
+      return JSON.parse(this.g.player_settlement_site(livePlayer, unit, pos.q, pos.r, JSON.stringify(reserved)));
+    }
     return JSON.parse(this.Game.settlement_site(JSON.stringify(view), unit, pos.q, pos.r, JSON.stringify(reserved)));
   }
 
   siteBlocker(view: PlayerView, pos: Hex): SiteBlocker | null {
+    const livePlayer = this.isLiveView(view);
+    if (livePlayer !== null && this.g.player_site_blocker) {
+      return JSON.parse(this.g.player_site_blocker(livePlayer, pos.q, pos.r));
+    }
     return JSON.parse(this.Game.site_blocker(JSON.stringify(view), pos.q, pos.r));
   }
 
@@ -190,7 +221,9 @@ export class WasmClient implements GameClient, TrainingEngine {
   }
 
   endTurn(humanOrders: Record<number, Order[]>): TurnResult {
-    return JSON.parse(this.g.end_turn(JSON.stringify(humanOrders)));
+    const res = JSON.parse(this.g.end_turn(JSON.stringify(humanOrders))) as TurnResult;
+    this.generation++;
+    return res;
   }
 
   planAhead(): number {
@@ -215,6 +248,7 @@ export class WasmClient implements GameClient, TrainingEngine {
     const replacement = this.Game.load(json);
     const previous = this.game;
     this.game = replacement;
+    this.generation++;
     previous?.free?.();
   }
 
