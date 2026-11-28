@@ -6,11 +6,15 @@ import { itemKey } from '../data';
 import { useGame } from '../store';
 import type { PlayerView, UnitView } from '../types';
 import { targetElement } from './Advisor';
+import { discoverySuggestion } from './advisorDiscovery';
 import { CityPanel } from './CityPanel';
 import { UnitPanel } from './UnitPanel';
 import { AirWing } from './AirWing';
 import { PingControl } from './PingControl';
 import { CitiesButton } from './CitiesOverview';
+import { RivalsTable } from './RivalsTable';
+import { buildVpModel } from '../vpModel';
+import { empireTitle } from '../empires';
 import { LensSwitcher } from '../map/LensSwitcher';
 let view: PlayerView;
 beforeEach(async () => {
@@ -64,7 +68,41 @@ it('rings Cities and the map chooser before its hidden Yields control', () => {
   expect(targetElement({ kind: 'control', name: 'mapYields' })?.getAttribute('data-overlay')).toBe('yields');
 });
 
-it('rings a met rival row in the right sidebar for the diplomacy discovery lesson', () => {
-  render(<div className="game"><section className="panel vp"><div className="rivals"><button className="rv-row">India</button></div><footer className="rivals-foot"><button>Diplomacy</button></footer></section></div>);
-  expect(targetElement({ kind: 'control', name: 'rivalRow' })?.textContent).toBe('India');
+it('rings the exact rival row named in the diplomacy lesson even when another met rival leads on VP', () => {
+  const rivals = view.players.filter((p) => p.team !== view.team && p.alive);
+  expect(rivals.length).toBeGreaterThanOrEqual(2);
+  const [firstMet, higherVp] = rivals;
+  // Contact order has firstMet before higherVp, while VP standings place higherVp first in the sidebar.
+  view.turn = 8;
+  view.diplomacy.met = [view.team, firstMet.team, higherVp.team];
+  for (const s of view.standings) {
+    if (s.team === higherVp.team) s.vp = 8;
+    else if (s.team === firstMet.team) s.vp = 1;
+  }
+  const advice = discoverySuggestion({ view, orders: [], selection: null, humans: 1, touch: false, plan: [] }, ['welcome', 'report', 'howToWin'], [], {});
+  expect(advice?.id).toBe('diplomacy');
+  const namedRival = empireTitle(view, firstMet.team);
+  expect(advice!.title).toBe(`Talk to ${namedRival}`);
+  expect(advice!.steps[0].instruction).toContain(namedRival);
+
+  const model = buildVpModel(view);
+  render(
+    <div className="game">
+      <section className="panel vp">
+        <RivalsTable view={view} model={model} relationOf={() => ({ kind: 'peace', text: 'Peace', title: 'At Peace' })} onOpen={() => {}} />
+        <footer className="rivals-foot"><button>Diplomacy</button></footer>
+      </section>
+    </div>,
+  );
+  // Confirm higherVp is indeed rendered before firstMet in the sidebar table.
+  const rows = [...document.querySelectorAll<HTMLElement>('.game .panel.vp .rivals button.rv-row')];
+  expect(rows[0].dataset.rivalTeam).toBe(String(higherVp.team));
+  expect(rows.some((r) => r.dataset.rivalTeam === String(firstMet.team))).toBe(true);
+
+  // Confirm the advisor ring lands on firstMet's row, matching the lesson text.
+  const target = advice!.steps[0].target;
+  expect(target?.kind).toBe('control');
+  const ringed = target?.kind === 'control' ? targetElement(target) : null;
+  expect(ringed?.dataset.rivalTeam).toBe(String(firstMet.team));
+  expect(ringed?.textContent).toContain(namedRival);
 });

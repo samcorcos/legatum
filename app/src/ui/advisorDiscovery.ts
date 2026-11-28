@@ -100,7 +100,7 @@ export function discoverySuggestion(ctx: AdvisorContext, seen: readonly string[]
     const instruction = ctx.touch
       ? `Tap ${rivalName} in the rivals list, or open Diplomacy from the menu.`
       : `Click ${rivalName} in the right sidebar to open Diplomacy.`;
-    return lesson('diplomacy', `Talk to ${rivalName}`, why, [{ instruction, target: control('rivalRow') }], 0);
+    return lesson('diplomacy', `Talk to ${rivalName}`, why, [{ instruction, target: control('rivalRow', String(metRival)) }], 0);
   }
   if (ctx.selection?.kind === 'air' && available('airOperations')) {
     const plane = v.aircraft?.find((p) => p.id === ctx.selection!.id && p.owner === v.me);

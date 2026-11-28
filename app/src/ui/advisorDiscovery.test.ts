@@ -218,7 +218,7 @@ describe('feature discovery', () => {
     view.diplomacy.met = [view.team, rival.team];
     const advice = discoverySuggestion(ctx, seen, [], {});
     expect(advice).toMatchObject({ id: 'diplomacy', current: 0, acknowledge: true, steps: [
-      { target: { kind: 'control', name: 'rivalRow' } },
+      { target: { kind: 'control', name: 'rivalRow', value: String(rival.team) } },
     ] });
     expect(advice!.steps[0].instruction).toContain('right sidebar');
     expect(advice!.why).toContain('offer Peace or an Alliance');

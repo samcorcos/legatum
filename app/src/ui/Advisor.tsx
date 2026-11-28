@@ -29,7 +29,13 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'race': return first('.game .panel.vp .rivals', '.phone-vp-strip');
     // Phones have no persistent Diplomacy control; the lesson stays readable without a ring.
     case 'diplomacy': return first('.game .panel.vp .rivals-foot button', '.game .panel.vp .rivals button.rv-row');
-    case 'rivalRow': return first('.game .panel.vp .rivals button.rv-row', '.game .panel.vp .rivals-foot button');
+    case 'rivalRow': {
+      const exact = target.value
+        ? [...document.querySelectorAll<HTMLElement>('.game .panel.vp .rivals button.rv-row')]
+          .find((e) => e.dataset.rivalTeam === target.value && e.getClientRects().length) ?? null
+        : null;
+      return exact ?? first('.game .panel.vp .rivals button.rv-row', '.game .panel.vp .rivals-foot button');
+    }
     case 'found': return action(/^Found City/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);
     case 'skip': return action(/^Skip/i);

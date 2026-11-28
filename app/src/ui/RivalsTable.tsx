@@ -117,7 +117,7 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
         // A met rival's row opens Diplomacy with it; your own row and an unmet one are not buttons.
         return row.isMine || unmet
           ? <div key={row.team} className={cls} style={style} role="row" aria-label={aria}>{who}{vp}{cells}{chips}{bar}</div>
-          : <button key={row.team} type="button" className={cls} style={style} role="row" aria-label={`${aria}. Open Diplomacy`} onClick={() => onOpen(row.team)}>{who}{vp}{cells}{chips}{bar}</button>;
+          : <button key={row.team} type="button" className={cls} style={style} role="row" data-rival-team={String(row.team)} aria-label={`${aria}. Open Diplomacy`} onClick={() => onOpen(row.team)}>{who}{vp}{cells}{chips}{bar}</button>;
       })}
     </div>
   );
