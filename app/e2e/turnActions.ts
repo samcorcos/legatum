@@ -20,17 +20,38 @@ export async function dismissInterstitials(page: Page) {
     await expect(screen).toHaveCount(0);
   }
   // A new Age opens with its takeover and then the score check; first contact opens meeting-takeover.
-  for (let i = 0; i < 6; i++) {
-    const age = page.locator('[data-testid="era-takeover"], [data-testid="score-check"], [data-testid="meeting-takeover"]').first();
-    if (!(await age.isVisible())) break;
-    const id = await age.getAttribute('data-testid');
-    // The takeover's primary may open Research; "Later" (Escape) leaves it, as a player planning elsewhere would.
-    // Escape also closes first-contact meeting-takeover without moving the camera.
-    if (id === 'era-takeover') { await skipEraFilm(page); await page.keyboard.press('Escape'); }
-    else if (id === 'meeting-takeover') await page.keyboard.press('Escape');
-    else await age.locator('[data-primary-action]').click();
-    await expect(age).toHaveCount(0);
+  const cards = page.locator('[data-testid="era-takeover"], [data-testid="score-check"], [data-testid="meeting-takeover"]');
+  for (let i = 0; i < 12; i++) {
+    const card = cards.first();
+    if (!(await card.isVisible())) break;
+    const node = await card.elementHandle();
+    if (!node) continue;
+    try {
+      const prev = await node.evaluate((el) => ({
+        testId: el.getAttribute('data-testid'),
+        people: el.getAttribute('data-people'),
+        era: el.getAttribute('data-era'),
+        label: el.getAttribute('aria-label'),
+      }));
+      // The takeover's primary may open Research; "Later" (Escape) leaves it, as a player planning elsewhere would.
+      // Escape also closes first-contact meeting-takeover without moving the camera.
+      if (prev.testId === 'era-takeover') { await skipEraFilm(page); await page.keyboard.press('Escape'); }
+      else if (prev.testId === 'meeting-takeover') await page.keyboard.press('Escape');
+      else await card.locator('[data-primary-action]').click();
+      // MomentLane mounts the next held card immediately on dismiss, so wait for this specific card to leave.
+      await page.waitForFunction(
+        ([el, before]) => !el.isConnected
+          || el.getAttribute('data-testid') !== before.testId
+          || el.getAttribute('data-people') !== before.people
+          || el.getAttribute('data-era') !== before.era
+          || el.getAttribute('aria-label') !== before.label,
+        [node, prev] as const,
+      );
+    } finally {
+      await node.dispose();
+    }
   }
+  await expect(cards).toHaveCount(0);
 }
 
 /** A declared war is part of the turn's story; acknowledge it before using the report or dock. */
