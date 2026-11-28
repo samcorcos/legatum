@@ -450,7 +450,7 @@ impl Planner<'_> {
                 Some((data::unit_era_tier(unit), strength, cost))
             })
             .collect();
-        let quote = if self.decisions.named_fund > 0 && self.difficulty == AiDifficulty::Hard {
+        let quote = if self.difficulty == AiDifficulty::Hard {
             quotes
                 .iter()
                 .max_by_key(|q| (q.0, q.1, -q.2))
@@ -466,7 +466,16 @@ impl Planner<'_> {
         } else {
             0
         };
-        let cap = v.economy.gold_per_turn.total.max(0) * INCOME_TURNS;
+        // Negative/zero net GPT during wartime upkeep must not collapse the hold to zero for
+        // an empire with a real treasury; cap by gross income turns (and treasury when net <= 0).
+        let gross_income = (v.economy.gold_per_turn.total + v.economy.upkeep).max(0);
+        let cap = if v.economy.gold_per_turn.total < 0 {
+            gross_income
+                .saturating_mul(INCOME_TURNS)
+                .max(v.economy.gold.max(0) / 2)
+        } else {
+            gross_income.saturating_mul(INCOME_TURNS)
+        };
         let held = (spike + defenders * quote + army).min(cap);
         self.held_gold.set(Some(held));
         held

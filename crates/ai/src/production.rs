@@ -4860,8 +4860,8 @@ impl Planner<'_> {
                         }
                         // The Rice Storehouse stays with Japan when it becomes playable again.
                         BuildingKind::RiceStorehouse => 0,
-                        // Valued with the Modern era's deliberate air-defence play (increment 3).
-                        BuildingKind::AirDefence => 0,
+                        // Air Defence intercepts air strikes on its city (`rules::air`).
+                        BuildingKind::AirDefence => self.air_defence_value(c),
                         BuildingKind::Granary => 100 + k.economy * 2 + k.expansion,
                         BuildingKind::Workshop => 100 + k.economy * 2 + k.military,
                         BuildingKind::Market => {
@@ -5004,6 +5004,90 @@ impl Planner<'_> {
                         BuildingKind::Castle | BuildingKind::StarFort => return 0,
                     }
             }
+        }
+    }
+
+    /// Score `BuildingKind::AirDefence` (Modern era, intercepts air strikes on its city)
+    /// using only public rival era/sighting/contact information.
+    fn air_defence_value(&self, c: &CityView) -> i32 {
+        let v = self.view();
+        let k = &self.knobs;
+        let flight_era = legatum_core::eras::era_of_tech(legatum_core::TechId::Flight);
+        let air_power_era = legatum_core::eras::era_of_tech(legatum_core::TechId::AirPower);
+        let jet_era = legatum_core::eras::era_of_tech(legatum_core::TechId::JetEngines);
+        let modern_era = legatum_core::eras::era_of_tech(legatum_core::TechId::GuidedMissiles);
+        let bomber_range = |owner: legatum_core::PlayerId| {
+            let era = v.era_of(owner);
+            if era >= legatum_core::eras::LAST_ERA
+                || v.air_sightings
+                    .iter()
+                    .any(|a| a.owner == owner && a.kind == UnitKind::StealthBomber)
+            {
+                data::unit_stats(UnitKind::StealthBomber).range
+            } else if era >= jet_era {
+                data::JET_BOMBER_RANGE
+            } else if era >= air_power_era {
+                data::BOMBER_RANGE
+            } else {
+                data::BIPLANE_STRIKE_RANGE
+            }
+        };
+        let rival_has_air = |owner: legatum_core::PlayerId| {
+            !owner.is_barbarian()
+                && !v.same_team(v.me, owner)
+                && !v.allied(v.me, owner)
+                && (v.era_of(owner) >= flight_era
+                    || v.air_sightings.iter().any(|a| a.owner == owner)
+                    || v.air_contacts.iter().any(|a| a.owner == owner))
+        };
+        let mut war_in_range = false;
+        let mut rival_in_range = false;
+        for base in &v.cities {
+            if !rival_has_air(base.owner) {
+                continue;
+            }
+            if base.pos.distance(c.pos) <= bomber_range(base.owner) {
+                if v.at_war(v.me, base.owner) {
+                    war_in_range = true;
+                    break;
+                }
+                rival_in_range = true;
+            }
+        }
+        let any_rival_air = war_in_range
+            || rival_in_range
+            || v.players.iter().any(|p| p.alive && rival_has_air(p.id));
+        let key_city = c.is_capital
+            || self.own_original_capital(c)
+            || !c.great_works.is_empty()
+            || self.goal_city_guard(c)
+            || self.wonder_guard_city(c);
+        if war_in_range {
+            if key_city {
+                500 + k.military * 2
+            } else {
+                280 + k.military * 2
+            }
+        } else if rival_in_range {
+            if key_city {
+                300 + k.military * 2
+            } else {
+                140 + k.military
+            }
+        } else if any_rival_air {
+            if key_city {
+                160 + k.military
+            } else {
+                60 + k.military / 2
+            }
+        } else if v.era_of(v.me) >= modern_era
+            || v.research
+                .known
+                .contains(&legatum_core::TechId::GuidedMissiles)
+        {
+            if key_city { 40 } else { 20 }
+        } else {
+            0
         }
     }
 
@@ -6295,121 +6379,140 @@ impl Planner<'_> {
             .max(self.frontline_upgrade_reserve())
             .max(hold)
             .max(self.gold_reserve() + held);
-        let mut best: Option<(
-            i32,
-            std::cmp::Reverse<i32>,
-            std::cmp::Reverse<legatum_core::CityId>,
-            ProductionItem,
-        )> = None;
-        // An affordable-only search repeatedly empties a treasury on small buys while a
-        // better building stays one or two income turns away. Under the savings gene,
-        // compare total decision value among near-term purchases; Gold price enters as
-        // affordability and arrival time. The default retains value-per-Gold ranking.
-        let mut future: Option<(i32, i32, i32, i32)> = None; // value, quote, reserve, ETA
-        let net = if self.decisions.purchase_savings_turns > 0 {
-            self.planned_net_gold(0)
-        } else {
-            0
-        };
-        for (ci, c) in self.ctx.own_cities.iter().enumerate() {
-            let d = c.detail.as_ref().expect("own city detail");
-            if d.resistance > 0
-                || self
-                    .orders
-                    .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
-            {
-                continue;
-            }
-            for opt in &d.options {
-                // Emergency military and scoring purchases have their own forecast gate.
-                // Natural production supplies ordinary reinforcements.
-                if matches!(opt.item, ProductionItem::Unit { unit } if unit != UnitKind::Settler)
-                    || opt.turns <= 1
-                    || legatum_core::data::is_great_work_item(opt.item)
-                    || opt.buy_block.is_some()
-                        && (self.decisions.purchase_savings_turns == 0
-                            || !matches!(
-                                opt.buy_block,
-                                Some(legatum_core::economy::BuyBlock::NotEnoughGold)
-                            ))
+        let mut bought_any = false;
+        let max_buys = self.ctx.own_cities.len();
+        for _ in 0..max_buys {
+            let mut best: Option<(
+                i32,
+                std::cmp::Reverse<i32>,
+                std::cmp::Reverse<legatum_core::CityId>,
+                ProductionItem,
+            )> = None;
+            // An affordable-only search repeatedly empties a treasury on small buys while a
+            // better building stays one or two income turns away. Under the savings gene,
+            // compare total decision value among near-term purchases; Gold price enters as
+            // affordability and arrival time. The default retains value-per-Gold ranking.
+            let mut future: Option<(i32, i32, i32, i32)> = None; // value, quote, reserve, ETA
+            let net = if self.decisions.purchase_savings_turns > 0 {
+                self.planned_net_gold(0)
+            } else {
+                0
+            };
+            for (ci, c) in self.ctx.own_cities.iter().enumerate() {
+                let d = c.detail.as_ref().expect("own city detail");
+                if d.resistance > 0
+                    || self
+                        .orders
+                        .iter()
+                        .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
                 {
                     continue;
                 }
-                // A final Market's savings must not freeze a young colony's growth.
-                // Food buildings add population, and a claimed tile per growth; they still pay
-                // the normal reserve and any pending frontline upgrade.
-                let purchase_reserve = if matches!(
-                    opt.item,
-                    ProductionItem::Building {
-                        building: BuildingKind::Granary | BuildingKind::RiceStorehouse,
+                for opt in &d.options {
+                    // Emergency military and scoring purchases have their own forecast gate.
+                    // Natural production supplies ordinary reinforcements.
+                    if matches!(opt.item, ProductionItem::Unit { unit } if unit != UnitKind::Settler)
+                        || opt.turns <= 1
+                        || legatum_core::data::is_great_work_item(opt.item)
+                        || (matches!(
+                            opt.item,
+                            ProductionItem::Building {
+                                building: BuildingKind::YamRelayStation
+                                    | BuildingKind::ImperialDiwan,
+                            }
+                        ) && self
+                            .orders
+                            .iter()
+                            .any(|o| matches!(o, Order::BuyItem { item, .. } if *item == opt.item)))
+                        || opt.buy_block.is_some()
+                            && (self.decisions.purchase_savings_turns == 0
+                                || !matches!(
+                                    opt.buy_block,
+                                    Some(legatum_core::economy::BuyBlock::NotEnoughGold)
+                                ))
+                    {
+                        continue;
                     }
-                ) {
-                    self.ordinary_gold_reserve()
-                        .max(self.frontline_upgrade_reserve())
-                        .max(hold)
-                        .max(self.ordinary_gold_reserve() + held)
-                } else {
-                    reserve
-                };
-                let Some(cost) = opt.buy_cost.filter(|cost| *cost > 0) else {
-                    continue;
-                };
-                let value = self.item_value(ci, c, opt, tally);
-                if value <= self.decisions.purchase_min_value {
-                    continue;
-                }
-                if self.decisions.purchase_savings_turns > 0
-                    && matches!(opt.item, ProductionItem::Building { .. })
-                    && matches!(
-                        opt.buy_block,
-                        None | Some(legatum_core::economy::BuyBlock::NotEnoughGold)
-                    )
-                    && self.gold_left - cost < purchase_reserve
-                    && net > 0
-                {
-                    let gap = cost + purchase_reserve - self.gold_left;
-                    let eta = (gap + net - 1) / net;
-                    if eta <= self.decisions.purchase_savings_turns && opt.turns > eta + 1 {
-                        let candidate = (value, cost, purchase_reserve, eta);
-                        if future.is_none_or(|f| candidate.0 > f.0) {
-                            future = Some(candidate);
+                    // A final Market's savings must not freeze a young colony's growth.
+                    // Food buildings add population, and a claimed tile per growth; they still pay
+                    // the normal reserve and any pending frontline upgrade.
+                    let purchase_reserve = if matches!(
+                        opt.item,
+                        ProductionItem::Building {
+                            building: BuildingKind::Granary | BuildingKind::RiceStorehouse,
+                        }
+                    ) {
+                        self.ordinary_gold_reserve()
+                            .max(self.frontline_upgrade_reserve())
+                            .max(hold)
+                            .max(self.ordinary_gold_reserve() + held)
+                    } else {
+                        reserve
+                    };
+                    let Some(cost) = opt.buy_cost.filter(|cost| *cost > 0) else {
+                        continue;
+                    };
+                    let value = self.item_value(ci, c, opt, tally);
+                    if value <= self.decisions.purchase_min_value {
+                        continue;
+                    }
+                    if self.decisions.purchase_savings_turns > 0
+                        && matches!(opt.item, ProductionItem::Building { .. })
+                        && matches!(
+                            opt.buy_block,
+                            None | Some(legatum_core::economy::BuyBlock::NotEnoughGold)
+                        )
+                        && self.gold_left - cost < purchase_reserve
+                        && net > 0
+                    {
+                        let gap = cost + purchase_reserve - self.gold_left;
+                        let eta = (gap + net - 1) / net;
+                        if eta <= self.decisions.purchase_savings_turns && opt.turns > eta + 1 {
+                            let candidate = (value, cost, purchase_reserve, eta);
+                            if future.is_none_or(|f| candidate.0 > f.0) {
+                                future = Some(candidate);
+                            }
                         }
                     }
-                }
-                if opt.buy_block.is_some() || self.gold_left - cost < purchase_reserve {
-                    continue;
-                }
-                let candidate = (
-                    if self.decisions.purchase_savings_turns > 0 {
-                        value
-                    } else {
-                        value * 1000 / cost
-                    },
-                    std::cmp::Reverse(cost),
-                    std::cmp::Reverse(c.id),
-                    opt.item,
-                );
-                if best.is_none_or(|best| candidate > best) {
-                    best = Some(candidate);
+                    if opt.buy_block.is_some() || self.gold_left - cost < purchase_reserve {
+                        continue;
+                    }
+                    let candidate = (
+                        if self.decisions.purchase_savings_turns > 0 {
+                            value
+                        } else {
+                            value * 1000 / cost
+                        },
+                        std::cmp::Reverse(cost),
+                        std::cmp::Reverse(c.id),
+                        opt.item,
+                    );
+                    if best.is_none_or(|best| candidate > best) {
+                        best = Some(candidate);
+                    }
                 }
             }
+            if let Some((future_value, target_cost, target_reserve, eta)) = future
+                && best.is_none_or(|b| future_value > b.0)
+                && best.is_none_or(|b| {
+                    let affordable_cost = b.1.0;
+                    let gap_after =
+                        target_cost + target_reserve - (self.gold_left - affordable_cost);
+                    (gap_after + net - 1) / net > eta
+                })
+            {
+                return;
+            }
+            if let Some((_, std::cmp::Reverse(cost), std::cmp::Reverse(city), item)) = best {
+                self.gold_left -= cost;
+                self.orders.push(Order::BuyItem { city, item });
+                tally.add(item);
+                bought_any = true;
+            } else {
+                break;
+            }
         }
-        if let Some((future_value, target_cost, target_reserve, eta)) = future
-            && best.is_none_or(|b| future_value > b.0)
-            && best.is_none_or(|b| {
-                let affordable_cost = b.1.0;
-                let gap_after = target_cost + target_reserve - (self.gold_left - affordable_cost);
-                (gap_after + net - 1) / net > eta
-            })
-        {
-            return;
-        }
-        if let Some((_, std::cmp::Reverse(cost), std::cmp::Reverse(city), item)) = best {
-            self.gold_left -= cost;
-            self.orders.push(Order::BuyItem { city, item });
-            tally.add(item);
-        } else {
+        if !bought_any {
             self.buy_surplus_army(tally, reserve);
             self.tag_buys("surplus_army");
         }
@@ -6546,76 +6649,86 @@ impl Planner<'_> {
             return;
         }
         let upkeep = self.marginal_military_upkeep();
-        // Each further 400 Gold of idle treasury funds one more unit beyond the
-        // routine army: strength wins the Army title and breaks late stalemates.
-        let cap = self.desired_army() + 2 + (self.gold_left - reserve).max(0) / 400;
-        if tally.army >= cap {
-            return;
-        }
-        // The added upkeep must stay payable for 60 Standard turns from income or treasury.
-        let deficit = (upkeep - self.view().economy.gold_per_turn.total).max(0);
-        let reserve = reserve + deficit * self.decisions.surplus_upkeep_turns;
-        let mut best: Option<(
-            i32,
-            i32,
-            std::cmp::Reverse<i32>,
-            legatum_core::CityId,
-            ProductionItem,
-        )> = None;
-        for (ci, c) in self.ctx.own_cities.iter().enumerate() {
-            let d = c.detail.as_ref().expect("own city detail");
-            if d.resistance > 0
-                || self.military_upgrade_hold(c)
-                || self
-                    .orders
-                    .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
-            {
-                continue;
+        let max_buys = self.ctx.own_cities.len();
+        let mut bought_units: i32 = 0;
+        for _ in 0..max_buys {
+            // Each further 400 Gold of idle treasury funds one more unit beyond the
+            // routine army: strength wins the Army title and breaks late stalemates.
+            let cap = self.desired_army() + 2 + (self.gold_left - reserve).max(0) / 400;
+            if tally.army >= cap {
+                break;
             }
-            let exposed = self.exposed_city(c) || self.ctx.threat[ci] > 0;
-            for o in &d.options {
-                let ProductionItem::Unit { unit } = o.item else {
-                    continue;
-                };
-                if !is_military_unit(o.item) || o.buy_block.is_some() {
+            // The added upkeep must stay payable for 60 Standard turns from income or treasury.
+            let deficit =
+                (upkeep * (bought_units + 1) - self.view().economy.gold_per_turn.total).max(0);
+            let buy_reserve = reserve + deficit * self.decisions.surplus_upkeep_turns;
+            let mut best: Option<(
+                i32,
+                i32,
+                std::cmp::Reverse<i32>,
+                legatum_core::CityId,
+                ProductionItem,
+            )> = None;
+            for (ci, c) in self.ctx.own_cities.iter().enumerate() {
+                let d = c.detail.as_ref().expect("own city detail");
+                if d.resistance > 0
+                    || self.military_upgrade_hold(c)
+                    || self
+                        .orders
+                        .iter()
+                        .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+                {
                     continue;
                 }
-                let Some(cost) = o.buy_cost.filter(|c| *c > 0) else {
-                    continue;
-                };
-                // Keep enough for the reserve plus a second purchase: this is surplus only.
-                if self.gold_left - cost * self.decisions.surplus_purchase_percent / 100 < reserve {
-                    continue;
-                }
-                let value = self.military_purchase_score(unit, cost, c.pos)
-                    + if self.mongol_horde()
-                        && composition::is_mounted(unit)
-                        && self.best_mounted_option(c) == Some(unit)
+                let exposed = self.exposed_city(c) || self.ctx.threat[ci] > 0;
+                for o in &d.options {
+                    let ProductionItem::Unit { unit } = o.item else {
+                        continue;
+                    };
+                    if !is_military_unit(o.item) || o.buy_block.is_some() {
+                        continue;
+                    }
+                    let Some(cost) = o.buy_cost.filter(|c| *c > 0) else {
+                        continue;
+                    };
+                    // Keep enough for the reserve plus a second purchase: this is surplus only.
+                    if self.gold_left - cost * self.decisions.surplus_purchase_percent / 100
+                        < buy_reserve
                     {
-                        1000
+                        continue;
+                    }
+                    let value = self.military_purchase_score(unit, cost, c.pos)
+                        + if self.mongol_horde()
+                            && composition::is_mounted(unit)
+                            && self.best_mounted_option(c) == Some(unit)
+                        {
+                            1000
+                        } else {
+                            0
+                        }
+                        + if exposed { 50 } else { 0 };
+                    let tier = if self.decisions.hard_purchase_scorer == 0
+                        && self.decisions.named_fund > 0
+                        && self.difficulty == AiDifficulty::Hard
+                    {
+                        i32::from(data::unit_era_tier(unit))
                     } else {
                         0
+                    };
+                    let key = (tier, value, std::cmp::Reverse(cost), c.id, o.item);
+                    if best.is_none_or(|b| key > b) {
+                        best = Some(key);
                     }
-                    + if exposed { 50 } else { 0 };
-                let tier = if self.decisions.hard_purchase_scorer == 0
-                    && self.decisions.named_fund > 0
-                    && self.difficulty == AiDifficulty::Hard
-                {
-                    i32::from(data::unit_era_tier(unit))
-                } else {
-                    0
-                };
-                let key = (tier, value, std::cmp::Reverse(cost), c.id, o.item);
-                if best.is_none_or(|b| key > b) {
-                    best = Some(key);
                 }
             }
-        }
-        if let Some((_, _, std::cmp::Reverse(cost), city, item)) = best {
-            self.gold_left -= cost;
-            self.orders.push(Order::BuyItem { city, item });
-            tally.add(item);
+            if let Some((_, _, std::cmp::Reverse(cost), city, item)) = best {
+                self.gold_left -= cost;
+                self.orders.push(Order::BuyItem { city, item });
+                tally.add(item);
+                bought_units += 1;
+            } else {
+                break;
+            }
         }
     }
 
@@ -9035,5 +9148,215 @@ mod unit_concentration_tests {
         assert!(!p.defer_slow_duplicate_unit(&view.cities[1], slow_option));
         p.decisions.unit_concentration_turns = 20;
         assert!(!p.defer_slow_duplicate_unit(&view.cities[1], slow_option));
+    }
+}
+
+#[cfg(test)]
+mod ai_caps_tests {
+    use super::*;
+    use crate::Knobs;
+    use crate::fixture::{ENEMY, ME, ViewBuilder, off};
+    use legatum_core::{CityId, TechId};
+
+    fn empty_tally() -> Tally {
+        Tally {
+            army: 0,
+            rangers: 0,
+            scouts: 0,
+            heir_pipeline: 0,
+            settler_pipeline: 0,
+            slow_settlers: 0,
+            relay_started: false,
+            sites: 0,
+        }
+    }
+
+    #[test]
+    fn held_gold_stays_nonzero_on_negative_gpt_and_prices_current_era_defender() {
+        let mut view = ViewBuilder::new(24, 16)
+            .faction(Faction::Athens)
+            .known_techs(&[
+                TechId::BronzeWorking,
+                TechId::IronWorking,
+                TechId::Gunpowder,
+            ])
+            .gold(1500)
+            .city(1, ME, off(5, 5), 5)
+            .city(2, ENEMY, off(14, 5), 5)
+            .build();
+        // ViewBuilder sets legacy diplomacy (ME and ENEMY at war); set negative net GPT.
+        view.economy.gold_per_turn.total = -10;
+        view.economy.upkeep = 40;
+        let opts = &mut view.cities[0].detail.as_mut().unwrap().options;
+        opts.retain(|o| {
+            matches!(
+                o.item,
+                ProductionItem::Unit {
+                    unit: UnitKind::Spearman | UnitKind::Musketman
+                }
+            )
+        });
+        for o in opts.iter_mut() {
+            o.buy_block = None;
+            o.buy_cost = match o.item {
+                ProductionItem::Unit {
+                    unit: UnitKind::Spearman,
+                } => Some(80),
+                ProductionItem::Unit {
+                    unit: UnitKind::Musketman,
+                } => Some(260),
+                _ => o.buy_cost,
+            };
+        }
+        let mut p = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Athens),
+            Faction::Athens,
+            7,
+        );
+        p.difficulty = AiDifficulty::Hard;
+        p.decisions.buy_hold = 1;
+        p.decisions.named_fund = 0;
+        assert_eq!(
+            p.held_gold(),
+            260,
+            "Hard should hold the current-era defender quote even at negative net GPT and named_fund=0"
+        );
+    }
+
+    #[test]
+    fn plan_buy_purchases_in_multiple_cities_when_treasury_comfortably_exceeds_reserve() {
+        let mut view = ViewBuilder::new(30, 16)
+            .faction(Faction::Athens)
+            .gold(2500)
+            .city(1, ME, off(4, 5), 5)
+            .city(2, ME, off(12, 5), 5)
+            .city(3, ME, off(20, 5), 5)
+            .build();
+        view.economy.gold_per_turn.total = 40;
+        let granary = ProductionItem::Building {
+            building: BuildingKind::Granary,
+        };
+        for c in &mut view.cities {
+            let d = c.detail.as_mut().unwrap();
+            d.options.retain(|o| o.item == granary);
+            for o in &mut d.options {
+                o.turns = 10;
+                o.buy_cost = Some(120);
+                o.buy_block = None;
+            }
+        }
+        let mut p = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Athens),
+            Faction::Athens,
+            7,
+        );
+        p.decisions.buy_hold = 0;
+        p.plan_buy(&mut empty_tally());
+        let bought_cities: Vec<CityId> = p
+            .orders
+            .iter()
+            .filter_map(|o| match *o {
+                Order::BuyItem { city, item } if item == granary => Some(city),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            bought_cities.len(),
+            3,
+            "expected routine purchases across all 3 distinct cities, got {bought_cities:?}"
+        );
+    }
+
+    #[test]
+    fn buy_surplus_army_purchases_in_multiple_cities_in_one_turn() {
+        let mut view = ViewBuilder::new(30, 16)
+            .faction(Faction::Athens)
+            .gold(4000)
+            .city(1, ME, off(4, 5), 5)
+            .city(2, ME, off(12, 5), 5)
+            .city(3, ME, off(20, 5), 5)
+            .build();
+        view.economy.gold_per_turn.total = 80;
+        let spearman = ProductionItem::Unit {
+            unit: UnitKind::Spearman,
+        };
+        for c in &mut view.cities {
+            let d = c.detail.as_mut().unwrap();
+            d.options.retain(|o| o.item == spearman);
+            for o in &mut d.options {
+                o.turns = 6;
+                o.buy_cost = Some(100);
+                o.buy_block = None;
+            }
+        }
+        let mut p = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Athens),
+            Faction::Athens,
+            7,
+        );
+        p.decisions.buy_hold = 0;
+        p.plan_buy(&mut empty_tally());
+        let bought_cities: Vec<CityId> = p
+            .orders
+            .iter()
+            .filter_map(|o| match *o {
+                Order::BuyItem { city, item } if item == spearman => Some(city),
+                _ => None,
+            })
+            .collect();
+        assert!(
+            bought_cities.len() >= 2,
+            "expected surplus army purchases in >1 distinct city, got {bought_cities:?}"
+        );
+    }
+
+    #[test]
+    fn air_defence_scores_positive_in_modern_era_and_higher_under_air_threat() {
+        let modern_era = legatum_core::eras::era_of_tech(TechId::GuidedMissiles);
+        let air_power_era = legatum_core::eras::era_of_tech(TechId::AirPower);
+        let mut peace_view = ViewBuilder::new(30, 16)
+            .faction(Faction::Athens)
+            .known_techs(&[TechId::GuidedMissiles])
+            .era_of(ME.0, modern_era + 1)
+            .era_of(ENEMY.0, 1)
+            .city(1, ME, off(5, 5), 6)
+            .city(2, ENEMY, off(10, 5), 6)
+            .build();
+        peace_view.cities[0].is_capital = true;
+        let peace_planner = Planner::new(
+            &peace_view,
+            Knobs::for_faction(Faction::Athens),
+            Faction::Athens,
+            7,
+        );
+        let peace_score = peace_planner.air_defence_value(&peace_view.cities[0]);
+        assert!(
+            peace_score > 0,
+            "AirDefence should score > 0 in Modern era, got {peace_score}"
+        );
+
+        let mut war_view = ViewBuilder::new(30, 16)
+            .faction(Faction::Athens)
+            .known_techs(&[TechId::GuidedMissiles])
+            .era_of(ME.0, modern_era + 1)
+            .era_of(ENEMY.0, air_power_era + 1)
+            .city(1, ME, off(5, 5), 6)
+            .city(2, ENEMY, off(10, 5), 6)
+            .build();
+        war_view.cities[0].is_capital = true;
+        let war_planner = Planner::new(
+            &war_view,
+            Knobs::for_faction(Faction::Athens),
+            Faction::Athens,
+            7,
+        );
+        let war_score = war_planner.air_defence_value(&war_view.cities[0]);
+        assert!(
+            war_score > peace_score && war_score >= 500,
+            "AirDefence should score strongly under at-war air threat ({war_score} vs {peace_score})"
+        );
     }
 }
