@@ -11,7 +11,7 @@ const only = (...stems: string[]) => (stem: string, size: 64 | 128 | 512) => siz
 describe('city art', () => {
   it('normalizes representative house height while footprints grow by tier', () => {
     expect(cityDrawScale(markStem('hamlet'))).toBe(1);
-    const bounds = [[0.55, 0.66], [0.73, 0.84], [0.96, 1.08], [1.24, 1.36]];
+    const bounds = [[0.61, 0.72], [0.81, 0.91], [1.07, 1.19], [1.37, 1.51]];
     for (const era of CITY_ERAS) for (const [index, tier] of CITY_TIERS.entries()) {
       const stem = `${era}-${tier}` as keyof typeof cityScaleData.sprites;
       const { houseHeightPx, scale } = cityScaleData.sprites[stem];
@@ -26,7 +26,7 @@ describe('city art', () => {
       expect(roofY, stem).toBeGreaterThan(-BANNER_BOTTOM * HEX_SIZE);
     }
   });
-  it('measures opaque sprite widths at map scale, including the hamlet floor', () => {
+  it('measures opaque sprite widths at map scale, including the hamlet floor and hamlet-to-town separation', () => {
     const widths = (tier: string) => CITY_ERAS.map((era) => {
       const stem = `${era}-${tier}`;
       const png = alphaOf(fileURLToPath(new URL(`../assets/cities/${stem}.png`, import.meta.url)));
@@ -40,8 +40,11 @@ describe('city art', () => {
       expect(roofTop, `${stem} roof and banner`).toBeGreaterThan(-BANNER_BOTTOM * HEX_SIZE);
       return (right - left + 1) * CITY_WORLD / png.width * scale / HEX_W;
     }).sort((a, b) => a - b);
-    expect(widths('metropolis')[4]).toBeCloseTo(1.3, 1);
-    expect(widths('hamlet')[0]).toBeGreaterThanOrEqual(0.45);
+    const hamlets = widths('hamlet');
+    const towns = widths('town');
+    expect(widths('metropolis')[4]).toBeCloseTo(1.46, 1);
+    expect(hamlets[0]).toBeGreaterThanOrEqual(0.60);
+    expect(towns[0] - hamlets[hamlets.length - 1]).toBeGreaterThanOrEqual(0.10);
   });
   it('keeps every walled tier within 1.4 hex widths, including the complete ring', () => {
     const widthOf = (path: URL) => {
