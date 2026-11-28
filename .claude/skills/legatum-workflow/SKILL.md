@@ -89,7 +89,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Any branch that changes units, buildings, techs, factions or rules ships with AI support for the new content (lead, 2026-10-11).
 - AI improvement is compute-heavy and token-light; explore strategies, not only tune numbers (user, 2026-10-18, 2026-10-26).
 - Rules first, then heavy simulation (user, 2026-10-06). Sims use Standard only; pass `--difficulty hard`.
-- WIP limit: no new Codex write tasks while more than 5 finished branches await review (user, 2026-11-06).
+- No review-backlog cutoff (user, 2026-11-27; supersedes the 2026-11-06 WIP limit): finished PRs awaiting review or human action do not block new independent work merely because of their count. Prioritize actionable reviews and fixes, then refill available slots under the three-active-task concurrency limit and existing lane/file collision safeguards.
 
 ## AI measurement positions
 
