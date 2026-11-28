@@ -29,6 +29,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'race': return first('.game .panel.vp .rivals', '.phone-vp-strip');
     // Phones have no persistent Diplomacy control; the lesson stays readable without a ring.
     case 'diplomacy': return first('.game .panel.vp .rivals-foot button', '.game .panel.vp .rivals button.rv-row');
+    case 'rivalRow': return first('.game .panel.vp .rivals button.rv-row', '.game .panel.vp .rivals-foot button');
     case 'found': return action(/^Found City/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);
     case 'skip': return action(/^Skip/i);
@@ -134,15 +135,18 @@ function usePractice() {
   const practise = useAdvisor((s) => s.practise);
   const markSeen = useAdvisor((s) => s.markSeen);
   const citiesOpen = useGame((s) => s.citiesOpen);
+  const diplomacyOpen = useGame((s) => s.diplomacyOpen);
+  const diplomacyTakeover = useGame((s) => s.diplomacyTakeover);
   const pings = useGame((s) => s.pings);
   const overlays = useOverlays();
   const turn = view?.turn;
   useEffect(() => {
     if (!view) return;
     if (citiesOpen) markSeen('cities', view.turn);
+    if (diplomacyOpen || diplomacyTakeover) markSeen('diplomacy', view.turn);
     if (overlays.yields) markSeen('mapYields', view.turn);
     if (pings.some((ping) => ping.from === view.me && ping.turn === view.turn)) markSeen('teamPing', view.turn);
-  }, [citiesOpen, overlays.yields, pings, view, markSeen]);
+  }, [citiesOpen, diplomacyOpen, diplomacyTakeover, overlays.yields, pings, view, markSeen]);
   useEffect(() => {
     if (!view || !orders?.length) return;
     const kinds = orders.filter((_, i) => !errors?.some((e) => e.index === i)).map((o) => practiceKind(o, view)).filter((k): k is PracticeKind => k !== null);

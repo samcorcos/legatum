@@ -1,6 +1,8 @@
 /** One-time lessons for useful optional controls, independent of the Hard AI's chosen orders. */
 import { cityAutomationFocus, isExploring } from '../automation';
 import { itemKey, itemName, SIEGE_USES_IRON } from '../data';
+import { dealsOn } from '../deals';
+import { empireTitle } from '../empires';
 import { reconBlocker } from '../airWing';
 import { upgradeCheck } from './UnitImprovements';
 import { pendingSpend } from './productionPurchases';
@@ -9,7 +11,7 @@ import { distance, hexEq } from '../hex';
 import type { Order } from '../types';
 import type { AdvisorContext, AdvisorStep, Practice, Suggestion } from './advisorModel';
 
-export const DISCOVERY_IDS = ['cityAutomation', 'autoExplore', 'tileImprovements', 'productionQueue', 'heal', 'autoFire', 'modernize', 'airOperations', 'teamPing', 'siege', 'projects', 'mapYields', 'cities'] as const;
+export const DISCOVERY_IDS = ['cityAutomation', 'autoExplore', 'tileImprovements', 'productionQueue', 'heal', 'autoFire', 'modernize', 'airOperations', 'teamPing', 'siege', 'projects', 'mapYields', 'cities', 'diplomacy'] as const;
 export type DiscoveryId = typeof DISCOVERY_IDS[number];
 
 /** Using a feature is evidence it is known, even if its lesson was never displayed. */
@@ -28,6 +30,8 @@ export function discoveriesUsed(orders: readonly Order[]): DiscoveryId[] {
     if (order.type === 'SetProductionQueue' && !automaticCities.has(order.city) && order.queue.length > 1) used.add('productionQueue');
     if ((order.type === 'SetProduction' && !automaticCities.has(order.city) && order.item.kind === 'Improvement')
       || (order.type === 'SetProductionQueue' && !automaticCities.has(order.city) && order.queue.some((item) => item.kind === 'Improvement'))) used.add('tileImprovements');
+    if (order.type === 'DeclareWar' || order.type === 'ProposeTreaty' || order.type === 'RespondToProposal'
+      || order.type === 'WithdrawProposal' || order.type === 'BreakTreaty' || order.type === 'GiveGold') used.add('diplomacy');
   }
   return [...used];
 }
@@ -86,6 +90,18 @@ export function discoverySuggestion(ctx: AdvisorContext, seen: readonly string[]
   if (!ctx.selection && ctx.canPing && v.turn >= 3 && available('teamPing')) return lesson('teamPing', 'Mark a place for your teammate',
     'Ping marks a tile for your human teammates until the turn ends.',
     [{ instruction: `${click} Ping, then a tile on the map.`, key: ctx.touch ? undefined : 'P', target: control('ping') }], 0);
+  const metRival = v.diplomacy?.met?.find((team) =>
+    team !== v.team && v.players.some((p) => p.team === team && p.alive));
+  if (!ctx.selection && metRival != null && available('diplomacy')) {
+    const rivalName = empireTitle(v, metRival);
+    const why = dealsOn(v)
+      ? 'Open Diplomacy to check relations, offer Peace or an Alliance, trade Gold or Open Borders, or declare War.'
+      : 'Open Diplomacy to check relations, offer Peace or an Alliance, or declare War.';
+    const instruction = ctx.touch
+      ? `Tap ${rivalName} in the rivals list, or open Diplomacy from the menu.`
+      : `Click ${rivalName} in the right sidebar to open Diplomacy.`;
+    return lesson('diplomacy', `Talk to ${rivalName}`, why, [{ instruction, target: control('rivalRow') }], 0);
+  }
   if (ctx.selection?.kind === 'air' && available('airOperations')) {
     const plane = v.aircraft?.find((p) => p.id === ctx.selection!.id && p.owner === v.me);
     const base = plane && cities.find((c) => c.id === plane.city);

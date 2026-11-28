@@ -86,7 +86,7 @@ when no legal hostile target exists, the unit holds. **A Celtic garrison skips b
 or spends Gold. A move, wait, skip or upgrade replaces it; a manual ranged shot chooses that turn’s target while the setting persists. The client unit card controls the toggle
 (`ui/UnitPanel.tsx`, `commands.ts`); `orders.ts::unitsNeedingOrders` excludes it from Return.
 
-**UI**: click/drag to move; clicking an enemy at Peace opens a "Declare War?" dialog, never a silent
+**UI**: click/drag to move; clicking an enemy at Peace opens the full-screen Declare War plate, never a silent
 attack; ranged click-to-target with range check; Sleep/Found/Disband/Upgrade/Skip
 each issue one order. Production/research queues (city-panel code, not inspected): Shift-click
 queues a technology (Guide, Controls: "Research: click / Shift+click", `app/src/ui/GuideContent.tsx`). **One purchase per city per

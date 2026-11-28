@@ -1,4 +1,6 @@
 .peace-talks { --pt-gold: color-mix(in srgb, var(--gilt) 55%, var(--panel)); z-index: 120; color: var(--panel); animation: none; }
+dialog.peace-talks { margin: 0; padding: 0; border: 0; width: 100%; height: 100%; max-width: none; max-height: none; background: transparent; }
+dialog.peace-talks::backdrop { background: transparent; }
 .peace-talks .et-art, .peace-talks .et-art img { animation: none; }
 .pt-wash { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 60%, transparent), color-mix(in srgb, var(--ink) 93%, transparent) 70%); }
 .peace-talks.war .pt-wash { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 45%, transparent), color-mix(in srgb, var(--ink) 80%, var(--accent)) 72%); }

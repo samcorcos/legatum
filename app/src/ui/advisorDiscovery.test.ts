@@ -206,4 +206,39 @@ describe('feature discovery', () => {
     } finally { useAdvisor.setState(old, true); }
   });
 
+  it('teaches opening Diplomacy from the right sidebar after meeting a rival, and suppresses before contact or once used', async () => {
+    const { ctx, view } = await fixture();
+    view.turn = 8; view.research.era = 0;
+    const rival = view.players.find((p) => p.team !== view.team)!;
+    view.diplomacy.met = [view.team];
+    // Before meeting a rival, no diplomacy lesson fires.
+    expect(discoverySuggestion(ctx, seen, [], {})?.id).not.toBe('diplomacy');
+
+    // Once a living rival is met with nothing selected, teach how to open Diplomacy.
+    view.diplomacy.met = [view.team, rival.team];
+    const advice = discoverySuggestion(ctx, seen, [], {});
+    expect(advice).toMatchObject({ id: 'diplomacy', current: 0, acknowledge: true, steps: [
+      { target: { kind: 'control', name: 'rivalRow' } },
+    ] });
+    expect(advice!.steps[0].instruction).toContain('right sidebar');
+    expect(advice!.why).toContain('offer Peace or an Alliance');
+    expect(advice!.why).toContain('declare War');
+
+    // Deals toggle controls whether Gold / Open Borders trading is promised.
+    view.diplomacy.deals = true;
+    expect(discoverySuggestion(ctx, seen, [], {})!.why).toContain('trade Gold or Open Borders');
+    view.diplomacy.deals = false;
+    expect(discoverySuggestion(ctx, seen, [], {})!.why).not.toContain('Open Borders');
+
+    // Touch phrasing avoids "Click ... right sidebar".
+    expect(discoverySuggestion({ ...ctx, touch: true }, seen, [], {})!.steps[0].instruction).toContain('Tap');
+
+    // Suppressed when a unit/city is selected, when seen/skipped, or once a diplomatic order is queued.
+    expect(discoverySuggestion({ ...ctx, selection: { kind: 'unit', id: view.units[0].id } }, seen, [], {})?.id).not.toBe('diplomacy');
+    expect(discoverySuggestion(ctx, [...seen, 'diplomacy'], [], {})?.id).not.toBe('diplomacy');
+    expect(discoverySuggestion(ctx, seen, ['diplomacy'], {})?.id).not.toBe('diplomacy');
+    expect(discoveriesUsed([{ type: 'DeclareWar', against: rival.team }])).toContain('diplomacy');
+    expect(discoverySuggestion({ ...ctx, orders: [{ type: 'DeclareWar', against: rival.team }] }, seen, [], {})?.id).not.toBe('diplomacy');
+  });
+
 });

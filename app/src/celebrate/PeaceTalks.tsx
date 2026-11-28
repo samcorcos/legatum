@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { clampDealGold, dealsOn, offerGoldForecast, withDealGold } from '../deals';
 import { incomingOffers, queueDiplomacy, relationWith, withLocalDiplomacy } from '../diplomacy';
 import { empireMembers, empireTitle } from '../empires';
@@ -7,12 +7,19 @@ import { pendingDecisions } from '../turnFlow';
 import type { DiplomaticAction, PeaceProposal, PlayerView, TeamId } from '../types';
 import { DealGold, goldTerm, offerForecast, offerHeadline, respondToOffer, warLines } from '../ui/DiplomacyPanel';
 import { PortraitFrame } from '../ui/premium';
+import { closeTips } from '../ui/Tip';
 import { peaceScope } from '../peaceScope';
 import { allianceTerms } from '../treaties';
 import { useCelebration } from './MomentLane';
 import { eraArt } from './eraArt';
 import { PEACE_OFFER, WAR_REPLY } from './greetings';
 import './peaceTalks.css';
+
+function focusables(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>(
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+  )].filter((el) => !el.hasAttribute('disabled') && el.getAttribute('aria-hidden') !== 'true');
+}
 
 /** Everything on the plate comes from the current seat's public view. */
 export function warFacts(view: PlayerView, team: TeamId): string[] {
@@ -44,9 +51,25 @@ export function armyLine(view: PlayerView, team: TeamId, extras: TeamId[] = []):
 }
 
 function Plate({ view, team, mode, children, onClose }: { view: PlayerView; team: TeamId; mode: 'offer' | 'terms' | 'war'; children: ReactNode; onClose(): void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
   const lead = empireMembers(view, team)[0];
   const mine = view.players.find((p) => p.id === view.me);
   const art = eraArt((mine?.era ?? 1) - 1);
+  useLayoutEffect(() => {
+    const el = dialog.current;
+    if (!el) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeTips();
+    if (!el.open) {
+      if (typeof el.showModal === 'function') el.showModal();
+      else el.setAttribute('open', '');
+    }
+    return () => {
+      if (typeof el.close === 'function' && el.open) el.close();
+      else el.removeAttribute('open');
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, []);
   useEffect(() => {
     if (!lead) return;
     useGame.setState({ meetingPeople: lead.faction });
@@ -54,18 +77,41 @@ function Plate({ view, team, mode, children, onClose }: { view: PlayerView; team
   }, [lead?.faction]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented) return;
-      e.preventDefault(); e.stopPropagation(); onClose();
+      if (e.defaultPrevented) return;
+      if (e.key === 'Escape') {
+        e.preventDefault(); e.stopPropagation(); onClose();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const el = dialog.current;
+        if (!el) return;
+        const items = focusables(el);
+        if (!items.length) { e.preventDefault(); return; }
+        const first = items[0], last = items[items.length - 1];
+        const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        if (!active || !el.contains(active)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus({ preventScroll: true });
+        } else if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus({ preventScroll: true });
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus({ preventScroll: true });
+        }
+      }
     };
     window.addEventListener('keydown', key, true);
     return () => window.removeEventListener('keydown', key, true);
   }, [onClose]);
-  return <div className={`era-takeover peace-talks ${mode}`} role="dialog" aria-modal="true" aria-label={mode === 'war' ? `Declare War on ${empireTitle(view, team)}?` : `Peace talks with ${empireTitle(view, team)}`}
-    data-testid={mode === 'war' ? 'war-takeover' : 'peace-talks'} data-game-overlay>
+  return <dialog ref={dialog} className={`era-takeover peace-talks ${mode}`}
+    aria-label={mode === 'war' ? `Declare War on ${empireTitle(view, team)}?` : `Peace talks with ${empireTitle(view, team)}`}
+    data-testid={mode === 'war' ? 'war-takeover' : 'peace-talks'} data-game-overlay
+    onCancel={(e) => { e.preventDefault(); onClose(); }}>
     <div className="et-art" aria-hidden="true">{art && <img src={art.small} srcSet={`${art.small} 1280w, ${art.large} 1920w`} sizes="100vw" alt="" />}</div>
     <div className="pt-wash" aria-hidden="true" />
     <div className="pt-layout">{children}</div>
-  </div>;
+  </dialog>;
 }
 
 function People({ view, team, own = false }: { view: PlayerView; team: TeamId; own?: boolean }) {
@@ -126,12 +172,15 @@ function OfferPlate({ view, proposal, close }: { view: PlayerView; proposal: Pea
 
 function TermsPlate({ view, team, close }: { view: PlayerView; team: TeamId; close(): void }) {
   const sendButton = useRef<HTMLButtonElement>(null);
-  useEffect(() => { sendButton.current?.focus({ preventScroll: true }); }, [team]);
+  const cancelButton = useRef<HTMLButtonElement>(null);
   const orders = useGame((s) => s.orders[s.seat] ?? []);
   const [gold, setGold] = useState(0);
   const action = view.diplomacy.actions.find((a) => a.order.type === 'ProposeTreaty' && a.order.kind === 'Peace' && a.order.to === team);
   const forecast = offerGoldForecast(view, gold, orders);
   const blocked = action?.blocked_reason ?? forecast?.error ?? (!action ? 'Peace is unavailable now.' : null);
+  useEffect(() => {
+    (blocked ? cancelButton.current : sendButton.current)?.focus({ preventScroll: true });
+  }, [team]);
   const send = () => {
     if (!action || blocked) return;
     useGame.getState().editOrders((current) => queueDiplomacy(current, withDealGold(action.order, clampDealGold(gold)), view));
@@ -146,8 +195,8 @@ function TermsPlate({ view, team, close }: { view: PlayerView; team: TeamId; clo
       <People view={view} team={team} />
     </main>
     <div className="pt-add"><h2>Add a term</h2>{dealsOn(view) ? <DealGold view={view} orders={orders} gold={gold} onChange={setGold} /> : <p>Peace has no Gold term in this game.</p>}</div>
-    <footer className="pt-bottom"><div><p>{warFacts(view, team).join(' · ')}{armyLine(view, team) ? ` · ${armyLine(view, team)}` : ''}</p><p>{empireTitle(view, team)} answers at the end of this turn.</p>{blocked && <p className="pt-blocked">{blocked}</p>}</div>
-      <div className="pt-actions"><button className="btn quiet" onClick={close}>Cancel</button><button ref={sendButton} className="btn primary" disabled={!!blocked} onClick={send}>Send terms to {empireTitle(view, team)}</button></div>
+    <footer className="pt-bottom"><div><p>{warFacts(view, team).join(' · ')}{armyLine(view, team) ? ` · ${armyLine(view, team)}` : ''}</p><p>{empireTitle(view, team)} has up to 3 turns to answer (by turn {view.turn + 3}).</p>{blocked && <p className="pt-blocked">{blocked}</p>}</div>
+      <div className="pt-actions"><button ref={cancelButton} className="btn quiet" onClick={close}>Cancel</button><button ref={sendButton} className="btn primary" disabled={!!blocked} onClick={send}>Send terms to {empireTitle(view, team)}</button></div>
     </footer>
   </Plate>;
 }

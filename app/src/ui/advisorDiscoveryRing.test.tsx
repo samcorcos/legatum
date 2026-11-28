@@ -63,3 +63,8 @@ it('rings Cities and the map chooser before its hidden Yields control', () => {
   mounted.rerender(<LensSwitcher lens="default" onChange={() => {}} sites={[]} onInspect={() => {}} settlerId={null} players={view.players} me={view.me} />);
   expect(targetElement({ kind: 'control', name: 'mapYields' })?.getAttribute('data-overlay')).toBe('yields');
 });
+
+it('rings a met rival row in the right sidebar for the diplomacy discovery lesson', () => {
+  render(<div className="game"><section className="panel vp"><div className="rivals"><button className="rv-row">India</button></div><footer className="rivals-foot"><button>Diplomacy</button></footer></section></div>);
+  expect(targetElement({ kind: 'control', name: 'rivalRow' })?.textContent).toBe('India');
+});
