@@ -312,16 +312,24 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   for (let i = (await choices.count()) - 1; i >= 0 && (await orders()) === '[]'; i--) await choices.nth(i).click();
   const entered = await orders();
   expect(entered, 'an order was entered this turn').not.toBe('[]');
-  await expect.poll(() => page.evaluate(() => new Promise<boolean>((resolve) => {
+  await expect.poll(() => page.evaluate((expected) => new Promise<boolean>((resolve) => {
+    const matches = (text: string | undefined) => {
+      try { return JSON.stringify(JSON.parse(text ?? '')[0]) === expected; }
+      catch { return false; }
+    };
+    const fallback = () => {
+      try { return matches(JSON.parse(localStorage.getItem('legatum.autosave.orders.v1') ?? 'null')?.text); }
+      catch { return false; }
+    };
     const open = indexedDB.open('legatum-autosave-v1');
-    open.onerror = () => resolve(false);
+    open.onerror = () => resolve(fallback());
     open.onsuccess = () => {
       const db = open.result;
       const get = db.transaction('orders').objectStore('orders').get('current');
-      get.onsuccess = () => { db.close(); resolve(!!get.result?.text); };
-      get.onerror = () => { db.close(); resolve(false); };
+      get.onsuccess = () => { db.close(); resolve(matches(get.result?.text) || fallback()); };
+      get.onerror = () => { db.close(); resolve(fallback()); };
     };
-  })), { message: 'the pending orders are saved' }).toBe(true);
+  }), entered), { message: 'the pending orders are saved' }).toBe(true);
 
   // The autosave survives a reload: Continue returns to the same turn with both cities, and the orders.
   await page.reload();
