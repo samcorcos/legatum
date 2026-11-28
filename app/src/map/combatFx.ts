@@ -20,7 +20,7 @@
 //     sunburst), `flash`, `ring`, `debris`. Reuse them so every effect shares one line language (legatum-art).
 import type { Event, Hex, PlayerView, UnitKind, UnitView } from '../types';
 import { attackerUnit } from '../types';
-import { hexToPixel, hexEq } from '../hex';
+import { hexToPixel, hexEq, tileIndex } from '../hex';
 import { unitClass, unitEraTier } from '../data';
 import { siegePropFor } from '../siegeProps';
 import { HEX_SIZE } from './grid';
@@ -92,6 +92,9 @@ export interface CombatPlan {
   clashes: FxClash[];
   deaths: FxDeath[];
   captures: FxCapture[];
+  /** Visible Walls damage and the impact that breached the ring. */
+  wallBars: Map<number, { max: number }>;
+  breaches: { city: number; at: Pt; t: number }[];
   /** Every moving unit's steps, round by round (a unit destroyed this turn too). */
   moves: Map<number, FxStep[]>;
   /** Units destroyed this turn, drawn from the view before the turn until they fall. */
@@ -256,6 +259,9 @@ export function buildCombatPlan(events: Event[], before: PlayerView | null, afte
 
   // HP bars: the value before the turn, then each blow's result as it lands.
   const hp = new Map<string, { t: number; hp: number }[]>();
+  const wallBars = new Map<number, { max: number }>();
+  const wallsLeft = new Map<number, number>();
+  const breaches: CombatPlan['breaches'] = [];
   const hpStep = (k: string, start: number | undefined, t: number, value: number) => {
     let list = hp.get(k);
     if (!list) { if (start == null) return; list = [{ t: -Infinity, hp: start }]; hp.set(k, list); }
@@ -266,6 +272,21 @@ export function buildCombatPlan(events: Event[], before: PlayerView | null, afte
     const t = impact.get(i)!;
     if (e.defender.kind === 'Unit') { const id = e.defender.unit; hpStep(`u${id}`, before?.units.find((u) => u.id === id)?.hp, t, e.defender_hp_after); }
     else { const id = e.defender.city; hpStep(`c${id}`, before?.cities.find((c) => c.id === id)?.hp, t, e.defender_hp_after); }
+    if (e.defender.kind === 'City') {
+      const id = e.defender.city, old = before?.cities.find((c) => c.id === id);
+      const tile = tileIndex(e.at, after.width, after.height);
+      if (old?.visible && after.cities.find((c) => c.id === id)?.visible && after.tiles[tile]?.visible && (old.walls_hp ?? 0) > 0) {
+        const left = wallsLeft.get(id) ?? old.walls_hp!;
+        // Core reports the actual Walls loss + HP loss + carried damage, so Walls consume this first.
+        const next = Math.max(0, left - e.damage_to_defender);
+        wallBars.set(id, { max: old.walls_max_hp ?? old.walls_hp! });
+        hpStep(`w${id}`, old.walls_hp, t, next);
+        wallsLeft.set(id, next);
+        if (left > 0 && next === 0 && events.some((x) => x.type === 'WallsBreached' && x.city === id)) {
+          breaches.push({ city: id, at: world(e.at), t });
+        }
+      }
+    }
     const a = attackerUnit(e.attacker);
     if (a != null && !e.ranged) hpStep(`u${a}`, before?.units.find((u) => u.id === a)?.hp, t, e.attacker_hp_after);
   });
@@ -303,8 +324,8 @@ export function buildCombatPlan(events: Event[], before: PlayerView | null, afte
   }
 
   // A shot-only turn still leaves 600 ms after the volley marker to read the final impact.
-  const ends = [volley + 100, endMoves, ...clashes.map((c) => c.t + 900), ...deaths.map((d) => d.t + DEATH_MS + 600), ...captures.map((c) => c.t + CAPTURE_MS)];
-  return { volley, stepMs, total: Math.max(...ends) + TAIL_MS, shots, clashes, deaths, captures, moves, ghosts, cueDelay, hp };
+  const ends = [volley + 100, endMoves, ...clashes.map((c) => c.t + 900), ...deaths.map((d) => d.t + DEATH_MS + 600), ...captures.map((c) => c.t + CAPTURE_MS), ...breaches.map((b) => b.t + 900)];
+  return { volley, stepMs, total: Math.max(...ends) + TAIL_MS, shots, clashes, deaths, captures, wallBars, breaches, moves, ghosts, cueDelay, hp };
 }
 
 const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildCombatPlan, cityShotKind, fxUnits, hpAt, HP_DRAIN_MS, lungeAmount, shotKindFor, stepPos, world } from './combatFx';
+import { bannerBarOf } from './render';
 import { aircraftPassProgress } from './combatFxDraw';
 import { cuesAt, battleCues } from './cues';
 import type { Event, Hex, PlayerView } from '../types';
@@ -214,4 +215,43 @@ it('cues wait for their blow and pop in', () => {
   expect(cuesAt(cues, 500, false, delay)).toEqual([]);
   expect(cuesAt(cues, 900, false, delay)[0].alpha).toBe(1);
   expect(cuesAt(cues, 500, false)[0].alpha).toBe(1);
+});
+
+
+describe('Walls playback', () => {
+  const pos = { q: 6, r: 4 };
+  const walled = () => ({ ...before, tiles: Array.from({ length: 1200 }, () => ({ visible: true })),
+    cities: [{ ...before.cities[0], visible: true, walls_hp: 60, walls_max_hp: 100 }] }) as PlayerView;
+  const hit = (damage: number) => battle({ defender: { kind: 'City', city: 1, owner: 2 }, at: pos,
+    damage_to_defender: damage, defender_hp_after: 90 });
+
+  it('drains Walls on successive impacts, then switches to HP without using the destroyed Walls maximum', () => {
+    const old = walled();
+    const after = { ...old, cities: [{ ...old.cities[0], hp: 90, walls: false, walls_level: 0, walls_hp: 0, walls_max_hp: 0 }] };
+    const plan = buildCombatPlan([hit(25), hit(45), { type: 'WallsBreached', city: 1, owner: 2 }], old, after)!;
+    const times = plan.shots.map((x) => x.launch + x.flight);
+    expect(hpAt(plan, 'w1', 0)).toBe(60);
+    expect(plan.hp.get('w1')!.map((x) => x.hp)).toEqual([60, 35, 0]);
+    const midway = hpAt(plan, 'w1', times[0] + 90)!;
+    expect(midway).toBeGreaterThan(35); expect(midway).toBeLessThan(60);
+    expect(bannerBarOf(after.cities[0], 90, midway, plan.wallBars.get(1)!.max)).toEqual({ value: midway, max: 100, walls: true });
+    expect(hpAt(plan, 'w1', times[1] + HP_DRAIN_MS)).toBe(0);
+    expect(bannerBarOf(after.cities[0], 90, 0, 100)).toEqual({ value: 90, max: 100, walls: false });
+    expect(plan.breaches).toEqual([{ city: 1, at: world(pos), t: times[1] }]);
+    // Damage to Walls must not also be subtracted from the city: use the core's HP result.
+    expect(hpAt(plan, 'c1', times[1] + HP_DRAIN_MS)).toBe(90);
+    // With animation absent, the final view is shown immediately.
+    expect(bannerBarOf(after.cities[0], after.cities[0].hp).walls).toBe(false);
+  });
+
+  it('never reconstructs Walls damage or breach effects from a hidden city', () => {
+    const old = walled(); old.cities[0].visible = false;
+    const events: Event[] = [hit(80), { type: 'WallsBreached', city: 1, owner: 2 }];
+    expect(buildCombatPlan(events, old, old)!.wallBars.size).toBe(0);
+    const shown = walled();
+    expect(buildCombatPlan(events, shown, old)!.breaches).toHaveLength(0);
+    old.cities[0].visible = true; old.tiles.forEach((t) => t.visible = false);
+    const plan = buildCombatPlan(events, old, old)!;
+    expect(plan.breaches).toHaveLength(0); expect(hpAt(plan, 'w1', 0)).toBeUndefined();
+  });
 });

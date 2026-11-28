@@ -20,6 +20,7 @@ import { iconEpoch, tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
 import { SELECT_HALO, SELECT_INK, selectionBreath, selectionBurst } from './selectionMark';
 import { MAP_STYLES, mapBorderColor, mapPlayerColor, type MapStyle } from './style';
+import { cityDrawDrop, cityDrawScale, cityStem, cityTier } from './cityArt';
 import { TerrainCache, TOWN_OVAL } from './terrain';
 import { getBorderVariant } from './borderVariant';
 import { getTerrainVariant } from './terrainVariant';
@@ -56,7 +57,7 @@ import { drawChimneySmoke, drawWaterGlints, idleBoxes, type IdleView } from './i
 import { drawLandmarks, LANDMARK_REF_ZOOM, landmarkBoxes, landmarksOf, townCover } from './landmarks';
 import { drawConstructionSites } from './constructionFx';
 import { constructionStage, sitesOf, type ConstructionSite } from './constructionSites';
-import { CONSTRUCTION_ANIMATION, buildPhases } from './momentFx';
+import { CONSTRUCTION_ANIMATION, buildPhases, repairedWallsHp } from './momentFx';
 import { drawPingGhost, drawPings, type PingMark } from './pingDraw';
 import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, type MomentView } from './momentFxDraw';
 import { drawImproveHot, drawImproveTiles, drawPlaceTiles, drawPriceChips, drawQueuedBuys } from './pickerDraw';
@@ -423,6 +424,14 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const pending = terrain.draw(ctx, cam, w, h, TERRAIN_BUDGET_MS);
   // During combat playback the HP bars drop as each blow lands (combatFx.ts), not all at once.
   const fxNow = inp.fx;
+  const cityWalls = (c: CityView) => {
+    const repair = moments?.plan.walls.find((x) => x.city === c.id && x.toHp > x.fromHp);
+    const refill = moments ? repairedWallsHp(moments.plan, c.id, moments.t) : undefined;
+    // Production follows combat; a long combat tail must not hide the later repair payoff.
+    if (repair && moments!.t >= repair.t) return refill!;
+    return (fxNow ? hpAt(fxNow.plan, `w${c.id}`, fxNow.t) : undefined) ?? refill ?? c.walls_hp ?? 0;
+  };
+  const cityBar = (c: CityView) => bannerBarOf(c, cityHp(c), cityWalls(c), Math.max(c.walls_max_hp ?? 0, fxNow?.plan.wallBars.get(c.id)?.max ?? 0));
   const cityHp = (c: CityView) => (fxNow ? hpAt(fxNow.plan, `c${c.id}`, fxNow.t) : undefined) ?? c.hp;
   const idleView: IdleView | null = inp.idle ? { toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, far: isFar(hexPx), w, h, dpr } : null;
   const idleT = inp.idleT ?? inp.time;
@@ -991,7 +1000,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     drawSprite(ctx, far.seal, far.x, far.y + (motion?.dy ?? 0), alpha);
     if (motion && motion.sx !== 1) ctx.restore();
     if (siege.has(c.id)) {
-      const bar = bannerBarOf(c, c.hp);
+      const bar = cityBar(c);
       drawSiegeBar(ctx, far.x, far.y - far.seal.ay + far.seal.h + 2, Math.max(30, far.seal.w), bar.value, bar.max, FONTS[look].sans, false, bar.walls);
     }
   }
@@ -1164,17 +1173,16 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       const r = drawBanner(ctx, look, spec, x, y + (motion?.dy ?? 0), fs, dpr, drawAlpha);
       const offer = offerOn(view, c.id);
       if (offer) drawOfferCoin(ctx, look, level ? r.x : r.x + r.w, r.y + r.h / 2, offer.turns_left, offerTone(view, offer), drawAlpha);
-      const hpNow = cityHp(c);
       if (level) {
         const barY = r.y + r.h + SIEGE_BAR_GAP;
-        const bar = bannerBarOf(c, hpNow);
+        const bar = cityBar(c);
         drawSiegeBar(ctx, x, barY, Math.min(Math.max(r.w - 8, 64), 128), bar.value, bar.max, FONTS[look].sans, true, bar.walls);
         if (meters.length) drawBannerMeters(ctx, look, meters, x, barY + SIEGE_BAR_H + 4, dpr);
         drawSiegeRing(ctx, cover, level, inp.pulseTime ?? inp.time, inp.reducedMotion);
         ambient.push(siegeRingBox(cover));
         drawSiegeBadge(ctx, cover.x + cover.w, cover.y, 11, dpr);
       } else {
-        const bar = bannerBarOf(c, hpNow);
+        const bar = cityBar(c);
         const hurt = c.visible && bar.value < bar.max;
         if (meters.length) drawBannerMeters(ctx, look, meters, x, r.y + r.h + (hurt ? 6 : 1), dpr);
         if (hurt) {
@@ -1266,7 +1274,15 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // Combat playback: missiles, clashes, losses and captures over the units and banners, under the damage cues.
   if (inp.fx) {
     const f0 = performance.now();
-    drawCombatFx(ctx, inp.fx.plan, inp.fx.t, { toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, far, w, h, colorOf: mapPlayerColor }, (d) => deathPos(inp.fx!.plan, d));
+    drawCombatFx(ctx, inp.fx.plan, inp.fx.t, { toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, far, w, h, colorOf: mapPlayerColor,
+      cityGround: (id) => {
+        const c = view.cities.find((x) => x.id === id);
+        if (!c) return null;
+        const p = S2(c.pos), era = Math.max(0, (view.players.find((x) => x.id === c.owner)?.era ?? 1) - 1);
+        // The same ground anchor used by the town/ring artwork, not the hex centre above the roofs.
+        return { x: p.x, y: p.y + cityDrawDrop(cityDrawScale(cityStem(era, cityTier(c.population)))) * z };
+      },
+    }, (d) => deathPos(inp.fx!.plan, d));
     const fms = performance.now() - f0;
     perf.fxFrames++;
     perf.fxMs += fms;
@@ -1503,8 +1519,8 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
  * The bar a city's banner shows: its Walls bar while the Walls stand (hits land there first and it never
  * heals), otherwise its health.
  */
-export function bannerBarOf(c: CityView, hpNow: number): { value: number; max: number; walls: boolean } {
-  const max = c.walls_max_hp ?? 0, walls = c.walls_hp ?? 0;
+export function bannerBarOf(c: CityView, hpNow: number, wallsNow = c.walls_hp ?? 0, wallsMax = c.walls_max_hp ?? 0): { value: number; max: number; walls: boolean } {
+  const max = wallsMax, walls = wallsNow;
   if (max > 0 && walls > 0) return { value: walls, max, walls: true };
   return { value: hpNow, max: c.max_hp, walls: false };
 }
