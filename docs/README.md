@@ -13,6 +13,7 @@
 | [research/](research/) | Background research on 4X design. |
 | [sound-qa.md](sound-qa.md), [celebration-sound-qa.md](celebration-sound-qa.md) | Measured audio levels of the shipped sounds. |
 | [ops/multi-agent.md](ops/multi-agent.md) | How Claude, ChatGPT/Codex, and Gemini coordinate autonomously on this repo via GitHub Issues, Draft PR locks, two-key cross-model peer merge, and staggered hourly heartbeats. |
+| [ops/automations.md](ops/automations.md) | Directory of agent heartbeat onboarding defaults, configured schedules, control locations, and links to GitHub Actions / Dependabot configs. |
 
 Build and contribution instructions are in [../CONTRIBUTING.md](../CONTRIBUTING.md).
 
