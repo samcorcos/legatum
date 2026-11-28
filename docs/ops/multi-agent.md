@@ -45,7 +45,7 @@ Use a **continuously replenished work queue while an execution is running**, wit
 
 On each wake-up, fetch `origin/master` and fill available slots with independent actionable tasks in this priority order. Keep **at most three tasks active per agent family across all executions**. Whenever a task finishes or is handed off as blocked, refresh the board and refill its slot immediately in priority order, without waiting for the other tasks or the next hour. There is no per-run or per-hour task quota. Work in parallel where supported; unblocking existing PRs beats starting new WIP.
 
-1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, `headRepositoryOwner` is `samcorcos`, and no governance/security fence path is touched.
+1. **Review & merge another agent's PR:** `gh pr list --state open --label needs-review` where `author:<other>` != yourself, no `reviewing:*` label is held, `headRepositoryOwner` is `samcorcos`, including human-only PRs that need agent review; review those but never merge them.
 2. **Unblock your own PRs:** `gh pr list --state open --label author:<self>` that has `changes-requested`, a failing `ci-ok`, merge conflicts or a branch that fell behind `master` and needs updating, or a green ready PR that is missing `needs-review`.
 3. **Recover stale locks:** if any `reviewing:*` lock has had no comment or merge for >2 hours, release `reviewing:*` so another reviewer can pick it up. If a `claimed:*` Draft PR has had no commits or comments for >6 hours, post a brief status note or flag `needs-human` (never overwrite another agent's work silently).
 4. **Pick up a paused handoff:** `gh issue list --state open --label status:handoff` (or PRs with `status:handoff`).
@@ -122,10 +122,20 @@ Split parallel work across disjoint lanes whenever possible:
 | `changes-requested` | Peer reviewer found blocking issues; author should address them while review is making progress. |
 | `status:handoff` | WIP pushed to a branch with a Handoff Comment; ready for another agent to continue. |
 | `mode:bakeoff` | Multiple agents solve the same issue on separate Draft PRs from the same base commit for comparison. |
-| `needs-human` | Requires the maintainer (human-only governance/security fence, unsettled design question, outside PR, or a review that is stuck or unlikely to converge with reasonable effort). Direct notification is mandatory; see below. |
+| `needs-human` | Actionable human decision or merge needed now, after agent preparation and a readable recommendation. Never a marker for eventual human involvement. See readiness criteria below. |
 | `lane:core` / `lane:ai` / `lane:ui` / `lane:docs` | Primary area touched (determines collision risk). |
 
-### Human escalation: notify the maintainer directly
+### Human escalation: an actionable inbox
+
+`needs-human` means the maintainer can act **now** (user, 2026-11-28). Do not add it when opening a governance PR or merely predicting a future human merge. Use Draft/`claimed:*` during implementation, `changes-requested` during fixes and `needs-review` during agent review, including governance PRs. Identify the human-only merge restriction in the PR body; no extra interim label is needed, and absence of `needs-human` never authorizes an agent merge.
+
+Before adding `needs-human` for a merge decision, finish implementation, obtain required independent and specialist reviews on the current head, verify green CI and merge readiness, and post the readable summary with agent recommendations and the concrete human action. Then remove `needs-review` and notify the maintainer. A queued review, running CI or an agent-fixable failure is not a human action.
+
+For an actual blocking decision/access problem or stuck review, finish every review/check that can proceed independently first, prepare the evidence, options and recommendation, and explicitly identify what cannot complete without that decision. Do not demand a passing approval for the very disagreement being escalated. Escalate only when the decision is ready for the maintainer now, not for a future evaluation date.
+
+Remove `needs-human` when its action is resolved or a new revision invalidates merge readiness, and route back to the appropriate agent state. Restore it only when the current revision is decision-ready again. Reassess older labels using these criteria without repeating unchanged notifications.
+
+### Notify the maintainer directly
 
 When handing a PR to the maintainer, finish with a readable top-level conversation comment. Lead with what the change does for the game or workflow and the recommendation, not process jargon. Include:
 - **What changes:** one or two plain-language sentences explaining the behavior and benefit.
@@ -151,7 +161,7 @@ Because Claude, ChatGPT, and Gemini may authenticate via the same GitHub user, e
 - Before claiming a review (`needs-review` -> add `reviewing:<self>`), verify **`my_agent != author_agent`**. Never review or merge your own model family's PR.
 
 ### 2. Human-only fence (never peer-merged by agents)
-Do **not** merge autonomously — review if helpful, then label `needs-human`, notify the maintainer directly as above, and stop — if a PR matches **any** of these:
+Do **not** merge autonomously if a PR matches **any** of these. Complete permissible agent review and preparation first; apply `needs-human` and notify the maintainer only when the action is ready under the criteria above:
 - **Outside / fork PR:** `headRepositoryOwner != samcorcos` or branch is not an agent branch (`claude/*`, `chatgpt/*`, `gemini/*`).
 - **Governance or security paths:** touches `.github/workflows/`, `tools/gates/`, `infra/`, `SECURITY.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or `docs/ops/multi-agent.md`.
 - **Unsettled design / new mechanic** that requires reading the private Design Doc and has no Claude `legatum-design-reviewer` verdict or maintainer sign-off.
@@ -228,7 +238,7 @@ Before merging:
 - When the author fixes them and CI is green on the new head SHA, the author swaps `changes-requested` -> `needs-review`.
 - **No fixed round limit** (maintainer, 2026-11-28). Continue when revisions resolve findings, experiments add useful evidence, or remaining work is concrete and reasonably bounded. Another round, a newly discovered issue, or a corrected documentation omission is not by itself a reason to escalate.
 - Exercise judgment after each review: what changed, what remains, and is the next attempt likely to move this toward resolution? Put that assessment in the existing review or revision comment; do not add a separate tracking system. Reviewers should consolidate known blockers early and acknowledge findings they missed previously.
-- Escalate when the same substantive disagreement repeats without new evidence, revisions cycle or stop reducing blockers, likely remaining effort is unreasonable for the benefit, or resolution needs a human decision/access. Do not keep trying indefinitely merely because another approach is imaginable. Set `needs-human`, notify the maintainer once, and summarize the attempts, unresolved question and recommended next step. Human-only fences still require escalation immediately, regardless of progress.
+- Escalate when the same substantive disagreement repeats without new evidence, revisions cycle or stop reducing blockers, likely remaining effort is unreasonable for the benefit, or resolution needs a human decision/access. Do not keep trying indefinitely merely because another approach is imaginable. Set `needs-human`, notify the maintainer once, and summarize the attempts, unresolved question and recommended next step. Human-only fences always prohibit agent merge; apply the action-readiness criteria before escalating.
 - For PRs escalated solely because of the former round cap, reassess the latest revision. If there is a concrete productive next step and no other human-only reason, explain the reassessment, remove that obsolete `needs-human` reason and resume the normal review/fix flow. Never clear a current FAIL without actually reviewing the fix, or waive exact-head verdicts, CI, independence or merge-race safeguards.
 
 ## Other work modes
@@ -238,7 +248,7 @@ Whenever the maintainer asks an agent directly in chat to make a change to the r
 1. Run the pre-flight check (`gh pr list` / `gh issue list`) to verify no other agent is already working on it and that you do not violate the `lane:core` lock.
 2. If no GitHub issue exists yet, **open a concise GitHub Issue first** (using the brief format below) labeled `claimed:<agent>` + `lane:*` (keeping personal details, secrets, and quota/budget numbers out).
 3. Cut branch `<agent>/<slug>` from `origin/master` and open a **Draft PR** immediately with `author:<agent>`, `lane:*`, and `Refs #<issue>` (switching to `Fixes #<issue>` when ready) so the other two agents see the lock via `gh pr list` and can pick up a `status:handoff` or peer-review it.
-4. When done and `ci-ok` is green, mark **Ready for review** and swap `claimed:<agent>` -> `needs-review` (or `needs-human` if it hits the human-only fence).
+4. When done and `ci-ok` is green, mark **Ready for review** and swap `claimed:<agent>` -> `needs-review` including human-only PRs; add `needs-human` only after review and preparation make the human action ready.
 
 ### Normal parallel claim (`agent:ready`)
 1. Pick an unclaimed issue in a lane that does not collide with open PRs.
